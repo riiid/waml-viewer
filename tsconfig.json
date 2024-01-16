@@ -1,0 +1,14 @@
+{
+  "extends": "@tsconfig/strictest",
+  "compilerOptions": {
+    "target": "es2016",
+    "module": "commonjs",
+    "rootDir": "src",
+    "outDir": "dist",
+
+    "jsx": "preserve",
+    "declaration": true
+  },
+  "include": [ "**/*.ts", "**/*.tsx" ],
+  "exclude": [ "dist", "node_modules" ]
+}

@@ -1,0 +1,29 @@
+{
+  "name": "waml-viewer",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "repository": "https://github.com/riiid/waml-viewer.git",
+  "author": "Juyeong Jeong <juyeong.jeong@riiid.co>",
+  "devDependencies": {
+    "@jjoriping/eslint-plugin": "github:JJoriping/eslint-plugin",
+    "@tsconfig/strictest": "^2.0.2",
+    "@types/react": "^18.2.47",
+    "@types/react-dom": "^18.2.18",
+    "browserify": "^17.0.0",
+    "eslint": "^8.56.0",
+    "esmify": "^2.1.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "typescript": "^5.3.3"
+  },
+  "scripts": {
+    "watch": "tsc -w",
+    "build:test": "tsc --jsx react-jsxdev && browserify dist/test.js -p esmify -o test/index.js"
+  },
+  "dependencies": {
+    "@riiid/waml": "github:riiid/waml#d3fb14896ae53d39962af051ec69b90e0b9e1cb8"
+  },
+  "peerDependencies": {
+    "react": "^18.2.0"
+  }
+}
