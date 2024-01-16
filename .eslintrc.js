@@ -10,5 +10,11 @@ module.exports = {
   parserOptions: {
     project: "./tsconfig.json"
   },
-  ignorePatterns: [ "dist", "test" ]
+  rules: {
+    "@jjoriping/variable-name": [
+      "error",
+      { exceptions: [ "R", "$R", "children" ] }
+    ]
+  },
+  ignorePatterns: [ "dist", "test", ".eslintrc.js" ]
 };

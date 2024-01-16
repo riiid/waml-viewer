@@ -1,33 +1,33 @@
-import type { FC } from "react";
-import { useMemo, useState } from "react";
-import { WAMLDocument } from "@riiid/waml";
+import type { WAML } from "@riiid/waml";
+import { WAMLDocument, parseWAML } from "@riiid/waml";
+import type { FC, HTMLAttributes } from "react";
+import { useMemo } from "react";
+import { WAMLProvider } from "./use-waml";
 
-export interface WAMLViewerProps{
+export interface WAMLViewerProps extends Omit<HTMLAttributes<HTMLElement>, 'children'>{
   waml:string;
 }
-const WAMLViewer:FC<WAMLViewerProps> = ({ waml }) => {
-  const [ currentError, setCurrentError ] = useState<string>();
-
+const WAMLViewer:FC<WAMLViewerProps> = ({ waml, ...props }) => {
   const document = useMemo(() => {
     try{
-      const R = new WAMLDocument(waml);
-      setCurrentError(undefined);
-      return R;
+      return new WAMLDocument(waml);
     }catch(error){
-      if(error instanceof Error) console.warn(error.stack);
-      setCurrentError(String(error));
-      return undefined;
+      return parseWAML(waml) as WAML.ParserError;
     }
   }, [ waml ]);
 
-  if(currentError){
-    return <article>{currentError}</article>;
+  if('error' in document){
+    return <article {...props}>
+      <pre>{document.stack?.join('\n') || document.message}</pre>
+    </article>;
   }
-  return <article>
-    <h2>Hello, World!</h2>
-    <pre>
-      {JSON.stringify(document, null, 2)}
-    </pre>
+  return <article {...props}>
+    <WAMLProvider document={document}>
+      <h2>Hello, World!</h2>
+      <pre>
+        {JSON.stringify(document, null, 2)}
+      </pre>
+    </WAMLProvider>
   </article>;
 };
 export default WAMLViewer;

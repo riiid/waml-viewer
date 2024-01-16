@@ -1,33 +1,41 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 "use strict";
+var __rest = (this && this.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const jsx_dev_runtime_1 = require("react/jsx-dev-runtime");
 const _jsxFileName = "C:/Users/dosel/Dev/waml-viewer/src/index.tsx";
-const react_1 = require("react");
 const waml_1 = require("@riiid/waml");
-const WAMLViewer = ({ waml }) => {
-    const [currentError, setCurrentError] = (0, react_1.useState)();
+const react_1 = require("react");
+const use_waml_1 = require("./use-waml");
+const WAMLViewer = (_a) => {
+    var _b;
+    var { waml } = _a, props = __rest(_a, ["waml"]);
     const document = (0, react_1.useMemo)(() => {
         try {
-            const R = new waml_1.WAMLDocument(waml);
-            setCurrentError(undefined);
-            return R;
+            return new waml_1.WAMLDocument(waml);
         }
         catch (error) {
-            if (error instanceof Error)
-                console.warn(error.stack);
-            setCurrentError(String(error));
-            return undefined;
+            return (0, waml_1.parseWAML)(waml);
         }
     }, [waml]);
-    if (currentError) {
-        return (0, jsx_dev_runtime_1.jsxDEV)("article", { children: currentError }, void 0, false, { fileName: _jsxFileName, lineNumber: 24, columnNumber: 11 }, this);
+    if ('error' in document) {
+        return (0, jsx_dev_runtime_1.jsxDEV)("article", Object.assign({}, props, { children: (0, jsx_dev_runtime_1.jsxDEV)("pre", { children: ((_b = document.stack) === null || _b === void 0 ? void 0 : _b.join('\n')) || document.message }, void 0, false, { fileName: _jsxFileName, lineNumber: 21, columnNumber: 7 }, this) }), void 0, false, { fileName: _jsxFileName, lineNumber: 20, columnNumber: 11 }, this);
     }
-    return (0, jsx_dev_runtime_1.jsxDEV)("article", { children: [(0, jsx_dev_runtime_1.jsxDEV)("h2", { children: "Hello, World!" }, void 0, false, { fileName: _jsxFileName, lineNumber: 27, columnNumber: 5 }, this), (0, jsx_dev_runtime_1.jsxDEV)("pre", { children: JSON.stringify(document, null, 2) }, void 0, false, { fileName: _jsxFileName, lineNumber: 28, columnNumber: 5 }, this)] }, void 0, true, { fileName: _jsxFileName, lineNumber: 26, columnNumber: 9 }, this);
+    return (0, jsx_dev_runtime_1.jsxDEV)("article", Object.assign({}, props, { children: (0, jsx_dev_runtime_1.jsxDEV)(use_waml_1.WAMLProvider, { document: document, children: [(0, jsx_dev_runtime_1.jsxDEV)("h2", { children: "Hello, World!" }, void 0, false, { fileName: _jsxFileName, lineNumber: 26, columnNumber: 7 }, this), (0, jsx_dev_runtime_1.jsxDEV)("pre", { children: JSON.stringify(document, null, 2) }, void 0, false, { fileName: _jsxFileName, lineNumber: 27, columnNumber: 7 }, this)] }, void 0, true, { fileName: _jsxFileName, lineNumber: 25, columnNumber: 5 }, this) }), void 0, false, { fileName: _jsxFileName, lineNumber: 24, columnNumber: 9 }, this);
 };
 exports.default = WAMLViewer;
 
-},{"@riiid/waml":5,"react":23,"react/jsx-dev-runtime":24}],2:[function(require,module,exports){
+},{"./use-waml":3,"@riiid/waml":6,"react":24,"react/jsx-dev-runtime":25}],2:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -45,7 +53,25 @@ const TestPage = () => {
 };
 react_dom_1.default.render((0, jsx_dev_runtime_1.jsxDEV)(TestPage, {}, void 0, false, { fileName: _jsxFileName, lineNumber: 19, columnNumber: 17 }, this), document.querySelector("#stage"));
 
-},{".":1,"react":23,"react-dom":18,"react/jsx-dev-runtime":24}],3:[function(require,module,exports){
+},{".":1,"react":24,"react-dom":19,"react/jsx-dev-runtime":25}],3:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.WAMLProvider = void 0;
+const jsx_dev_runtime_1 = require("react/jsx-dev-runtime");
+const _jsxFileName = "C:/Users/dosel/Dev/waml-viewer/src/use-waml.tsx";
+const react_1 = require("react");
+const context = (0, react_1.createContext)(null);
+const useWAML = () => (0, react_1.useContext)(context);
+exports.default = useWAML;
+const WAMLProvider = ({ document, children }) => {
+    const value = (0, react_1.useMemo)(() => ({
+        metadata: document.metadata
+    }), [document.metadata]);
+    return (0, jsx_dev_runtime_1.jsxDEV)(context.Provider, { value: value, children: children }, void 0, false, { fileName: _jsxFileName, lineNumber: 21, columnNumber: 9 }, this);
+};
+exports.WAMLProvider = WAMLProvider;
+
+},{"react":24,"react/jsx-dev-runtime":25}],4:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -77,7 +103,7 @@ function guessChoiceOptionGroup(value) {
   return null;
 }
 
-},{"./type.js":10}],4:[function(require,module,exports){
+},{"./type.js":11}],5:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -111,7 +137,7 @@ class WAMLDocument {
 }
 exports.WAMLDocument = WAMLDocument;
 
-},{"./methods/find-answers.js":6,"./methods/find-references.js":7,"./methods/sanitize-waml.js":8,"./parse-waml.js":9}],5:[function(require,module,exports){
+},{"./methods/find-answers.js":7,"./methods/find-references.js":8,"./methods/sanitize-waml.js":9,"./parse-waml.js":10}],6:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -162,7 +188,7 @@ Object.keys(_check).forEach(function (key) {
   });
 });
 
-},{"./check.js":3,"./document.js":4,"./parse-waml.js":9,"./type.js":10}],6:[function(require,module,exports){
+},{"./check.js":4,"./document.js":5,"./parse-waml.js":10,"./type.js":11}],7:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -336,7 +362,7 @@ function getChoiceOptionValues(document) {
   }
 }
 
-},{"../check.js":3,"../type.js":10}],7:[function(require,module,exports){
+},{"../check.js":4,"../type.js":11}],8:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -364,7 +390,7 @@ function findReferences(document) {
   }
 }
 
-},{"../check.js":3}],8:[function(require,module,exports){
+},{"../check.js":4}],9:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -449,7 +475,7 @@ function sanitize(document, {
   }
 }
 
-},{"../check.js":3,"../utility.js":11}],9:[function(require,module,exports){
+},{"../check.js":4,"../utility.js":12}],10:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -512,7 +538,7 @@ function isNearleyError(error) {
   return error instanceof Error && (error.message.startsWith("invalid syntax at") || error.message.startsWith("Syntax error at"));
 }
 
-},{"../res/waml.cjs":12,"./check.js":3,"nearley":14}],10:[function(require,module,exports){
+},{"../res/waml.cjs":13,"./check.js":4,"nearley":15}],11:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -545,7 +571,7 @@ var WAML;
   })(LinePrefix = WAML.LinePrefix || (WAML.LinePrefix = {}));
 })(WAML || (exports.WAML = WAML = {}));
 
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -568,7 +594,7 @@ function getCircledLetter(value) {
   return `(${value})`;
 }
 
-},{}],12:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 // Generated automatically by nearley, version 2.20.1
 // http://github.com/Hardmath123/nearley
 (function () {
@@ -991,7 +1017,7 @@ if (typeof module !== 'undefined'&& typeof module.exports !== 'undefined') {
 }
 })();
 
-},{"moo":13}],13:[function(require,module,exports){
+},{"moo":14}],14:[function(require,module,exports){
 (function(root, factory) {
   if (typeof define === 'function' && define.amd) {
     define([], factory) /* global define */
@@ -1635,7 +1661,7 @@ if (typeof module !== 'undefined'&& typeof module.exports !== 'undefined') {
 
 }));
 
-},{}],14:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 (function(root, factory) {
     if (typeof module === 'object' && module.exports) {
         module.exports = factory();
@@ -2201,7 +2227,7 @@ if (typeof module !== 'undefined'&& typeof module.exports !== 'undefined') {
 
 }));
 
-},{}],15:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -2387,7 +2413,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],16:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 (function (process){(function (){
 /**
  * @license React
@@ -7342,7 +7368,7 @@ if(/^(https?|file):$/.test(protocol)){// eslint-disable-next-line react-internal
 console.info('%cDownload the React DevTools '+'for a better development experience: '+'https://reactjs.org/link/react-devtools'+(protocol==='file:'?'\nYou might need to use a local HTTP server (instead of file://): '+'https://reactjs.org/link/react-devtools-faq':''),'font-weight:bold');}}}}exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED=Internals;exports.createPortal=createPortal$1;exports.createRoot=createRoot$1;exports.findDOMNode=findDOMNode;exports.flushSync=flushSync$1;exports.hydrate=hydrate;exports.hydrateRoot=hydrateRoot$1;exports.render=render;exports.unmountComponentAtNode=unmountComponentAtNode;exports.unstable_batchedUpdates=batchedUpdates$1;exports.unstable_renderSubtreeIntoContainer=renderSubtreeIntoContainer;exports.version=ReactVersion;/* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */if(typeof __REACT_DEVTOOLS_GLOBAL_HOOK__!=='undefined'&&typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop==='function'){__REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop(new Error());}})();}
 
 }).call(this)}).call(this,require('_process'))
-},{"_process":15,"react":23,"scheduler":27}],17:[function(require,module,exports){
+},{"_process":16,"react":24,"scheduler":28}],18:[function(require,module,exports){
 /**
  * @license React
  * react-dom.production.min.js
@@ -7667,7 +7693,7 @@ exports.hydrateRoot=function(a,b,c){if(!ol(a))throw Error(p(405));var d=null!=c&
 e);return new nl(b)};exports.render=function(a,b,c){if(!pl(b))throw Error(p(200));return sl(null,a,b,!1,c)};exports.unmountComponentAtNode=function(a){if(!pl(a))throw Error(p(40));return a._reactRootContainer?(Sk(function(){sl(null,null,a,!1,function(){a._reactRootContainer=null;a[uf]=null})}),!0):!1};exports.unstable_batchedUpdates=Rk;
 exports.unstable_renderSubtreeIntoContainer=function(a,b,c,d){if(!pl(c))throw Error(p(200));if(null==a||void 0===a._reactInternals)throw Error(p(38));return sl(a,b,c,!1,d)};exports.version="18.2.0-next-9e3b772b8-20220608";
 
-},{"react":23,"scheduler":27}],18:[function(require,module,exports){
+},{"react":24,"scheduler":28}],19:[function(require,module,exports){
 (function (process){(function (){
 'use strict';
 
@@ -7709,7 +7735,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 }).call(this)}).call(this,require('_process'))
-},{"./cjs/react-dom.development.js":16,"./cjs/react-dom.production.min.js":17,"_process":15}],19:[function(require,module,exports){
+},{"./cjs/react-dom.development.js":17,"./cjs/react-dom.production.min.js":18,"_process":16}],20:[function(require,module,exports){
 (function (process){(function (){
 /**
  * @license React
@@ -8825,7 +8851,7 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 }).call(this)}).call(this,require('_process'))
-},{"_process":15,"react":23}],20:[function(require,module,exports){
+},{"_process":16,"react":24}],21:[function(require,module,exports){
 /**
  * @license React
  * react-jsx-dev-runtime.production.min.js
@@ -8837,7 +8863,7 @@ if (process.env.NODE_ENV !== "production") {
  */
 'use strict';var a=Symbol.for("react.fragment");exports.Fragment=a;exports.jsxDEV=void 0;
 
-},{}],21:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 (function (process){(function (){
 /**
  * @license React
@@ -11237,7 +11263,7 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 }).call(this)}).call(this,require('_process'))
-},{"_process":15}],22:[function(require,module,exports){
+},{"_process":16}],23:[function(require,module,exports){
 /**
  * @license React
  * react.production.min.js
@@ -11265,7 +11291,7 @@ exports.useCallback=function(a,b){return U.current.useCallback(a,b)};exports.use
 exports.useInsertionEffect=function(a,b){return U.current.useInsertionEffect(a,b)};exports.useLayoutEffect=function(a,b){return U.current.useLayoutEffect(a,b)};exports.useMemo=function(a,b){return U.current.useMemo(a,b)};exports.useReducer=function(a,b,e){return U.current.useReducer(a,b,e)};exports.useRef=function(a){return U.current.useRef(a)};exports.useState=function(a){return U.current.useState(a)};exports.useSyncExternalStore=function(a,b,e){return U.current.useSyncExternalStore(a,b,e)};
 exports.useTransition=function(){return U.current.useTransition()};exports.version="18.2.0";
 
-},{}],23:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 (function (process){(function (){
 'use strict';
 
@@ -11276,7 +11302,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 }).call(this)}).call(this,require('_process'))
-},{"./cjs/react.development.js":21,"./cjs/react.production.min.js":22,"_process":15}],24:[function(require,module,exports){
+},{"./cjs/react.development.js":22,"./cjs/react.production.min.js":23,"_process":16}],25:[function(require,module,exports){
 (function (process){(function (){
 'use strict';
 
@@ -11287,7 +11313,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 }).call(this)}).call(this,require('_process'))
-},{"./cjs/react-jsx-dev-runtime.development.js":19,"./cjs/react-jsx-dev-runtime.production.min.js":20,"_process":15}],25:[function(require,module,exports){
+},{"./cjs/react-jsx-dev-runtime.development.js":20,"./cjs/react-jsx-dev-runtime.production.min.js":21,"_process":16}],26:[function(require,module,exports){
 (function (process,setImmediate){(function (){
 /**
  * @license React
@@ -11925,7 +11951,7 @@ if (
 }
 
 }).call(this)}).call(this,require('_process'),require("timers").setImmediate)
-},{"_process":15,"timers":28}],26:[function(require,module,exports){
+},{"_process":16,"timers":29}],27:[function(require,module,exports){
 (function (setImmediate){(function (){
 /**
  * @license React
@@ -11948,7 +11974,7 @@ exports.unstable_scheduleCallback=function(a,b,c){var d=exports.unstable_now();"
 exports.unstable_shouldYield=M;exports.unstable_wrapCallback=function(a){var b=y;return function(){var c=y;y=b;try{return a.apply(this,arguments)}finally{y=c}}};
 
 }).call(this)}).call(this,require("timers").setImmediate)
-},{"timers":28}],27:[function(require,module,exports){
+},{"timers":29}],28:[function(require,module,exports){
 (function (process){(function (){
 'use strict';
 
@@ -11959,7 +11985,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 }).call(this)}).call(this,require('_process'))
-},{"./cjs/scheduler.development.js":25,"./cjs/scheduler.production.min.js":26,"_process":15}],28:[function(require,module,exports){
+},{"./cjs/scheduler.development.js":26,"./cjs/scheduler.production.min.js":27,"_process":16}],29:[function(require,module,exports){
 (function (setImmediate,clearImmediate){(function (){
 var nextTick = require('process/browser.js').nextTick;
 var apply = Function.prototype.apply;
@@ -12038,4 +12064,4 @@ exports.clearImmediate = typeof clearImmediate === "function" ? clearImmediate :
   delete immediateIds[id];
 };
 }).call(this)}).call(this,require("timers").setImmediate,require("timers").clearImmediate)
-},{"process/browser.js":15,"timers":28}]},{},[2]);
+},{"process/browser.js":16,"timers":29}]},{},[2]);
