@@ -1,0 +1,33 @@
+.SyntaxErrorHandler {
+  color: #E22;
+}
+
+.DebugConsole {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+
+  >div {
+    display: flex;
+    flex-direction: column;
+    width: 50vw;
+    height: 80vh;
+    overflow: auto;
+    background-color: #EEE;
+    box-shadow: 0 2px 4px #000;
+
+    >pre {
+      flex: 1;
+      padding: 4px;
+      color: #EEE;
+      background-color: #111;
+    }
+  }
+
+  >button {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 120px;
+  }
+}

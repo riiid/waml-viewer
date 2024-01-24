@@ -18,10 +18,11 @@
   },
   "scripts": {
     "watch": "tsc -w",
-    "build:test": "tsc --jsx react-jsxdev && browserify dist/test.js -p esmify -o test/index.js"
+    "build": "tsc",
+    "build:test": "tsc --jsx react-jsxdev --outDir test/dist && browserify test/dist/test.js -p esmify -o test/index.js"
   },
   "dependencies": {
-    "@riiid/waml": "github:riiid/waml#d3fb14896ae53d39962af051ec69b90e0b9e1cb8"
+    "@riiid/waml": "github:riiid/waml#1226d751e7bd2b6b91d9491ecfc97374bd5dec7e"
   },
   "peerDependencies": {
     "react": "^18.2.0"

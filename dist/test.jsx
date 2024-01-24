@@ -11,7 +11,7 @@ const TestPage = () => {
     const handleChange = (0, react_1.useCallback)(e => setWAML(e.currentTarget.value), []);
     return <>
     <textarea value={waml} onChange={handleChange}/>
-    <_1.default waml={waml}/>
+    <_1.default waml={waml} options={{ debug: true, explanationWrapper: document.head }}/>
   </>;
 };
 react_dom_1.default.render(<TestPage />, document.querySelector("#stage"));

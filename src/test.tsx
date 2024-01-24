@@ -13,7 +13,7 @@ const TestPage:FC = () => {
 
   return <>
     <textarea value={waml} onChange={handleChange} />
-    <WAMLViewer waml={waml} />
+    <WAMLViewer waml={waml} options={{ debug: true, explanationWrapper: document.head }} />
   </>;
 };
 ReactDOM.render(<TestPage />, document.querySelector("#stage"));
