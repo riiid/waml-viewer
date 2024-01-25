@@ -10,6 +10,7 @@ import type { WAMLViewerOptions } from "./types";
 import ScopedStyle from "./components/scoped-style";
 import DebugConsole from "./components/debug-console";
 import Document from "./components/document";
+import BuiltinStyle from "./components/builtin-style";
 
 const EMPTY_OPTIONS:WAMLViewerOptions = {};
 
@@ -50,12 +51,14 @@ const WAMLViewer:FC<WAMLViewerProps> = ({ waml, options = EMPTY_OPTIONS, ...prop
 
   if('error' in document){
     return <article {...props}>
+      <BuiltinStyle />
       <WAMLProvider document={document} options={options}>
         <SyntaxErrorHandler node={document} />
       </WAMLProvider>
     </article>;
   }
   return <article {...props}>
+    <BuiltinStyle />
     <WAMLProvider document={document} options={options}>
       {styles.map((v, i) => (
         <ScopedStyle key={i}>{v}</ScopedStyle>

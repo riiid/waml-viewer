@@ -7,7 +7,9 @@
     "outDir": "dist",
 
     "jsx": "preserve",
-    "declaration": true
+    "declaration": true,
+
+    "noUncheckedIndexedAccess": false
   },
   "include": [ "**/*.ts", "**/*.tsx" ],
   "exclude": [ "dist", "test/dist", "node_modules" ]

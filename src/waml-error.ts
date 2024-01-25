@@ -6,3 +6,4 @@ export default class WAMLError extends Error{
     this.node = node;
   }
 }
+export const NOT_YET_IMPLEMENTED = new WAMLError("Not yet implemented");

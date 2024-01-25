@@ -1,5 +1,18 @@
-.SyntaxErrorHandler {
-  color: #E22;
+.Box {
+  padding: 4px;
+  border: 1px solid #CCC;
+}
+
+.ChoiceOption {
+  font-weight: bold;
+}
+
+.ChoiceOption>i {
+  padding: 0 4px;
+  border: 1px solid #CCC;
+  border-radius: 50%;
+  margin-right: 4px;
+  font-style: normal;
 }
 
 .DebugConsole {
@@ -30,4 +43,31 @@
     bottom: 0;
     width: 120px;
   }
+}
+
+.FigureTitle {
+  font-weight: bold;
+  text-align: center;
+}
+
+.FigureCaption {
+  font-style: italic;
+  font-size: small;
+  text-align: right;
+  opacity: 0.5;
+}
+
+.Line[data-anchored] {
+  display: grid;
+  grid-template-columns: 1fr auto;
+}
+
+.Question {
+  padding: 4px;
+  font-weight: bold;
+  background-color: #EEE;
+}
+
+.SyntaxErrorHandler {
+  color: #E22;
 }

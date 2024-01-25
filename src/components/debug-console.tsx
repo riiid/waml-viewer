@@ -13,7 +13,7 @@ const DebugConsole:FC<Props> = ({ document }) => {
       <pre>{JSON.stringify(document.raw, null, 2)}</pre>
     </div>}
     <button onClick={() => setOpened(!opened)}>
-      {opened ? "닫기" : "WAML 콘솔 열기"}
+      {opened ? "Close" : "Open console"}
     </button>
   </div>;
 };

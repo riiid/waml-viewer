@@ -19,6 +19,7 @@ const waml_1 = require("@riiid/waml");
 const componentify_1 = __importDefault(require("../componentify"));
 const waml_error_1 = __importDefault(require("../waml-error"));
 const semantic_error_handler_1 = __importDefault(require("./semantic-error-handler"));
+const isoprefixed_line_group_renderer_1 = __importDefault(require("./isoprefixed-line-group-renderer"));
 const Document = (_a) => {
     var { node } = _a, props = __rest(_a, ["node"]);
     const lines = (0, react_1.useMemo)(() => {
@@ -38,7 +39,7 @@ const Document = (_a) => {
     }, [node]);
     return <WAMLErrorBoundary document={node}>
     <section {...props}>
-      {JSON.stringify(lines, null, 2)}
+      <isoprefixed_line_group_renderer_1.default lines={lines}/>
     </section>
   </WAMLErrorBoundary>;
 };

@@ -8,6 +8,9 @@ type Context = {
         [key in keyof WAMLViewerOptions as FirstLetterOf<key> extends Lowercase<FirstLetterOf<key>> ? key : never]: WAMLViewerOptions[key];
     };
     'getComponentOptions': <T extends WAMLComponentType>(type: T) => WAMLViewerOptions[T];
+    'renderingVariables': {
+        'pendingClasses': string[];
+    };
 };
 type Props = {
     'document': WAMLDocument | WAML.ParserError;

@@ -22,7 +22,8 @@
     "build:test": "tsc --jsx react-jsxdev --outDir test/dist && browserify test/dist/test.js -p esmify -o test/index.js"
   },
   "dependencies": {
-    "@riiid/waml": "github:riiid/waml#1226d751e7bd2b6b91d9491ecfc97374bd5dec7e"
+    "@riiid/waml": "github:riiid/waml#cc9b11abdb4c2049ceaf96253e6a74f16f46ed1e",
+    "react-latex-next": "^2.2.0"
   },
   "peerDependencies": {
     "react": "^18.2.0"

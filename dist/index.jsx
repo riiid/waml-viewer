@@ -23,6 +23,7 @@ const syntax_error_handler_1 = __importDefault(require("./components/syntax-erro
 const scoped_style_1 = __importDefault(require("./components/scoped-style"));
 const debug_console_1 = __importDefault(require("./components/debug-console"));
 const document_1 = __importDefault(require("./components/document"));
+const builtin_style_1 = __importDefault(require("./components/builtin-style"));
 const EMPTY_OPTIONS = {};
 const WAMLViewer = (_a) => {
     var { waml, options = EMPTY_OPTIONS } = _a, props = __rest(_a, ["waml", "options"]);
@@ -62,12 +63,14 @@ const WAMLViewer = (_a) => {
     }, [document]);
     if ('error' in document) {
         return <article {...props}>
+      <builtin_style_1.default />
       <use_waml_1.WAMLProvider document={document} options={options}>
         <syntax_error_handler_1.default node={document}/>
       </use_waml_1.WAMLProvider>
     </article>;
     }
     return <article {...props}>
+    <builtin_style_1.default />
     <use_waml_1.WAMLProvider document={document} options={options}>
       {styles.map((v, i) => (<scoped_style_1.default key={i}>{v}</scoped_style_1.default>))}
       <document_1.default node={document.raw}/>

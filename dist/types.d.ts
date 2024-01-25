@@ -1,10 +1,37 @@
 import type { WAML } from "@riiid/waml";
 import type { FC, HTMLAttributes, ReactNode } from "react";
 import type WAMLError from "./waml-error";
+type Include<T, U> = T extends U ? T : never;
 type WAMLComponentMap = {
-    'SyntaxErrorHandler': WAML.ParserError;
-    'SemanticErrorHandler': WAMLError;
+    'Anchor': WAML.Anchor;
+    'ChoiceOption': WAML.ChoiceOption;
+    'ChoiceOptionLine': Include<WAML.LineComponent, {
+        kind: "LineComponent";
+    }>;
     'Document': WAML.Document;
+    'FigureCaption': WAML.FigureAddon;
+    'FigureTitle': WAML.FigureAddon;
+    'Inline': WAML.Inline;
+    'Line': WAML.Line;
+    'LineComponent': WAML.LineComponent;
+    'PrefixedLine': WAML.Line[];
+    'SemanticErrorHandler': WAMLError;
+    'ShortLingualOption': WAML.ShortLingualOption;
+    'SyntaxErrorHandler': WAML.ParserError;
+};
+type WAMLComponentAdditionalPropsMap = {
+    [key in keyof WAMLComponentMap]: unknown;
+} & {
+    'Line': {
+        next?: WAML.Line;
+    };
+    'PrefixedLine': {
+        'type': "Question" | "Quotation" | "Indentation";
+        'depth': number;
+    };
+    'ShortLingualOption': {
+        inline: boolean;
+    };
 };
 type WAMLComponentPropsBase = Omit<HTMLAttributes<HTMLElement>, 'children'>;
 export type FCWithChildren<T = {}> = FC<T & {
@@ -18,12 +45,12 @@ export type WAMLViewerOptions = {
 } & {
     [key in WAMLComponentType]?: WAMLComponentPropsBase | FCWithChildren<{
         node: WAMLComponentMap[key];
-    }>;
+    } & WAMLComponentAdditionalPropsMap[key]>;
 };
 export interface WAMLComponent<T extends WAMLComponentType> extends FC<WAMLComponentProps<T>> {
     displayName: T;
 }
-export interface WAMLComponentProps<T extends WAMLComponentType> extends WAMLComponentPropsBase {
+export type WAMLComponentProps<T extends WAMLComponentType> = WAMLComponentPropsBase & WAMLComponentAdditionalPropsMap[T] & {
     node: WAMLComponentMap[T];
-}
+};
 export {};

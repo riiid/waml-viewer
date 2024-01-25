@@ -6,6 +6,7 @@ import componentify from "../componentify";
 import type { WAMLComponent } from "../types";
 import WAMLError from "../waml-error";
 import SemanticErrorHandler from "./semantic-error-handler";
+import IsoprefixedLineGroupRenderer from "./isoprefixed-line-group-renderer";
 
 const Document:WAMLComponent<'Document'> = ({ node, ...props }) => {
   const lines = useMemo(() => {
@@ -24,7 +25,7 @@ const Document:WAMLComponent<'Document'> = ({ node, ...props }) => {
 
   return <WAMLErrorBoundary document={node}>
     <section {...props}>
-      {JSON.stringify(lines, null, 2)}
+      <IsoprefixedLineGroupRenderer lines={lines} />
     </section>
   </WAMLErrorBoundary>;
 };

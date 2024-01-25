@@ -14,15 +14,16 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const react_1 = require("react");
+const react_2 = require("./react");
 const use_waml_1 = __importDefault(require("./use-waml"));
-const react_1 = require("./react");
 function componentify(Component) {
     const R = (_a) => {
         var { node } = _a, props = __rest(_a, ["node"]);
         const { commonOptions, getComponentOptions } = (0, use_waml_1.default)();
         const componentOptions = getComponentOptions(Component.displayName);
         if (!commonOptions.noDefaultClassName) {
-            props.className = (0, react_1.C)(Component.displayName, props.className);
+            Object.assign(props, { className: (0, react_2.C)(Component.displayName, props.className) });
         }
         if (typeof componentOptions === "function") {
             const children = Component(Object.assign({ node }, props));
@@ -34,6 +35,6 @@ function componentify(Component) {
         return <Component node={node} {...props} {...componentOptions}/>;
     };
     R.displayName = Component.displayName;
-    return R;
+    return Object.assign((0, react_1.memo)(R), { displayName: R.displayName });
 }
 exports.default = componentify;

@@ -5,6 +5,8 @@ import WAMLViewer from ".";
 
 const TestPage:FC = () => {
   const [ waml, setWAML ] = useState("Hello, World!");
+  // eslint-disable-next-line @jjoriping/variable-name
+  const [ explanationWrapper, setExplanationWrapper ] = useState<HTMLElement|null>(null);
 
   const handleChange = useCallback<ChangeEventHandler<HTMLTextAreaElement>>(
     e => setWAML(e.currentTarget.value),
@@ -13,7 +15,8 @@ const TestPage:FC = () => {
 
   return <>
     <textarea value={waml} onChange={handleChange} />
-    <WAMLViewer waml={waml} options={{ debug: true, explanationWrapper: document.head }} />
+    {explanationWrapper && <WAMLViewer key={waml} waml={waml} options={{ debug: true, explanationWrapper }} />}
+    <aside ref={setExplanationWrapper} />
   </>;
 };
 ReactDOM.render(<TestPage />, document.querySelector("#stage"));
