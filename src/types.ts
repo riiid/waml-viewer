@@ -6,18 +6,26 @@ import type WAMLError from "./waml-error";
 type Include<T, U> = T extends U ? T : never;
 type WAMLComponentMap = {
   'Anchor': WAML.Anchor,
+  'Audio': WAML.MooToken<'medium'>,
+  'ButtonBlank': WAML.MooToken<'buttonBlank'>,
+  'ButtonOption': WAML.ButtonOption,
   'ChoiceOption': WAML.ChoiceOption,
   'ChoiceOptionLine': Include<WAML.LineComponent, { kind: "LineComponent" }>,
   'Document': WAML.Document,
   'FigureCaption': WAML.FigureAddon,
   'FigureTitle': WAML.FigureAddon,
+  'HR': WAML.MooToken<'hr'>,
+  'Image': WAML.MooToken<'medium'>,
   'Inline': WAML.Inline,
   'Line': WAML.Line,
   'LineComponent': WAML.LineComponent,
+  'LongLingualOption': WAML.MooToken<'longLingualOption'>,
   'PrefixedLine': WAML.Line[],
   'SemanticErrorHandler': WAMLError,
   'ShortLingualOption': WAML.ShortLingualOption,
-  'SyntaxErrorHandler': WAML.ParserError
+  'SyntaxErrorHandler': WAML.ParserError,
+  'Table': WAML.LineXMLElement&{ tag: "table" },
+  'Video': WAML.MooToken<'medium'>
 };
 type WAMLComponentAdditionalPropsMap = {
   [key in keyof WAMLComponentMap]: unknown
@@ -35,6 +43,7 @@ export type FCWithChildren<T = {}> = FC<T&{ children: ReactNode }>;
 // eslint-disable-next-line @jjoriping/no-type-name-affix
 export type WAMLComponentType = keyof WAMLComponentMap;
 export type WAMLViewerOptions = {
+  'uriResolver'?: (uri:string) => string,
   'noDefaultClassName'?: boolean,
   'explanationWrapper'?: Element,
   'debug'?: boolean
@@ -50,3 +59,4 @@ export interface WAMLComponent<T extends WAMLComponentType> extends FC<WAMLCompo
 export type WAMLComponentProps<T extends WAMLComponentType> = WAMLComponentPropsBase&WAMLComponentAdditionalPropsMap[T]&{
   node: WAMLComponentMap[T]
 };
+export type ASTMiddleware = (documemt:WAML.Document, metadata:WAML.Metadata) => boolean;

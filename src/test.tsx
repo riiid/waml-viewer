@@ -15,7 +15,11 @@ const TestPage:FC = () => {
 
   return <>
     <textarea value={waml} onChange={handleChange} />
-    {explanationWrapper && <WAMLViewer key={waml} waml={waml} options={{ debug: true, explanationWrapper }} />}
+    {explanationWrapper && <WAMLViewer
+      key={waml}
+      waml={waml}
+      options={{ debug: true, explanationWrapper }}
+    />}
     <aside ref={setExplanationWrapper} />
   </>;
 };

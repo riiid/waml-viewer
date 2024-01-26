@@ -24,17 +24,21 @@ const scoped_style_1 = __importDefault(require("./components/scoped-style"));
 const debug_console_1 = __importDefault(require("./components/debug-console"));
 const document_1 = __importDefault(require("./components/document"));
 const builtin_style_1 = __importDefault(require("./components/builtin-style"));
-const EMPTY_OPTIONS = {};
+const defaultOptions = {};
+const defaultMiddlewares = [];
 const WAMLViewer = (_a) => {
-    var { waml, options = EMPTY_OPTIONS } = _a, props = __rest(_a, ["waml", "options"]);
+    var { waml, middlewares = defaultMiddlewares, options = defaultOptions } = _a, props = __rest(_a, ["waml", "middlewares", "options"]);
     const document = (0, react_1.useMemo)(() => {
         try {
-            return new waml_2.WAMLDocument(waml);
+            const R = new waml_2.WAMLDocument(waml);
+            for (const v of middlewares)
+                v(R.raw, R.metadata);
+            return R;
         }
         catch (error) {
             return (0, waml_2.parseWAML)(waml);
         }
-    }, [waml]);
+    }, [middlewares, waml]);
     const $explanations = (0, react_1.useMemo)(() => {
         if ('error' in document)
             return [];

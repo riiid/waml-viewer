@@ -15,6 +15,7 @@ const WAMLProvider = ({ document, options, children }) => {
             noDefaultClassName: options.noDefaultClassName || false
         },
         getComponentOptions: type => options[type],
+        getURL: options.uriResolver || (uri => uri),
         renderingVariables: $renderingVariables.current
     }), [document, options]);
     return <context.Provider value={value}>

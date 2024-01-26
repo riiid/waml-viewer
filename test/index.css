@@ -3,6 +3,15 @@
   border: 1px solid #CCC;
 }
 
+.ButtonBlank {
+  display: inline-block;
+  width: 80px;
+  height: 1em;
+  padding: 2px;
+  border-bottom: 1px solid #666;
+  background-color: #EEE;
+}
+
 .ChoiceOption {
   font-weight: bold;
 }
@@ -57,9 +66,28 @@
   opacity: 0.5;
 }
 
+.Image,
+.Audio,
+.Video {
+  max-width: 100%;
+}
+
+.Indentation {
+  padding-left: 16px;
+}
+
+.Line:empty {
+  height: 1em;
+}
+
 .Line[data-anchored] {
   display: grid;
   grid-template-columns: 1fr auto;
+}
+
+.LongLingualOption {
+  width: 100%;
+  height: 100px;
 }
 
 .Question {
@@ -68,6 +96,27 @@
   background-color: #EEE;
 }
 
+.Quotation {
+  padding-left: 4px;
+  border-left: 4px solid #CCC;
+}
+
 .SyntaxErrorHandler {
   color: #E22;
+}
+
+.Table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.Table th {
+  padding: 2px;
+  border: 1px solid #CCC;
+  background-color: #EEE;
+}
+
+.Table td {
+  padding: 2px;
+  border: 1px solid #CCC;
 }

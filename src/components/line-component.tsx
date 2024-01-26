@@ -3,23 +3,25 @@ import Latex from "react-latex-next";
 import componentify from "../componentify";
 import type { WAMLComponent } from "../types";
 import useWAML from "../use-waml";
-import { NOT_YET_IMPLEMENTED } from "../waml-error";
 import Inline from "./inline";
 import Anchor from "./anchor";
 import FigureTitle from "./figure-title";
 import FigureCaption from "./figure-caption";
 import ChoiceOptionLine from "./choice-option-line";
 import ShortLingualOption from "./short-lingual-option";
+import Table from "./table";
+import LongLingualOption from "./long-lingual-option";
+import HR from "./hr";
 
 const LineComponent:WAMLComponent<'LineComponent'> = ({ node, ...props }) => {
   const { renderingVariables } = useWAML();
 
-  if(node === null) return <div typeof="empty-line" />;
+  if(node === null) return null;
   if(isMooToken(node, 'longLingualOption')){
-    throw NOT_YET_IMPLEMENTED;
+    return <LongLingualOption node={node} />;
   }
   if(isMooToken(node, 'hr')){
-    return <hr />;
+    return <HR node={node} />;
   }
   switch(node.kind){
     case "LineComponent": {
@@ -45,7 +47,7 @@ const LineComponent:WAMLComponent<'LineComponent'> = ({ node, ...props }) => {
     case "XMLElement":
       switch(node.tag){
         case "table":
-          throw NOT_YET_IMPLEMENTED;
+          return <Table node={node} />;
       }
     case "Directive":
       switch(node.name){

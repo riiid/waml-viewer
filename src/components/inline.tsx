@@ -2,19 +2,28 @@ import { isMooToken } from "@riiid/waml";
 import Latex from "react-latex-next";
 import componentify from "../componentify";
 import type { WAMLComponent } from "../types";
-import { NOT_YET_IMPLEMENTED } from "../waml-error";
 import ChoiceOption from "./choice-option";
 import ShortLingualOption from "./short-lingual-option";
+import ButtonBlank from "./button-blank";
+import Image from "./image";
+import Video from "./video";
+import Audio from "./audio";
+import ButtonOption from "./button-option";
 
 const Inline:WAMLComponent<'Inline'> = ({ node }) => {
   if(typeof node === "string"){
     return node;
   }
   if(isMooToken(node, 'buttonBlank')){
-    throw NOT_YET_IMPLEMENTED;
+    return <ButtonBlank node={node} />;
   }
   if(isMooToken(node, 'medium')){
-    throw NOT_YET_IMPLEMENTED;
+    switch(node.value.type){
+      case "image": return <Image node={node} />;
+      case "audio": return <Audio node={node} />;
+      case "video": return <Video node={node} />;
+      default: throw Error(`Unhandled medium type: ${node.value.type}`);
+    }
   }
   switch(node.kind){
     case "StyledInline": {
@@ -36,7 +45,7 @@ const Inline:WAMLComponent<'Inline'> = ({ node }) => {
     case "ChoiceOption":
       return <ChoiceOption node={node} />;
     case "ButtonOption":
-      throw NOT_YET_IMPLEMENTED;
+      return <ButtonOption node={node} />;
     case "ShortLingualOption":
       return <ShortLingualOption node={node} inline />;
     case "ClassedInline":

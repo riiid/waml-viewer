@@ -18,23 +18,25 @@ const waml_1 = require("@riiid/waml");
 const react_latex_next_1 = __importDefault(require("react-latex-next"));
 const componentify_1 = __importDefault(require("../componentify"));
 const use_waml_1 = __importDefault(require("../use-waml"));
-const waml_error_1 = require("../waml-error");
 const inline_1 = __importDefault(require("./inline"));
 const anchor_1 = __importDefault(require("./anchor"));
 const figure_title_1 = __importDefault(require("./figure-title"));
 const figure_caption_1 = __importDefault(require("./figure-caption"));
 const choice_option_line_1 = __importDefault(require("./choice-option-line"));
 const short_lingual_option_1 = __importDefault(require("./short-lingual-option"));
+const table_1 = __importDefault(require("./table"));
+const long_lingual_option_1 = __importDefault(require("./long-lingual-option"));
+const hr_1 = __importDefault(require("./hr"));
 const LineComponent = (_a) => {
     var { node } = _a, props = __rest(_a, ["node"]);
     const { renderingVariables } = (0, use_waml_1.default)();
     if (node === null)
-        return <div typeof="empty-line"/>;
+        return null;
     if ((0, waml_1.isMooToken)(node, 'longLingualOption')) {
-        throw waml_error_1.NOT_YET_IMPLEMENTED;
+        return <long_lingual_option_1.default node={node}/>;
     }
     if ((0, waml_1.isMooToken)(node, 'hr')) {
-        return <hr />;
+        return <hr_1.default node={node}/>;
     }
     switch (node.kind) {
         case "LineComponent": {
@@ -59,7 +61,7 @@ const LineComponent = (_a) => {
         case "XMLElement":
             switch (node.tag) {
                 case "table":
-                    throw waml_error_1.NOT_YET_IMPLEMENTED;
+                    return <table_1.default node={node}/>;
             }
         case "Directive":
             switch (node.name) {

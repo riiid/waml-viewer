@@ -16,6 +16,7 @@ type Context = {
     [key in keyof WAMLViewerOptions as FirstLetterOf<key> extends Lowercase<FirstLetterOf<key>> ? key : never]: WAMLViewerOptions[key]
   },
   'getComponentOptions': <T extends WAMLComponentType>(type:T) => WAMLViewerOptions[T],
+  'getURL': (uri:string) => string,
 
   'renderingVariables': {
     'pendingClasses': string[]
@@ -41,6 +42,7 @@ export const WAMLProvider:FCWithChildren<Props> = ({ document, options, children
       noDefaultClassName: options.noDefaultClassName || false
     },
     getComponentOptions: type => options[type],
+    getURL: options.uriResolver || (uri => uri),
 
     renderingVariables: $renderingVariables.current
   }), [ document, options ]);

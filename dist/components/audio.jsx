@@ -15,15 +15,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const componentify_1 = __importDefault(require("../componentify"));
-const react_1 = require("../react");
 const use_waml_1 = __importDefault(require("../use-waml"));
-const isoprefixed_line_group_renderer_1 = __importDefault(require("./isoprefixed-line-group-renderer"));
-const Question = (_a) => {
-    var { node, depth, className } = _a, props = __rest(_a, ["node", "depth", "className"]);
-    const { renderingVariables } = (0, use_waml_1.default)();
-    return (<div className={(0, react_1.C)(className, renderingVariables.pendingClasses.pop())} {...props}>
-      <isoprefixed_line_group_renderer_1.default depth={depth} lines={node}/>
-    </div>);
+const Audio = (_a) => {
+    var { node } = _a, props = __rest(_a, ["node"]);
+    const { getURL } = (0, use_waml_1.default)();
+    return <audio title={node.value.alt} src={getURL(node.value.uri)} controls {...props}/>;
 };
-Question.displayName = "Question";
-exports.default = (0, componentify_1.default)(Question);
+Audio.displayName = "Audio";
+exports.default = (0, componentify_1.default)(Audio);

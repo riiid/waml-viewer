@@ -6,26 +6,36 @@ import { useMemo } from "react";
 import { createPortal } from "react-dom";
 import { WAMLProvider } from "./use-waml";
 import SyntaxErrorHandler from "./components/syntax-error-handler";
-import type { WAMLViewerOptions } from "./types";
+import type { ASTMiddleware, WAMLViewerOptions } from "./types";
 import ScopedStyle from "./components/scoped-style";
 import DebugConsole from "./components/debug-console";
 import Document from "./components/document";
 import BuiltinStyle from "./components/builtin-style";
 
-const EMPTY_OPTIONS:WAMLViewerOptions = {};
+const defaultOptions:WAMLViewerOptions = {};
+const defaultMiddlewares:ASTMiddleware[] = [];
 
 export interface WAMLViewerProps extends Omit<HTMLAttributes<HTMLElement>, 'children'>{
   waml:string;
+  middlewares?:ASTMiddleware[];
   options?:WAMLViewerOptions;
 }
-const WAMLViewer:FC<WAMLViewerProps> = ({ waml, options = EMPTY_OPTIONS, ...props }) => {
+const WAMLViewer:FC<WAMLViewerProps> = ({
+  waml,
+  middlewares = defaultMiddlewares,
+  options = defaultOptions,
+  ...props
+}) => {
   const document = useMemo(() => {
     try{
-      return new WAMLDocument(waml);
+      const R = new WAMLDocument(waml);
+
+      for(const v of middlewares) v(R.raw, R.metadata);
+      return R;
     }catch(error){
       return parseWAML(waml) as WAML.ParserError;
     }
-  }, [ waml ]);
+  }, [ middlewares, waml ]);
   const $explanations = useMemo(() => {
     if('error' in document) return [];
     const R:ReactNode[] = [];

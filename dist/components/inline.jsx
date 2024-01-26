@@ -6,18 +6,27 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const waml_1 = require("@riiid/waml");
 const react_latex_next_1 = __importDefault(require("react-latex-next"));
 const componentify_1 = __importDefault(require("../componentify"));
-const waml_error_1 = require("../waml-error");
 const choice_option_1 = __importDefault(require("./choice-option"));
 const short_lingual_option_1 = __importDefault(require("./short-lingual-option"));
+const button_blank_1 = __importDefault(require("./button-blank"));
+const image_1 = __importDefault(require("./image"));
+const video_1 = __importDefault(require("./video"));
+const audio_1 = __importDefault(require("./audio"));
+const button_option_1 = __importDefault(require("./button-option"));
 const Inline = ({ node }) => {
     if (typeof node === "string") {
         return node;
     }
     if ((0, waml_1.isMooToken)(node, 'buttonBlank')) {
-        throw waml_error_1.NOT_YET_IMPLEMENTED;
+        return <button_blank_1.default node={node}/>;
     }
     if ((0, waml_1.isMooToken)(node, 'medium')) {
-        throw waml_error_1.NOT_YET_IMPLEMENTED;
+        switch (node.value.type) {
+            case "image": return <image_1.default node={node}/>;
+            case "audio": return <audio_1.default node={node}/>;
+            case "video": return <video_1.default node={node}/>;
+            default: throw Error(`Unhandled medium type: ${node.value.type}`);
+        }
     }
     switch (node.kind) {
         case "StyledInline": {
@@ -38,7 +47,7 @@ const Inline = ({ node }) => {
         case "ChoiceOption":
             return <choice_option_1.default node={node}/>;
         case "ButtonOption":
-            throw waml_error_1.NOT_YET_IMPLEMENTED;
+            return <button_option_1.default node={node}/>;
         case "ShortLingualOption":
             return <short_lingual_option_1.default node={node} inline/>;
         case "ClassedInline":

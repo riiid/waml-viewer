@@ -15,11 +15,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const componentify_1 = __importDefault(require("../componentify"));
-const inline_1 = __importDefault(require("./inline"));
-const FigureTitle = (_a) => {
+const use_waml_1 = __importDefault(require("../use-waml"));
+const Video = (_a) => {
     var { node } = _a, props = __rest(_a, ["node"]);
-    const children = node.inlines.map((v, i) => <inline_1.default key={i} node={v}/>);
-    return <em {...props}>{children}</em>;
+    const { getURL } = (0, use_waml_1.default)();
+    return <video title={node.value.alt} src={getURL(node.value.uri)} controls {...props}/>;
 };
-FigureTitle.displayName = "FigureTitle";
-exports.default = (0, componentify_1.default)(FigureTitle);
+Video.displayName = "Video";
+exports.default = (0, componentify_1.default)(Video);
