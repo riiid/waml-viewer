@@ -5,9 +5,10 @@ const react_1 = require("react");
 const context = (0, react_1.createContext)(null);
 const useWAML = () => (0, react_1.useContext)(context);
 exports.default = useWAML;
-const WAMLProvider = ({ document, options, children }) => {
+const WAMLProvider = ({ document, options, pairingGroups, children }) => {
     const $renderingVariables = (0, react_1.useRef)({
-        pendingClasses: []
+        pendingClasses: [],
+        pairingGroups
     });
     const value = (0, react_1.useMemo)(() => ({
         metadata: 'error' in document ? null : document.metadata,

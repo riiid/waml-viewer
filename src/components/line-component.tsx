@@ -9,14 +9,15 @@ import FigureTitle from "./figure-title";
 import FigureCaption from "./figure-caption";
 import ChoiceOptionLine from "./choice-option-line";
 import ShortLingualOption from "./short-lingual-option";
-import Table from "./table";
 import LongLingualOption from "./long-lingual-option";
 import HR from "./hr";
+import Passage from "./passage";
+import Footnote from "./footnote";
 
 const LineComponent:WAMLComponent<'LineComponent'> = ({ node, ...props }) => {
   const { renderingVariables } = useWAML();
 
-  if(node === null) return null;
+  if(node === null) return <br />;
   if(isMooToken(node, 'longLingualOption')){
     return <LongLingualOption node={node} />;
   }
@@ -44,21 +45,26 @@ const LineComponent:WAMLComponent<'LineComponent'> = ({ node, ...props }) => {
         case "caption":
           return <FigureCaption node={node} />;
       }
-    case "XMLElement":
-      switch(node.tag){
-        case "table":
-          return <Table node={node} />;
-      }
     case "Directive":
       switch(node.name){
         case "answer":
+        case "answertype":
           return null;
+        case "passage":
+          return <Passage node={node} />;
       }
-      break;
     case "Anchor":
       return <Anchor node={node} />;
     case "ShortLingualOption":
       return <ShortLingualOption node={node} inline={false} />;
+    case "Footnote":
+      return <Footnote node={node} />;
+    case "PairingOption": {
+      const $R = renderingVariables.pairingGroups[node.cell.value] || null;
+      if($R) delete renderingVariables.pairingGroups[node.cell.value];
+      return $R;
+    }
+    default:
   }
   throw Error(`Unhandled node: ${JSON.stringify(node)}`);
 };

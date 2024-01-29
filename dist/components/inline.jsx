@@ -13,6 +13,7 @@ const image_1 = __importDefault(require("./image"));
 const video_1 = __importDefault(require("./video"));
 const audio_1 = __importDefault(require("./audio"));
 const button_option_1 = __importDefault(require("./button-option"));
+const table_1 = __importDefault(require("./table"));
 const Inline = ({ node }) => {
     if (typeof node === "string") {
         return node;
@@ -42,6 +43,11 @@ const Inline = ({ node }) => {
                     return <s>{$inlines}</s>;
             }
         }
+        case "XMLElement":
+            switch (node.tag) {
+                case "table":
+                    return <table_1.default node={node}/>;
+            }
         case "Math":
             return <react_latex_next_1.default>{`$${node.content}$`}</react_latex_next_1.default>;
         case "ChoiceOption":
@@ -55,8 +61,8 @@ const Inline = ({ node }) => {
           {node.inlines.map((v, i) => (<Inline key={i} node={v}/>))}
         </span>);
         default:
-            throw Error(`Unhandled inline node: ${JSON.stringify(node)}`);
     }
+    throw Error(`Unhandled inline node: ${JSON.stringify(node)}`);
 };
 Inline.displayName = "Inline";
 exports.default = (0, componentify_1.default)(Inline);

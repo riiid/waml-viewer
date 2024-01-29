@@ -66,6 +66,11 @@
   opacity: 0.5;
 }
 
+.Footnote::before {
+  content: "*";
+  margin-right: 4px;
+}
+
 .Image,
 .Audio,
 .Video {
@@ -74,10 +79,6 @@
 
 .Indentation {
   padding-left: 16px;
-}
-
-.Line:empty {
-  height: 1em;
 }
 
 .Line[data-anchored] {
@@ -97,7 +98,7 @@
 }
 
 .Quotation {
-  padding-left: 4px;
+  padding-left: 8px;
   border-left: 4px solid #CCC;
 }
 
@@ -106,8 +107,9 @@
 }
 
 .Table {
-  width: 100%;
+  display: inline-table;
   border-collapse: collapse;
+  vertical-align: sub;
 }
 
 .Table th {

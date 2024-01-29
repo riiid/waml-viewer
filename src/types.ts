@@ -14,12 +14,16 @@ type WAMLComponentMap = {
   'Document': WAML.Document,
   'FigureCaption': WAML.FigureAddon,
   'FigureTitle': WAML.FigureAddon,
+  'Footnote': WAML.Footnote,
   'HR': WAML.MooToken<'hr'>,
   'Image': WAML.MooToken<'medium'>,
   'Inline': WAML.Inline,
   'Line': WAML.Line,
   'LineComponent': WAML.LineComponent,
   'LongLingualOption': WAML.MooToken<'longLingualOption'>,
+  'PairingOption': WAML.PairingOption,
+  'PairingOptionList': ReactNode[],
+  'Passage': WAML.Directive&{ name: "passage" },
   'PrefixedLine': WAML.Line[],
   'SemanticErrorHandler': WAMLError,
   'ShortLingualOption': WAML.ShortLingualOption,
@@ -31,6 +35,7 @@ type WAMLComponentAdditionalPropsMap = {
   [key in keyof WAMLComponentMap]: unknown
 }&{
   'Line': { next?: WAML.Line },
+  'Passage': { fallback?: ReactNode },
   'PrefixedLine': {
     'type': "Question"|"Quotation"|"Indentation",
     'depth': number

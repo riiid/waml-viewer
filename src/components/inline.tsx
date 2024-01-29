@@ -9,6 +9,7 @@ import Image from "./image";
 import Video from "./video";
 import Audio from "./audio";
 import ButtonOption from "./button-option";
+import Table from "./table";
 
 const Inline:WAMLComponent<'Inline'> = ({ node }) => {
   if(typeof node === "string"){
@@ -40,6 +41,11 @@ const Inline:WAMLComponent<'Inline'> = ({ node }) => {
           return <s>{$inlines}</s>;
       }
     }
+    case "XMLElement":
+      switch(node.tag){
+        case "table":
+          return <Table node={node} />;
+      }
     case "Math":
       return <Latex>{`$${node.content}$`}</Latex>;
     case "ChoiceOption":
@@ -57,8 +63,8 @@ const Inline:WAMLComponent<'Inline'> = ({ node }) => {
         </span>
       );
     default:
-      throw Error(`Unhandled inline node: ${JSON.stringify(node)}`);
   }
+  throw Error(`Unhandled inline node: ${JSON.stringify(node)}`);
 };
 Inline.displayName = "Inline";
 export default componentify(Inline);

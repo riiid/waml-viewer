@@ -4,17 +4,22 @@ import { hasKind } from "@riiid/waml";
 import componentify from "../componentify";
 import type { WAMLComponent } from "../types";
 import WAMLError from "../waml-error";
+import { C } from "../react";
 import Document from "./document";
 
 const columnsPattern = /^\d+(:\d+)*$/;
 
-const Table:WAMLComponent<'Table'> = ({ node, style, ...props }) => {
+const Table:WAMLComponent<'Table'> = ({ node, style, className, ...props }) => {
   const attributes = useMemo(() => {
     const css:CSSProperties = {};
+    let actualClassName = className;
     let columns:number[]|undefined;
 
     for(const { key, value } of node.attributes){
       switch(key){
+        case "class":
+          actualClassName = C(className, value);
+          break;
         case "columns":
           if(value === "fixed"){
             css.tableLayout = "fixed";
@@ -28,8 +33,8 @@ const Table:WAMLComponent<'Table'> = ({ node, style, ...props }) => {
           throw new WAMLError(`Unknown table attribute: ${key}`, node);
       }
     }
-    return { css, columns };
-  }, [ node ]);
+    return { css, className: actualClassName, columns };
+  }, [ className, node ]);
   const sumOfColumns = useMemo(
     () => attributes.columns?.reduce((pv, v) => pv + v, 0),
     [ attributes.columns ]
@@ -68,7 +73,7 @@ const Table:WAMLComponent<'Table'> = ({ node, style, ...props }) => {
   }, [ node.content ]);
 
   return (
-    <table style={{ ...attributes.css, ...style }} {...props}>
+    <table className={attributes.className} style={{ ...attributes.css, ...style }} {...props}>
       {attributes.columns && (
         <colgroup>
           {attributes.columns.map((v, i) => (

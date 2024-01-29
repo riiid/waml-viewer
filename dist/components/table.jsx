@@ -18,15 +18,20 @@ const react_1 = require("react");
 const waml_1 = require("@riiid/waml");
 const componentify_1 = __importDefault(require("../componentify"));
 const waml_error_1 = __importDefault(require("../waml-error"));
+const react_2 = require("../react");
 const document_1 = __importDefault(require("./document"));
 const columnsPattern = /^\d+(:\d+)*$/;
 const Table = (_a) => {
-    var { node, style } = _a, props = __rest(_a, ["node", "style"]);
+    var { node, style, className } = _a, props = __rest(_a, ["node", "style", "className"]);
     const attributes = (0, react_1.useMemo)(() => {
         const css = {};
+        let actualClassName = className;
         let columns;
         for (const { key, value } of node.attributes) {
             switch (key) {
+                case "class":
+                    actualClassName = (0, react_2.C)(className, value);
+                    break;
                 case "columns":
                     if (value === "fixed") {
                         css.tableLayout = "fixed";
@@ -42,8 +47,8 @@ const Table = (_a) => {
                     throw new waml_error_1.default(`Unknown table attribute: ${key}`, node);
             }
         }
-        return { css, columns };
-    }, [node]);
+        return { css, className: actualClassName, columns };
+    }, [className, node]);
     const sumOfColumns = (0, react_1.useMemo)(() => { var _a; return (_a = attributes.columns) === null || _a === void 0 ? void 0 : _a.reduce((pv, v) => pv + v, 0); }, [attributes.columns]);
     const $rows = (0, react_1.useMemo)(() => {
         const R = [];
@@ -76,7 +81,7 @@ const Table = (_a) => {
             R.push(<tr key={R.length}>{$cells}</tr>);
         return R;
     }, [node.content]);
-    return (<table style={Object.assign(Object.assign({}, attributes.css), style)} {...props}>
+    return (<table className={attributes.className} style={Object.assign(Object.assign({}, attributes.css), style)} {...props}>
       {attributes.columns && (<colgroup>
           {attributes.columns.map((v, i) => (<col key={i} width={`${(v / sumOfColumns) * 100}%`}/>))}
         </colgroup>)}

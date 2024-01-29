@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { WAML, WAMLDocument } from "@riiid/waml";
 import type { FCWithChildren, WAMLComponentType, WAMLViewerOptions } from "./types";
 type SplittedFormOf<T extends string> = T extends `${infer A}${infer B}` ? B extends "" ? [A] : [A, ...SplittedFormOf<B>] : [];
@@ -11,11 +12,13 @@ type Context = {
     'getURL': (uri: string) => string;
     'renderingVariables': {
         'pendingClasses': string[];
+        'pairingGroups': Props['pairingGroups'];
     };
 };
 type Props = {
     'document': WAMLDocument | WAML.ParserError;
     'options': WAMLViewerOptions;
+    'pairingGroups': Record<string, ReactNode>;
 };
 declare const useWAML: () => Context;
 export default useWAML;

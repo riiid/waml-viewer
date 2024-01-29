@@ -24,14 +24,15 @@ const figure_title_1 = __importDefault(require("./figure-title"));
 const figure_caption_1 = __importDefault(require("./figure-caption"));
 const choice_option_line_1 = __importDefault(require("./choice-option-line"));
 const short_lingual_option_1 = __importDefault(require("./short-lingual-option"));
-const table_1 = __importDefault(require("./table"));
 const long_lingual_option_1 = __importDefault(require("./long-lingual-option"));
 const hr_1 = __importDefault(require("./hr"));
+const passage_1 = __importDefault(require("./passage"));
+const footnote_1 = __importDefault(require("./footnote"));
 const LineComponent = (_a) => {
     var { node } = _a, props = __rest(_a, ["node"]);
     const { renderingVariables } = (0, use_waml_1.default)();
     if (node === null)
-        return null;
+        return <br />;
     if ((0, waml_1.isMooToken)(node, 'longLingualOption')) {
         return <long_lingual_option_1.default node={node}/>;
     }
@@ -58,21 +59,27 @@ const LineComponent = (_a) => {
                 case "caption":
                     return <figure_caption_1.default node={node}/>;
             }
-        case "XMLElement":
-            switch (node.tag) {
-                case "table":
-                    return <table_1.default node={node}/>;
-            }
         case "Directive":
             switch (node.name) {
                 case "answer":
+                case "answertype":
                     return null;
+                case "passage":
+                    return <passage_1.default node={node}/>;
             }
-            break;
         case "Anchor":
             return <anchor_1.default node={node}/>;
         case "ShortLingualOption":
             return <short_lingual_option_1.default node={node} inline={false}/>;
+        case "Footnote":
+            return <footnote_1.default node={node}/>;
+        case "PairingOption": {
+            const $R = renderingVariables.pairingGroups[node.cell.value] || null;
+            if ($R)
+                delete renderingVariables.pairingGroups[node.cell.value];
+            return $R;
+        }
+        default:
     }
     throw Error(`Unhandled node: ${JSON.stringify(node)}`);
 };
