@@ -22,6 +22,7 @@ const Table:WAMLComponent<'Table'> = ({ node, style, className, ...props }) => {
           break;
         case "columns":
           if(value === "fixed"){
+            css.width = "100%";
             css.tableLayout = "fixed";
           }else if(columnsPattern.test(value)){
             columns = value.split(':').map(w => parseInt(w));

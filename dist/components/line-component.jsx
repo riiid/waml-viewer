@@ -73,12 +73,6 @@ const LineComponent = (_a) => {
             return <short_lingual_option_1.default node={node} inline={false}/>;
         case "Footnote":
             return <footnote_1.default node={node}/>;
-        case "PairingOption": {
-            const $R = renderingVariables.pairingGroups[node.cell.value] || null;
-            if ($R)
-                delete renderingVariables.pairingGroups[node.cell.value];
-            return $R;
-        }
         default:
     }
     throw Error(`Unhandled node: ${JSON.stringify(node)}`);

@@ -24,6 +24,10 @@
   overflow: auto;
 }
 
+li {
+  list-style: none;
+}
+
 pre {
   margin: 0;
   white-space: pre-wrap;

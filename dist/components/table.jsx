@@ -34,6 +34,7 @@ const Table = (_a) => {
                     break;
                 case "columns":
                     if (value === "fixed") {
+                        css.width = "100%";
                         css.tableLayout = "fixed";
                     }
                     else if (columnsPattern.test(value)) {

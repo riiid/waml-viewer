@@ -14,6 +14,7 @@ const video_1 = __importDefault(require("./video"));
 const audio_1 = __importDefault(require("./audio"));
 const button_option_1 = __importDefault(require("./button-option"));
 const table_1 = __importDefault(require("./table"));
+const pairing_option_group_1 = __importDefault(require("./pairing-option-group"));
 const Inline = ({ node }) => {
     if (typeof node === "string") {
         return node;
@@ -45,6 +46,8 @@ const Inline = ({ node }) => {
         }
         case "XMLElement":
             switch (node.tag) {
+                case "pog":
+                    return <pairing_option_group_1.default node={node.content}/>;
                 case "table":
                     return <table_1.default node={node}/>;
             }

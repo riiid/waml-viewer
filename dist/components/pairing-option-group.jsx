@@ -15,14 +15,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const componentify_1 = __importDefault(require("../componentify"));
-const inline_1 = __importDefault(require("./inline"));
-const PairingOption = (_a) => {
+const pairing_option_1 = __importDefault(require("./pairing-option"));
+const PairingOptionGroup = (_a) => {
     var { node } = _a, props = __rest(_a, ["node"]);
-    return <li {...props}>
-  {node.cell.inbound.length > 0 && <input type="radio" readOnly/>}
-  {node.inlines.map((v, i) => <inline_1.default key={i} node={v}/>)}
-  {node.cell.outbound.length > 0 && <input type="radio" readOnly/>}
-    </li>;
+    return <ul {...props}>
+  {node.map(v => <pairing_option_1.default key={v.cell.value} node={v}/>)}
+    </ul>;
 };
-PairingOption.displayName = "PairingOption";
-exports.default = (0, componentify_1.default)(PairingOption);
+PairingOptionGroup.displayName = "PairingOptionGroup";
+exports.default = (0, componentify_1.default)(PairingOptionGroup);

@@ -81,6 +81,10 @@
   padding-left: 16px;
 }
 
+.Line:empty {
+  display: none;
+}
+
 .Line[data-anchored] {
   display: grid;
   grid-template-columns: 1fr auto;

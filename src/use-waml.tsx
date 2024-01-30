@@ -1,4 +1,3 @@
-import type { ReactNode } from "react";
 import { createContext, useContext, useMemo, useRef } from "react";
 import type { WAML, WAMLDocument } from "@riiid/waml";
 import type { FCWithChildren, WAMLComponentType, WAMLViewerOptions } from "./types";
@@ -20,24 +19,21 @@ type Context = {
   'getURL': (uri:string) => string,
 
   'renderingVariables': {
-    'pendingClasses': string[],
-    'pairingGroups': Props['pairingGroups']
+    'pendingClasses': string[]
   }
 };
 type Props = {
   'document': WAMLDocument|WAML.ParserError,
-  'options': WAMLViewerOptions,
-  'pairingGroups': Record<string, ReactNode>
+  'options': WAMLViewerOptions
 };
 
 const context = createContext<Context>(null!);
 const useWAML = () => useContext(context);
 
 export default useWAML;
-export const WAMLProvider:FCWithChildren<Props> = ({ document, options, pairingGroups, children }) => {
+export const WAMLProvider:FCWithChildren<Props> = ({ document, options, children }) => {
   const $renderingVariables = useRef<Context['renderingVariables']>({
-    pendingClasses: [],
-    pairingGroups
+    pendingClasses: []
   });
 
   const value = useMemo<Context>(() => ({

@@ -22,7 +22,7 @@ type WAMLComponentMap = {
     'LineComponent': WAML.LineComponent;
     'LongLingualOption': WAML.MooToken<'longLingualOption'>;
     'PairingOption': WAML.PairingOption;
-    'PairingOptionList': ReactNode[];
+    'PairingOptionGroup': WAML.PairingOption[];
     'Passage': WAML.Directive & {
         name: "passage";
     };

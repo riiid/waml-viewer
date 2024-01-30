@@ -177,7 +177,6 @@ function findAnswers(document) {
   return R;
 }
 function getAnswerFormat(document, answer) {
-  var _a;
   const flattenAnswers = answer ? getFlattenAnswers(answer) : [];
   const choiceOptionValues = getChoiceOptionValues(document);
   const interactions = [];
@@ -185,68 +184,80 @@ function getAnswerFormat(document, answer) {
   const existingButtonOptionGroup = {};
   const existingPairingNetGroup = {};
   for (const v of document) {
-    if (typeof v === "string" || !(0, _check.hasKind)(v, "Line")) continue;
-    if ((0, _check.hasKind)(v.component, "PairingOption")) {
-      for (const w of v.component.cell.inbound) {
-        const group = existingPairingNetGroup[w.name] || (existingPairingNetGroup[w.name] = {
-          type: _type.WAML.InteractionType.PAIRING_NET,
-          index: interactions.length,
-          name: w.name,
-          fromValues: [],
-          toValues: []
-        });
-        if (group.index === interactions.length) interactions.push(group);
-        group.toValues.push(v.component.cell.value);
+    if (typeof v === "string" || !(0, _check.hasKind)(v, "Line") || !v.component) continue;
+    if ((0, _check.hasKind)(v.component, "LineComponent") && v.component.headOption) {
+      handleChoiceOption(v.component.headOption.value);
+    }
+    if ((0, _check.hasKind)(v.component, "ShortLingualOption")) {
+      checkInline(v.component);
+    }
+    if ("inlines" in v.component) {
+      for (const w of iterate(v.component.inlines)) {
+        checkInline(w);
       }
-      for (const w of v.component.cell.outbound) {
-        const group = existingPairingNetGroup[w.name] || (existingPairingNetGroup[w.name] = {
-          type: _type.WAML.InteractionType.PAIRING_NET,
-          index: interactions.length,
-          name: w.name,
-          fromValues: [],
-          toValues: []
-        });
-        if (group.index === interactions.length) interactions.push(group);
-        group.fromValues.push(v.component.cell.value);
-      }
-    } else if ((0, _check.hasKind)(v.component, "LineComponent")) {
-      switch ((_a = v.component.headOption) === null || _a === void 0 ? void 0 : _a.kind) {
-        case undefined:
-          break;
-        case "ChoiceOption":
-          handleChoiceOption(v.component.headOption.value);
-          break;
-        default:
-          throw Error(`Unhandled headOption: ${v.component.headOption["kind"]}`);
-      }
-      iterate(v.component.inlines);
-    } else if ((0, _check.hasKind)(v.component, "ShortLingualOption")) {
-      iterate([v.component]);
     }
   }
   return {
     interactions
   };
-  function iterate(inlines) {
+  function* iterate(inlines) {
     for (const v of inlines) {
+      yield v;
       if (typeof v === "string") continue;
-      if ((0, _check.isMooToken)(v, "buttonBlank")) {
-        handleButtonOption("");
+      if ((0, _check.hasKind)(v, "XMLElement") && v.tag === "pog") {
+        for (const w of v.content) {
+          yield* iterate(w.inlines);
+        }
         continue;
       }
-      if ((0, _check.hasKind)(v, "StyledInline") || (0, _check.hasKind)(v, "ClassedInline")) {
-        iterate(v.inlines);
-      } else if ((0, _check.hasKind)(v, "ChoiceOption")) {
-        handleChoiceOption(v.value);
-      } else if ((0, _check.hasKind)(v, "ButtonOption")) {
-        handleButtonOption(v.value);
-      } else if ((0, _check.hasKind)(v, "ShortLingualOption")) {
-        interactions.push({
-          index: interactions.length,
-          type: _type.WAML.InteractionType.SHORT_LINGUAL_OPTION,
-          placeholder: v.value
-        });
+      if ("inlines" in v) {
+        yield* iterate(v.inlines);
       }
+    }
+  }
+  function checkInline(inline) {
+    if (typeof inline === "string") return;
+    if ((0, _check.isMooToken)(inline, "buttonBlank")) {
+      handleButtonOption("");
+      return;
+    }
+    if ((0, _check.hasKind)(inline, "XMLElement") && inline.tag === "pog") {
+      for (const v of inline.content) {
+        for (const w of v.cell.inbound) {
+          const group = existingPairingNetGroup[w.name] || (existingPairingNetGroup[w.name] = {
+            type: _type.WAML.InteractionType.PAIRING_NET,
+            index: interactions.length,
+            name: w.name,
+            fromValues: [],
+            toValues: []
+          });
+          if (group.index === interactions.length) interactions.push(group);
+          group.toValues.push(v.cell.value);
+        }
+        for (const x of v.cell.outbound) {
+          const group = existingPairingNetGroup[x.name] || (existingPairingNetGroup[x.name] = {
+            type: _type.WAML.InteractionType.PAIRING_NET,
+            index: interactions.length,
+            name: x.name,
+            fromValues: [],
+            toValues: []
+          });
+          if (group.index === interactions.length) interactions.push(group);
+          group.fromValues.push(v.cell.value);
+        }
+      }
+    } else if ((0, _check.hasKind)(inline, "StyledInline") || (0, _check.hasKind)(inline, "ClassedInline")) {
+      for (const v of inline.inlines) checkInline(v);
+    } else if ((0, _check.hasKind)(inline, "ChoiceOption")) {
+      handleChoiceOption(inline.value);
+    } else if ((0, _check.hasKind)(inline, "ButtonOption")) {
+      handleButtonOption(inline.value);
+    } else if ((0, _check.hasKind)(inline, "ShortLingualOption")) {
+      interactions.push({
+        index: interactions.length,
+        type: _type.WAML.InteractionType.SHORT_LINGUAL_OPTION,
+        placeholder: inline.value
+      });
     }
   }
   function handleChoiceOption(value) {
@@ -590,6 +601,7 @@ function id(x) { return x[0]; }
     buttonBlank: { match: /{\[_{3,}\]}/, value: "default" },
     buttonOptionOpen: { match: /{\[/, push: "singleButtonOption" },
     choiceOptionOpen: { match: /{/, push: "singleChoiceOption" },
+    pairingOptionGroupOpen: { match: /<pog>/ },
 
     dKVDirective: { match: /@(?:passage|answertype)\b/, value: chunk => chunk.slice(1) },
     dAnswer: { match: "@answer", push: "answer" },
@@ -619,6 +631,7 @@ function id(x) { return x[0]; }
   const main = {
     xStyleOpen: { match: /<style>\s*/, push: "xStyle", value: () => "style" },
     xExplanationOpen: { match: /<explanation>\s*/, push: "xExplanation", value: () => "explanation" },
+    xPOGOpen: { match: /<pog>\s*/, push: "xPOG", value: () => "pog" },
     xTableOpen: { match: /<table/, push: "xTableOpening", value: () => "table" },
     ...withoutXML
   };
@@ -638,6 +651,10 @@ function id(x) { return x[0]; }
     xExplanation: {
       xExplanationClose: { match: /\s*<\/explanation>/, pop: 1 },
       xTableOpen: main.xTableOpen,
+      ...withoutXML
+    },
+    xPOG: {
+      xPOGClose: { match: /\s*<\/pog>/, pop: 1 },
       ...withoutXML
     },
     xTableOpening: {
@@ -803,20 +820,17 @@ var grammar = {
     {"name": "LineComponent", "symbols": ["Directive"], "postprocess": id},
     {"name": "LineComponent", "symbols": ["ClassedBlock"], "postprocess": id},
     {"name": "LineComponent", "symbols": ["FigureAddon"], "postprocess": id},
+    {"name": "LineComponent", "symbols": [(lexer.has("longLingualOption") ? {type: "longLingualOption"} : longLingualOption)], "postprocess": id},
     {"name": "LineComponent$ebnf$1", "symbols": ["Inline"]},
     {"name": "LineComponent$ebnf$1", "symbols": ["LineComponent$ebnf$1", "Inline"], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
-    {"name": "LineComponent", "symbols": ["PairingCell", "LineComponent$ebnf$1"], "postprocess": ([ cell, inlines ]) => ({ kind: "PairingOption", cell, inlines: trimArray(inlines) })},
-    {"name": "LineComponent", "symbols": [(lexer.has("longLingualOption") ? {type: "longLingualOption"} : longLingualOption)], "postprocess": id},
+    {"name": "LineComponent", "symbols": [(lexer.has("footnote") ? {type: "footnote"} : footnote), "LineComponent$ebnf$1"], "postprocess": ([ , inlines ]) => ({ kind: "Footnote", inlines: trimArray(inlines) })},
     {"name": "LineComponent$ebnf$2", "symbols": ["Inline"]},
     {"name": "LineComponent$ebnf$2", "symbols": ["LineComponent$ebnf$2", "Inline"], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
-    {"name": "LineComponent", "symbols": [(lexer.has("footnote") ? {type: "footnote"} : footnote), "LineComponent$ebnf$2"], "postprocess": ([ , inlines ]) => ({ kind: "Footnote", inlines: trimArray(inlines) })},
+    {"name": "LineComponent", "symbols": [(lexer.has("anchor") ? {type: "anchor"} : anchor), "LineComponent$ebnf$2"], "postprocess": ([ , inlines ]) => ({ kind: "Anchor", inlines: trimArray(inlines) })},
+    {"name": "LineComponent", "symbols": [(lexer.has("hr") ? {type: "hr"} : hr)], "postprocess": id},
     {"name": "LineComponent$ebnf$3", "symbols": ["Inline"]},
     {"name": "LineComponent$ebnf$3", "symbols": ["LineComponent$ebnf$3", "Inline"], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
-    {"name": "LineComponent", "symbols": [(lexer.has("anchor") ? {type: "anchor"} : anchor), "LineComponent$ebnf$3"], "postprocess": ([ , inlines ]) => ({ kind: "Anchor", inlines: trimArray(inlines) })},
-    {"name": "LineComponent", "symbols": [(lexer.has("hr") ? {type: "hr"} : hr)], "postprocess": id},
-    {"name": "LineComponent$ebnf$4", "symbols": ["Inline"]},
-    {"name": "LineComponent$ebnf$4", "symbols": ["LineComponent$ebnf$4", "Inline"], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
-    {"name": "LineComponent", "symbols": ["LineComponent$ebnf$4"], "postprocess":  ([ inlines ], _, reject) => {
+    {"name": "LineComponent", "symbols": ["LineComponent$ebnf$3"], "postprocess":  ([ inlines ], _, reject) => {
           if(PREFIXES.includes(inlines[0])) return reject;
           if(FIGURE_ADDONS.includes(inlines[0])) return reject;
           if(inlines.length === 1 && inlines[0].kind === "ShortLingualOption") return inlines[0];
@@ -881,16 +895,12 @@ var grammar = {
     {"name": "XMLElement$macrocall$3$ebnf$1", "symbols": ["XMLElement$macrocall$3$ebnf$1", (lexer.has("any") ? {type: "any"} : any)], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
     {"name": "XMLElement$macrocall$3", "symbols": ["XMLElement$macrocall$3$ebnf$1"]},
     {"name": "XMLElement$macrocall$4", "symbols": [(lexer.has("xStyleClose") ? {type: "xStyleClose"} : xStyleClose)]},
-    {"name": "XMLElement$macrocall$1$ebnf$1", "symbols": [(lexer.has("spaces") ? {type: "spaces"} : spaces)], "postprocess": id},
-    {"name": "XMLElement$macrocall$1$ebnf$1", "symbols": [], "postprocess": function(d) {return null;}},
-    {"name": "XMLElement$macrocall$1", "symbols": ["XMLElement$macrocall$1$ebnf$1", "XMLElement$macrocall$2", "XMLElement$macrocall$3", "XMLElement$macrocall$4"], "postprocess": ([ , open, body ]) => ({ tag: open[0].value, body: body[0] })},
+    {"name": "XMLElement$macrocall$1", "symbols": ["XMLElement$macrocall$2", "XMLElement$macrocall$3", "XMLElement$macrocall$4"], "postprocess": ([ open, body ]) => ({ tag: open[0].value, body: body[0] })},
     {"name": "XMLElement", "symbols": ["XMLElement$macrocall$1"], "postprocess": ([{ tag, body }]) => ({ kind: "XMLElement", tag, content: mergeValue(body) })},
     {"name": "XMLElement$macrocall$6", "symbols": [(lexer.has("xExplanationOpen") ? {type: "xExplanationOpen"} : xExplanationOpen)]},
     {"name": "XMLElement$macrocall$7", "symbols": ["Main"]},
     {"name": "XMLElement$macrocall$8", "symbols": [(lexer.has("xExplanationClose") ? {type: "xExplanationClose"} : xExplanationClose)]},
-    {"name": "XMLElement$macrocall$5$ebnf$1", "symbols": [(lexer.has("spaces") ? {type: "spaces"} : spaces)], "postprocess": id},
-    {"name": "XMLElement$macrocall$5$ebnf$1", "symbols": [], "postprocess": function(d) {return null;}},
-    {"name": "XMLElement$macrocall$5", "symbols": ["XMLElement$macrocall$5$ebnf$1", "XMLElement$macrocall$6", "XMLElement$macrocall$7", "XMLElement$macrocall$8"], "postprocess": ([ , open, body ]) => ({ tag: open[0].value, body: body[0] })},
+    {"name": "XMLElement$macrocall$5", "symbols": ["XMLElement$macrocall$6", "XMLElement$macrocall$7", "XMLElement$macrocall$8"], "postprocess": ([ open, body ]) => ({ tag: open[0].value, body: body[0] })},
     {"name": "XMLElement", "symbols": ["XMLElement$macrocall$5"], "postprocess": ([{ tag, body }]) => ({ kind: "XMLElement", tag, content: body })},
     {"name": "LineXMLElement$macrocall$2", "symbols": [(lexer.has("xTableOpen") ? {type: "xTableOpen"} : xTableOpen)]},
     {"name": "LineXMLElement$macrocall$3", "symbols": ["Table"]},
@@ -905,6 +915,17 @@ var grammar = {
           body: body[0]
         })},
     {"name": "LineXMLElement", "symbols": ["LineXMLElement$macrocall$1"], "postprocess": ([{ tag, attributes, body }]) => ({ kind: "XMLElement", tag, attributes, content: body })},
+    {"name": "LineXMLElement$macrocall$6", "symbols": [(lexer.has("xPOGOpen") ? {type: "xPOGOpen"} : xPOGOpen)]},
+    {"name": "LineXMLElement$macrocall$7$macrocall$2", "symbols": ["PairingOption"]},
+    {"name": "LineXMLElement$macrocall$7$macrocall$3", "symbols": [(lexer.has("lineBreak") ? {type: "lineBreak"} : lineBreak)]},
+    {"name": "LineXMLElement$macrocall$7$macrocall$1$ebnf$1", "symbols": []},
+    {"name": "LineXMLElement$macrocall$7$macrocall$1$ebnf$1$subexpression$1", "symbols": ["LineXMLElement$macrocall$7$macrocall$3", "LineXMLElement$macrocall$7$macrocall$2"]},
+    {"name": "LineXMLElement$macrocall$7$macrocall$1$ebnf$1", "symbols": ["LineXMLElement$macrocall$7$macrocall$1$ebnf$1", "LineXMLElement$macrocall$7$macrocall$1$ebnf$1$subexpression$1"], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
+    {"name": "LineXMLElement$macrocall$7$macrocall$1", "symbols": ["LineXMLElement$macrocall$7$macrocall$2", "LineXMLElement$macrocall$7$macrocall$1$ebnf$1"], "postprocess": ([ first, rest ]) => [ first[0], ...rest.map(v => v[1][0]) ]},
+    {"name": "LineXMLElement$macrocall$7", "symbols": ["LineXMLElement$macrocall$7$macrocall$1"]},
+    {"name": "LineXMLElement$macrocall$8", "symbols": [(lexer.has("xPOGClose") ? {type: "xPOGClose"} : xPOGClose)]},
+    {"name": "LineXMLElement$macrocall$5", "symbols": ["LineXMLElement$macrocall$6", "LineXMLElement$macrocall$7", "LineXMLElement$macrocall$8"], "postprocess": ([ open, body ]) => ({ tag: open[0].value, body: body[0] })},
+    {"name": "LineXMLElement", "symbols": ["LineXMLElement$macrocall$5"], "postprocess": ([{ tag, body }]) => ({ kind: "XMLElement", tag, content: body })},
     {"name": "XMLAttribute$ebnf$1", "symbols": [(lexer.has("identifiable") ? {type: "identifiable"} : identifiable)]},
     {"name": "XMLAttribute$ebnf$1", "symbols": ["XMLAttribute$ebnf$1", (lexer.has("identifiable") ? {type: "identifiable"} : identifiable)], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
     {"name": "XMLAttribute$ebnf$2", "symbols": []},
@@ -995,6 +1016,9 @@ var grammar = {
     {"name": "OptionRest$ebnf$2$subexpression$2", "symbols": [(lexer.has("unorderedOptionSeparator") ? {type: "unorderedOptionSeparator"} : unorderedOptionSeparator), "OptionRest$ebnf$2$subexpression$2$ebnf$1"]},
     {"name": "OptionRest$ebnf$2", "symbols": ["OptionRest$ebnf$2", "OptionRest$ebnf$2$subexpression$2"], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
     {"name": "OptionRest", "symbols": ["OptionRest$ebnf$2"], "postprocess": ([ list ]) => ({ kind: "UnorderedOptionRest", value: list.map(v => v[1].join('')) })},
+    {"name": "PairingOption$ebnf$1", "symbols": ["Inline"]},
+    {"name": "PairingOption$ebnf$1", "symbols": ["PairingOption$ebnf$1", "Inline"], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
+    {"name": "PairingOption", "symbols": ["PairingCell", "PairingOption$ebnf$1"], "postprocess": ([ cell, inlines ]) => ({ kind: "PairingOption", cell, inlines: trimArray(inlines) })},
     {"name": "PairingCell$ebnf$1", "symbols": [(lexer.has("identifiable") ? {type: "identifiable"} : identifiable)]},
     {"name": "PairingCell$ebnf$1", "symbols": ["PairingCell$ebnf$1", (lexer.has("identifiable") ? {type: "identifiable"} : identifiable)], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
     {"name": "PairingCell$ebnf$2$subexpression$1$ebnf$1", "symbols": [(lexer.has("identifiable") ? {type: "identifiable"} : identifiable)]},
@@ -15477,58 +15501,61 @@ const video_1 = __importDefault(require("./video"));
 const audio_1 = __importDefault(require("./audio"));
 const button_option_1 = __importDefault(require("./button-option"));
 const table_1 = __importDefault(require("./table"));
+const pairing_option_group_1 = __importDefault(require("./pairing-option-group"));
 const Inline = ({ node }) => {
     if (typeof node === "string") {
         return node;
     }
     if ((0, waml_1.isMooToken)(node, 'buttonBlank')) {
-        return (0, jsx_dev_runtime_1.jsxDEV)(button_blank_1.default, { node: node }, void 0, false, { fileName: _jsxFileName, lineNumber: 19, columnNumber: 11 }, this);
+        return (0, jsx_dev_runtime_1.jsxDEV)(button_blank_1.default, { node: node }, void 0, false, { fileName: _jsxFileName, lineNumber: 20, columnNumber: 11 }, this);
     }
     if ((0, waml_1.isMooToken)(node, 'medium')) {
         switch (node.value.type) {
-            case "image": return (0, jsx_dev_runtime_1.jsxDEV)(image_1.default, { node: node }, void 0, false, { fileName: _jsxFileName, lineNumber: 23, columnNumber: 27 }, this);
-            case "audio": return (0, jsx_dev_runtime_1.jsxDEV)(audio_1.default, { node: node }, void 0, false, { fileName: _jsxFileName, lineNumber: 24, columnNumber: 27 }, this);
-            case "video": return (0, jsx_dev_runtime_1.jsxDEV)(video_1.default, { node: node }, void 0, false, { fileName: _jsxFileName, lineNumber: 25, columnNumber: 27 }, this);
+            case "image": return (0, jsx_dev_runtime_1.jsxDEV)(image_1.default, { node: node }, void 0, false, { fileName: _jsxFileName, lineNumber: 24, columnNumber: 27 }, this);
+            case "audio": return (0, jsx_dev_runtime_1.jsxDEV)(audio_1.default, { node: node }, void 0, false, { fileName: _jsxFileName, lineNumber: 25, columnNumber: 27 }, this);
+            case "video": return (0, jsx_dev_runtime_1.jsxDEV)(video_1.default, { node: node }, void 0, false, { fileName: _jsxFileName, lineNumber: 26, columnNumber: 27 }, this);
             default: throw Error(`Unhandled medium type: ${node.value.type}`);
         }
     }
     switch (node.kind) {
         case "StyledInline": {
-            const $inlines = node.inlines.map((v, i) => (0, jsx_dev_runtime_1.jsxDEV)(Inline, { node: v }, i, false, { fileName: _jsxFileName, lineNumber: 31, columnNumber: 50 }, this));
+            const $inlines = node.inlines.map((v, i) => (0, jsx_dev_runtime_1.jsxDEV)(Inline, { node: v }, i, false, { fileName: _jsxFileName, lineNumber: 32, columnNumber: 50 }, this));
             switch (node.style) {
                 case "underline":
-                    return (0, jsx_dev_runtime_1.jsxDEV)("u", { children: $inlines }, void 0, false, { fileName: _jsxFileName, lineNumber: 35, columnNumber: 17 }, this);
+                    return (0, jsx_dev_runtime_1.jsxDEV)("u", { children: $inlines }, void 0, false, { fileName: _jsxFileName, lineNumber: 36, columnNumber: 17 }, this);
                 case "bold":
-                    return (0, jsx_dev_runtime_1.jsxDEV)("b", { children: $inlines }, void 0, false, { fileName: _jsxFileName, lineNumber: 37, columnNumber: 17 }, this);
+                    return (0, jsx_dev_runtime_1.jsxDEV)("b", { children: $inlines }, void 0, false, { fileName: _jsxFileName, lineNumber: 38, columnNumber: 17 }, this);
                 case "italic":
-                    return (0, jsx_dev_runtime_1.jsxDEV)("i", { children: $inlines }, void 0, false, { fileName: _jsxFileName, lineNumber: 39, columnNumber: 17 }, this);
+                    return (0, jsx_dev_runtime_1.jsxDEV)("i", { children: $inlines }, void 0, false, { fileName: _jsxFileName, lineNumber: 40, columnNumber: 17 }, this);
                 case "strikethrough":
-                    return (0, jsx_dev_runtime_1.jsxDEV)("s", { children: $inlines }, void 0, false, { fileName: _jsxFileName, lineNumber: 41, columnNumber: 17 }, this);
+                    return (0, jsx_dev_runtime_1.jsxDEV)("s", { children: $inlines }, void 0, false, { fileName: _jsxFileName, lineNumber: 42, columnNumber: 17 }, this);
             }
         }
         case "XMLElement":
             switch (node.tag) {
+                case "pog":
+                    return (0, jsx_dev_runtime_1.jsxDEV)(pairing_option_group_1.default, { node: node.content }, void 0, false, { fileName: _jsxFileName, lineNumber: 48, columnNumber: 17 }, this);
                 case "table":
-                    return (0, jsx_dev_runtime_1.jsxDEV)(table_1.default, { node: node }, void 0, false, { fileName: _jsxFileName, lineNumber: 47, columnNumber: 17 }, this);
+                    return (0, jsx_dev_runtime_1.jsxDEV)(table_1.default, { node: node }, void 0, false, { fileName: _jsxFileName, lineNumber: 50, columnNumber: 17 }, this);
             }
         case "Math":
-            return (0, jsx_dev_runtime_1.jsxDEV)(react_latex_next_1.default, { children: `$${node.content}$` }, void 0, false, { fileName: _jsxFileName, lineNumber: 50, columnNumber: 13 }, this);
+            return (0, jsx_dev_runtime_1.jsxDEV)(react_latex_next_1.default, { children: `$${node.content}$` }, void 0, false, { fileName: _jsxFileName, lineNumber: 53, columnNumber: 13 }, this);
         case "ChoiceOption":
-            return (0, jsx_dev_runtime_1.jsxDEV)(choice_option_1.default, { node: node }, void 0, false, { fileName: _jsxFileName, lineNumber: 52, columnNumber: 13 }, this);
+            return (0, jsx_dev_runtime_1.jsxDEV)(choice_option_1.default, { node: node }, void 0, false, { fileName: _jsxFileName, lineNumber: 55, columnNumber: 13 }, this);
         case "ButtonOption":
-            return (0, jsx_dev_runtime_1.jsxDEV)(button_option_1.default, { node: node }, void 0, false, { fileName: _jsxFileName, lineNumber: 54, columnNumber: 13 }, this);
+            return (0, jsx_dev_runtime_1.jsxDEV)(button_option_1.default, { node: node }, void 0, false, { fileName: _jsxFileName, lineNumber: 57, columnNumber: 13 }, this);
         case "ShortLingualOption":
-            return (0, jsx_dev_runtime_1.jsxDEV)(short_lingual_option_1.default, { node: node, inline: true }, void 0, false, { fileName: _jsxFileName, lineNumber: 56, columnNumber: 13 }, this);
+            return (0, jsx_dev_runtime_1.jsxDEV)(short_lingual_option_1.default, { node: node, inline: true }, void 0, false, { fileName: _jsxFileName, lineNumber: 59, columnNumber: 13 }, this);
         case "ClassedInline":
-            return ((0, jsx_dev_runtime_1.jsxDEV)("span", { className: node.name, children: node.inlines.map((v, i) => ((0, jsx_dev_runtime_1.jsxDEV)(Inline, { node: v }, i, false, { fileName: _jsxFileName, lineNumber: 60, columnNumber: 40 }, this))) }, void 0, false, { fileName: _jsxFileName, lineNumber: 58, columnNumber: 15 }, this));
+            return ((0, jsx_dev_runtime_1.jsxDEV)("span", { className: node.name, children: node.inlines.map((v, i) => ((0, jsx_dev_runtime_1.jsxDEV)(Inline, { node: v }, i, false, { fileName: _jsxFileName, lineNumber: 63, columnNumber: 40 }, this))) }, void 0, false, { fileName: _jsxFileName, lineNumber: 61, columnNumber: 15 }, this));
         default:
-            throw Error(`Unhandled inline node: ${JSON.stringify(node)}`);
     }
+    throw Error(`Unhandled inline node: ${JSON.stringify(node)}`);
 };
 Inline.displayName = "Inline";
 exports.default = (0, componentify_1.default)(Inline);
 
-},{"../componentify":28,"./audio":30,"./button-blank":32,"./button-option":33,"./choice-option":35,"./image":42,"./short-lingual-option":54,"./table":56,"./video":57,"@riiid/waml":3,"react-latex-next":17,"react/jsx-dev-runtime":23}],44:[function(require,module,exports){
+},{"../componentify":28,"./audio":30,"./button-blank":32,"./button-option":33,"./choice-option":35,"./image":42,"./pairing-option-group":48,"./short-lingual-option":54,"./table":56,"./video":57,"@riiid/waml":3,"react-latex-next":17,"react/jsx-dev-runtime":23}],44:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -15662,12 +15689,6 @@ const LineComponent = (_a) => {
             return (0, jsx_dev_runtime_1.jsxDEV)(short_lingual_option_1.default, { node: node, inline: false }, void 0, false, { fileName: _jsxFileName, lineNumber: 59, columnNumber: 13 }, this);
         case "Footnote":
             return (0, jsx_dev_runtime_1.jsxDEV)(footnote_1.default, { node: node }, void 0, false, { fileName: _jsxFileName, lineNumber: 61, columnNumber: 13 }, this);
-        case "PairingOption": {
-            const $R = renderingVariables.pairingGroups[node.cell.value] || null;
-            if ($R)
-                delete renderingVariables.pairingGroups[node.cell.value];
-            return $R;
-        }
         default:
     }
     throw Error(`Unhandled node: ${JSON.stringify(node)}`);
@@ -15753,16 +15774,17 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const jsx_dev_runtime_1 = require("react/jsx-dev-runtime");
-const _jsxFileName = "C:/Users/dosel/Dev/waml-viewer/src/components/pairing-option-list.tsx";
+const _jsxFileName = "C:/Users/dosel/Dev/waml-viewer/src/components/pairing-option-group.tsx";
 const componentify_1 = __importDefault(require("../componentify"));
-const PairingOptionList = (_a) => {
+const pairing_option_1 = __importDefault(require("./pairing-option"));
+const PairingOptionGroup = (_a) => {
     var { node } = _a, props = __rest(_a, ["node"]);
-    return (0, jsx_dev_runtime_1.jsxDEV)("ul", Object.assign({}, props, { children: node }), void 0, false, { fileName: _jsxFileName, lineNumber: 4, columnNumber: 85 }, this);
+    return (0, jsx_dev_runtime_1.jsxDEV)("ul", Object.assign({}, props, { children: node.map(v => (0, jsx_dev_runtime_1.jsxDEV)(pairing_option_1.default, { node: v }, v.cell.value, false, { fileName: _jsxFileName, lineNumber: 6, columnNumber: 17 }, this)) }), void 0, false, { fileName: _jsxFileName, lineNumber: 5, columnNumber: 87 }, this);
 };
-PairingOptionList.displayName = "PairingOptionList";
-exports.default = (0, componentify_1.default)(PairingOptionList);
+PairingOptionGroup.displayName = "PairingOptionGroup";
+exports.default = (0, componentify_1.default)(PairingOptionGroup);
 
-},{"../componentify":28,"react/jsx-dev-runtime":23}],49:[function(require,module,exports){
+},{"../componentify":28,"./pairing-option":49,"react/jsx-dev-runtime":23}],49:[function(require,module,exports){
 "use strict";
 var __rest = (this && this.__rest) || function (s, e) {
     var t = {};
@@ -15785,7 +15807,7 @@ const componentify_1 = __importDefault(require("../componentify"));
 const inline_1 = __importDefault(require("./inline"));
 const PairingOption = (_a) => {
     var { node } = _a, props = __rest(_a, ["node"]);
-    return (0, jsx_dev_runtime_1.jsxDEV)("li", Object.assign({}, props, { children: [node.cell.inbound.length > 0 && (0, jsx_dev_runtime_1.jsxDEV)("input", { type: "radio", readOnly: true }, void 0, false, { fileName: _jsxFileName, lineNumber: 6, columnNumber: 35 }, this), node.inlines.map((v, i) => (0, jsx_dev_runtime_1.jsxDEV)(inline_1.default, { node: v }, i, false, { fileName: _jsxFileName, lineNumber: 7, columnNumber: 30 }, this)), node.cell.outbound.length > 0 && (0, jsx_dev_runtime_1.jsxDEV)("input", { type: "radio", readOnly: true }, void 0, false, { fileName: _jsxFileName, lineNumber: 8, columnNumber: 36 }, this)] }), node.cell.value, true, { fileName: _jsxFileName, lineNumber: 5, columnNumber: 77 }, this);
+    return (0, jsx_dev_runtime_1.jsxDEV)("li", Object.assign({}, props, { children: [node.cell.inbound.length > 0 && (0, jsx_dev_runtime_1.jsxDEV)("input", { type: "radio", readOnly: true }, void 0, false, { fileName: _jsxFileName, lineNumber: 6, columnNumber: 35 }, this), node.inlines.map((v, i) => (0, jsx_dev_runtime_1.jsxDEV)(inline_1.default, { node: v }, i, false, { fileName: _jsxFileName, lineNumber: 7, columnNumber: 30 }, this)), node.cell.outbound.length > 0 && (0, jsx_dev_runtime_1.jsxDEV)("input", { type: "radio", readOnly: true }, void 0, false, { fileName: _jsxFileName, lineNumber: 8, columnNumber: 36 }, this)] }), void 0, true, { fileName: _jsxFileName, lineNumber: 5, columnNumber: 77 }, this);
 };
 PairingOption.displayName = "PairingOption";
 exports.default = (0, componentify_1.default)(PairingOption);
@@ -16093,32 +16115,28 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const jsx_dev_runtime_1 = require("react/jsx-dev-runtime");
 const _jsxFileName = "C:/Users/dosel/Dev/waml-viewer/src/index.tsx";
 const waml_1 = require("@riiid/waml");
-const waml_2 = require("@riiid/waml");
-const waml_3 = require("@riiid/waml");
 const react_1 = require("react");
 const react_dom_1 = require("react-dom");
-const use_waml_1 = require("./use-waml");
-const syntax_error_handler_1 = __importDefault(require("./components/syntax-error-handler"));
-const scoped_style_1 = __importDefault(require("./components/scoped-style"));
+const builtin_style_1 = __importDefault(require("./components/builtin-style"));
 const debug_console_1 = __importDefault(require("./components/debug-console"));
 const document_1 = __importDefault(require("./components/document"));
-const builtin_style_1 = __importDefault(require("./components/builtin-style"));
-const pairing_option_1 = __importDefault(require("./components/pairing-option"));
-const pairing_option_list_1 = __importDefault(require("./components/pairing-option-list"));
+const scoped_style_1 = __importDefault(require("./components/scoped-style"));
+const syntax_error_handler_1 = __importDefault(require("./components/syntax-error-handler"));
+const use_waml_1 = require("./use-waml");
 const defaultOptions = {};
 const defaultMiddlewares = [];
 const WAMLViewer = (_a) => {
     var { waml, middlewares = defaultMiddlewares, options = defaultOptions, bare } = _a, props = __rest(_a, ["waml", "middlewares", "options", "bare"]);
     const document = (0, react_1.useMemo)(() => {
         try {
-            const R = typeof waml === "string" ? new waml_3.WAMLDocument(waml) : waml;
+            const R = typeof waml === "string" ? new waml_1.WAMLDocument(waml) : waml;
             for (const v of middlewares)
                 v(R.raw, R.metadata);
             return R;
         }
         catch (error) {
             if (typeof waml === "string")
-                return (0, waml_3.parseWAML)(waml);
+                return (0, waml_1.parseWAML)(waml);
             throw error;
         }
     }, [middlewares, waml]);
@@ -16127,46 +16145,11 @@ const WAMLViewer = (_a) => {
             return [];
         const R = [];
         for (const v of document.raw) {
-            if (!(0, waml_2.hasKind)(v, 'XMLElement'))
+            if (!(0, waml_1.hasKind)(v, 'XMLElement'))
                 continue;
             if (v.tag !== "explanation")
                 continue;
-            R.push((0, jsx_dev_runtime_1.jsxDEV)(document_1.default, { node: v.content }, R.length, false, { fileName: _jsxFileName, lineNumber: 51, columnNumber: 14 }, this));
-        }
-        return R;
-    }, [document]);
-    const pairingGroups = (0, react_1.useMemo)(() => {
-        var _a;
-        if ('error' in document)
-            return {};
-        const R = {};
-        const vertexGroups = {};
-        for (const v of document.raw) {
-            if (!(0, waml_2.hasKind)(v, 'Line'))
-                continue;
-            if (!v.component || !(0, waml_2.hasKind)(v.component, 'PairingOption'))
-                continue;
-            const $baby = (0, jsx_dev_runtime_1.jsxDEV)(pairing_option_1.default, { node: v.component }, v.component.cell.value, false, { fileName: _jsxFileName, lineNumber: 63, columnNumber: 20 }, this);
-            let key;
-            if (v.component.cell.inbound.length) {
-                key = `${v.component.cell.inbound[0].name}/next`;
-            }
-            else {
-                key = `${v.component.cell.outbound[0].name}/prev`;
-            }
-            (_a = vertexGroups[key]) !== null && _a !== void 0 ? _a : (vertexGroups[key] = []);
-            vertexGroups[key].push($baby);
-        }
-        for (const v of document.metadata.answerFormat.interactions) {
-            if (v.type !== waml_1.WAML.InteractionType.PAIRING_NET) {
-                continue;
-            }
-            const prevVertices = vertexGroups[`${v.name}/prev`];
-            const nextVertices = vertexGroups[`${v.name}/next`];
-            if (prevVertices === null || prevVertices === void 0 ? void 0 : prevVertices.length)
-                R[v.fromValues[0]] = (0, jsx_dev_runtime_1.jsxDEV)(pairing_option_list_1.default, { node: prevVertices }, "prev", false, { fileName: _jsxFileName, lineNumber: 81, columnNumber: 52 }, this);
-            if (nextVertices === null || nextVertices === void 0 ? void 0 : nextVertices.length)
-                R[v.toValues[0]] = (0, jsx_dev_runtime_1.jsxDEV)(pairing_option_list_1.default, { node: nextVertices }, "next", false, { fileName: _jsxFileName, lineNumber: 82, columnNumber: 50 }, this);
+            R.push((0, jsx_dev_runtime_1.jsxDEV)(document_1.default, { node: v.content }, R.length, false, { fileName: _jsxFileName, lineNumber: 48, columnNumber: 14 }, this));
         }
         return R;
     }, [document]);
@@ -16175,7 +16158,7 @@ const WAMLViewer = (_a) => {
             return [];
         const R = [];
         for (const v of document.raw) {
-            if (!(0, waml_2.hasKind)(v, 'XMLElement'))
+            if (!(0, waml_1.hasKind)(v, 'XMLElement'))
                 continue;
             if (v.tag !== "style")
                 continue;
@@ -16184,18 +16167,18 @@ const WAMLViewer = (_a) => {
         return R;
     }, [document]);
     if ('error' in document) {
-        return (0, jsx_dev_runtime_1.jsxDEV)("article", Object.assign({}, props, { children: [(0, jsx_dev_runtime_1.jsxDEV)(builtin_style_1.default, {}, void 0, false, { fileName: _jsxFileName, lineNumber: 100, columnNumber: 7 }, this), (0, jsx_dev_runtime_1.jsxDEV)(use_waml_1.WAMLProvider, { document: document, options: options, pairingGroups: pairingGroups, children: (0, jsx_dev_runtime_1.jsxDEV)(syntax_error_handler_1.default, { node: document }, void 0, false, { fileName: _jsxFileName, lineNumber: 102, columnNumber: 9 }, this) }, void 0, false, { fileName: _jsxFileName, lineNumber: 101, columnNumber: 7 }, this)] }), void 0, true, { fileName: _jsxFileName, lineNumber: 99, columnNumber: 11 }, this);
+        return (0, jsx_dev_runtime_1.jsxDEV)("article", Object.assign({}, props, { children: [(0, jsx_dev_runtime_1.jsxDEV)(builtin_style_1.default, {}, void 0, false, { fileName: _jsxFileName, lineNumber: 66, columnNumber: 7 }, this), (0, jsx_dev_runtime_1.jsxDEV)(use_waml_1.WAMLProvider, { document: document, options: options, children: (0, jsx_dev_runtime_1.jsxDEV)(syntax_error_handler_1.default, { node: document }, void 0, false, { fileName: _jsxFileName, lineNumber: 68, columnNumber: 9 }, this) }, void 0, false, { fileName: _jsxFileName, lineNumber: 67, columnNumber: 7 }, this)] }), void 0, true, { fileName: _jsxFileName, lineNumber: 65, columnNumber: 11 }, this);
     }
     if (bare) {
-        return (0, jsx_dev_runtime_1.jsxDEV)(jsx_dev_runtime_1.Fragment, { children: [styles.map((v, i) => ((0, jsx_dev_runtime_1.jsxDEV)(scoped_style_1.default, { children: v }, i, false, { fileName: _jsxFileName, lineNumber: 108, columnNumber: 30 }, this))), (0, jsx_dev_runtime_1.jsxDEV)(document_1.default, { node: document.raw }, void 0, false, { fileName: _jsxFileName, lineNumber: 111, columnNumber: 7 }, this)] }, void 0, true, { fileName: _jsxFileName, lineNumber: 107, columnNumber: 11 }, this);
+        return (0, jsx_dev_runtime_1.jsxDEV)(jsx_dev_runtime_1.Fragment, { children: [styles.map((v, i) => ((0, jsx_dev_runtime_1.jsxDEV)(scoped_style_1.default, { children: v }, i, false, { fileName: _jsxFileName, lineNumber: 74, columnNumber: 30 }, this))), (0, jsx_dev_runtime_1.jsxDEV)(document_1.default, { node: document.raw }, void 0, false, { fileName: _jsxFileName, lineNumber: 77, columnNumber: 7 }, this)] }, void 0, true, { fileName: _jsxFileName, lineNumber: 73, columnNumber: 11 }, this);
     }
-    return (0, jsx_dev_runtime_1.jsxDEV)("article", Object.assign({}, props, { children: [(0, jsx_dev_runtime_1.jsxDEV)(builtin_style_1.default, {}, void 0, false, { fileName: _jsxFileName, lineNumber: 115, columnNumber: 5 }, this), (0, jsx_dev_runtime_1.jsxDEV)(use_waml_1.WAMLProvider, { document: document, options: options, pairingGroups: pairingGroups, children: [styles.map((v, i) => ((0, jsx_dev_runtime_1.jsxDEV)(scoped_style_1.default, { children: v }, i, false, { fileName: _jsxFileName, lineNumber: 117, columnNumber: 30 }, this))), (0, jsx_dev_runtime_1.jsxDEV)(document_1.default, { node: document.raw }, void 0, false, { fileName: _jsxFileName, lineNumber: 120, columnNumber: 7 }, this), options.explanationWrapper
+    return (0, jsx_dev_runtime_1.jsxDEV)("article", Object.assign({}, props, { children: [(0, jsx_dev_runtime_1.jsxDEV)(builtin_style_1.default, {}, void 0, false, { fileName: _jsxFileName, lineNumber: 81, columnNumber: 5 }, this), (0, jsx_dev_runtime_1.jsxDEV)(use_waml_1.WAMLProvider, { document: document, options: options, children: [styles.map((v, i) => ((0, jsx_dev_runtime_1.jsxDEV)(scoped_style_1.default, { children: v }, i, false, { fileName: _jsxFileName, lineNumber: 83, columnNumber: 30 }, this))), (0, jsx_dev_runtime_1.jsxDEV)(document_1.default, { node: document.raw }, void 0, false, { fileName: _jsxFileName, lineNumber: 86, columnNumber: 7 }, this), options.explanationWrapper
                         ? (0, react_dom_1.createPortal)($explanations, options.explanationWrapper)
-                        : $explanations, options.debug && (0, jsx_dev_runtime_1.jsxDEV)(debug_console_1.default, { document: document }, void 0, false, { fileName: _jsxFileName, lineNumber: 125, columnNumber: 24 }, this)] }, void 0, true, { fileName: _jsxFileName, lineNumber: 116, columnNumber: 5 }, this)] }), void 0, true, { fileName: _jsxFileName, lineNumber: 114, columnNumber: 9 }, this);
+                        : $explanations, options.debug && (0, jsx_dev_runtime_1.jsxDEV)(debug_console_1.default, { document: document }, void 0, false, { fileName: _jsxFileName, lineNumber: 91, columnNumber: 24 }, this)] }, void 0, true, { fileName: _jsxFileName, lineNumber: 82, columnNumber: 5 }, this)] }), void 0, true, { fileName: _jsxFileName, lineNumber: 80, columnNumber: 9 }, this);
 };
 exports.default = WAMLViewer;
 
-},{"./components/builtin-style":31,"./components/debug-console":36,"./components/document":37,"./components/pairing-option":49,"./components/pairing-option-list":48,"./components/scoped-style":52,"./components/syntax-error-handler":55,"./use-waml":61,"@riiid/waml":3,"react":22,"react-dom":16,"react/jsx-dev-runtime":23}],59:[function(require,module,exports){
+},{"./components/builtin-style":31,"./components/debug-console":36,"./components/document":37,"./components/scoped-style":52,"./components/syntax-error-handler":55,"./use-waml":61,"@riiid/waml":3,"react":22,"react-dom":16,"react/jsx-dev-runtime":23}],59:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.C = void 0;
@@ -16235,10 +16218,9 @@ const react_1 = require("react");
 const context = (0, react_1.createContext)(null);
 const useWAML = () => (0, react_1.useContext)(context);
 exports.default = useWAML;
-const WAMLProvider = ({ document, options, pairingGroups, children }) => {
+const WAMLProvider = ({ document, options, children }) => {
     const $renderingVariables = (0, react_1.useRef)({
-        pendingClasses: [],
-        pairingGroups
+        pendingClasses: []
     });
     const value = (0, react_1.useMemo)(() => ({
         metadata: 'error' in document ? null : document.metadata,
@@ -16249,7 +16231,7 @@ const WAMLProvider = ({ document, options, pairingGroups, children }) => {
         getURL: options.uriResolver || (uri => uri),
         renderingVariables: $renderingVariables.current
     }), [document, options]);
-    return (0, jsx_dev_runtime_1.jsxDEV)(context.Provider, { value: value, children: children }, void 0, false, { fileName: _jsxFileName, lineNumber: 54, columnNumber: 9 }, this);
+    return (0, jsx_dev_runtime_1.jsxDEV)(context.Provider, { value: value, children: children }, void 0, false, { fileName: _jsxFileName, lineNumber: 50, columnNumber: 9 }, this);
 };
 exports.WAMLProvider = WAMLProvider;
 

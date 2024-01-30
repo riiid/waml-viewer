@@ -59,11 +59,6 @@ const LineComponent:WAMLComponent<'LineComponent'> = ({ node, ...props }) => {
       return <ShortLingualOption node={node} inline={false} />;
     case "Footnote":
       return <Footnote node={node} />;
-    case "PairingOption": {
-      const $R = renderingVariables.pairingGroups[node.cell.value] || null;
-      if($R) delete renderingVariables.pairingGroups[node.cell.value];
-      return $R;
-    }
     default:
   }
   throw Error(`Unhandled node: ${JSON.stringify(node)}`);
