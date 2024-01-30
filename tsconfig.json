@@ -9,7 +9,8 @@
     "jsx": "preserve",
     "declaration": true,
 
-    "noUncheckedIndexedAccess": false
+    "noUncheckedIndexedAccess": false,
+    "exactOptionalPropertyTypes": false
   },
   "include": [ "**/*.ts", "**/*.tsx" ],
   "exclude": [ "dist", "test/dist", "node_modules" ]

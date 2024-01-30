@@ -14,13 +14,19 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const react_1 = require("react");
 const componentify_1 = __importDefault(require("../componentify"));
+const use_waml_1 = __importDefault(require("../use-waml"));
 const ChoiceOption = (_a) => {
     var { node } = _a, props = __rest(_a, ["node"]);
+    const { interactionToken } = (0, use_waml_1.default)(true);
+    const handleChange = (0, react_1.useCallback)(() => {
+        interactionToken.handleInteract(interactionToken.interactionValue);
+    }, [interactionToken]);
     return <span {...props}>
-  <input type="checkbox" value={node.value}/>
-  <i>{node.value}</i>
-    </span>;
+    <input type="checkbox" checked={interactionToken.selected} onChange={handleChange}/>
+    <i>{node.value}</i>
+  </span>;
 };
 ChoiceOption.displayName = "ChoiceOption";
 exports.default = (0, componentify_1.default)(ChoiceOption);

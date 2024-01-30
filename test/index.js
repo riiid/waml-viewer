@@ -185,6 +185,14 @@ function getAnswerFormat(document, answer) {
   const existingPairingNetGroup = {};
   for (const v of document) {
     if (typeof v === "string" || !(0, _check.hasKind)(v, "Line") || !v.component) continue;
+    if ((0, _check.isMooToken)(v.component, "longLingualOption")) {
+      interactions.push({
+        index: interactions.length,
+        type: _type.WAML.InteractionType.LONG_LINGUAL_OPTION,
+        placeholder: v.component.value
+      });
+      continue;
+    }
     if ((0, _check.hasKind)(v.component, "LineComponent") && v.component.headOption) {
       handleChoiceOption(v.component.headOption.value);
     }
@@ -524,7 +532,8 @@ var WAML;
     InteractionType[InteractionType["CHOICE_OPTION"] = 0] = "CHOICE_OPTION";
     InteractionType[InteractionType["BUTTON_OPTION"] = 1] = "BUTTON_OPTION";
     InteractionType[InteractionType["SHORT_LINGUAL_OPTION"] = 2] = "SHORT_LINGUAL_OPTION";
-    InteractionType[InteractionType["PAIRING_NET"] = 3] = "PAIRING_NET";
+    InteractionType[InteractionType["LONG_LINGUAL_OPTION"] = 3] = "LONG_LINGUAL_OPTION";
+    InteractionType[InteractionType["PAIRING_NET"] = 4] = "PAIRING_NET";
   })(InteractionType = WAML.InteractionType || (WAML.InteractionType = {}));
   let ChoiceOptionGroup;
   (function (ChoiceOptionGroup) {
@@ -15062,7 +15071,7 @@ function componentify(Component) {
 }
 exports.default = componentify;
 
-},{"./react":59,"./use-waml":61,"react":22,"react/jsx-dev-runtime":23}],29:[function(require,module,exports){
+},{"./react":60,"./use-waml":62,"react":22,"react/jsx-dev-runtime":23}],29:[function(require,module,exports){
 "use strict";
 var __rest = (this && this.__rest) || function (s, e) {
     var t = {};
@@ -15119,7 +15128,7 @@ const Audio = (_a) => {
 Audio.displayName = "Audio";
 exports.default = (0, componentify_1.default)(Audio);
 
-},{"../componentify":28,"../use-waml":61,"react/jsx-dev-runtime":23}],31:[function(require,module,exports){
+},{"../componentify":28,"../use-waml":62,"react/jsx-dev-runtime":23}],31:[function(require,module,exports){
 "use strict";
 
 var __importDefault = void 0 && (void 0).__importDefault || function (mod) {
@@ -15247,27 +15256,38 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const jsx_dev_runtime_1 = require("react/jsx-dev-runtime");
 const _jsxFileName = "C:/Users/dosel/Dev/waml-viewer/src/components/choice-option.tsx";
+const react_1 = require("react");
 const componentify_1 = __importDefault(require("../componentify"));
+const use_waml_1 = __importDefault(require("../use-waml"));
 const ChoiceOption = (_a) => {
     var { node } = _a, props = __rest(_a, ["node"]);
-    return (0, jsx_dev_runtime_1.jsxDEV)("span", Object.assign({}, props, { children: [(0, jsx_dev_runtime_1.jsxDEV)("input", { type: "checkbox", value: node.value }, void 0, false, { fileName: _jsxFileName, lineNumber: 5, columnNumber: 3 }, this), (0, jsx_dev_runtime_1.jsxDEV)("i", { children: node.value }, void 0, false, { fileName: _jsxFileName, lineNumber: 6, columnNumber: 3 }, this)] }), void 0, true, { fileName: _jsxFileName, lineNumber: 4, columnNumber: 75 }, this);
+    const { interactionToken } = (0, use_waml_1.default)(true);
+    const handleChange = (0, react_1.useCallback)(() => {
+        interactionToken.handleInteract(interactionToken.interactionValue);
+    }, [interactionToken]);
+    return (0, jsx_dev_runtime_1.jsxDEV)("span", Object.assign({}, props, { children: [(0, jsx_dev_runtime_1.jsxDEV)("input", { type: "checkbox", checked: interactionToken.selected, onChange: handleChange }, void 0, false, { fileName: _jsxFileName, lineNumber: 14, columnNumber: 5 }, this), (0, jsx_dev_runtime_1.jsxDEV)("i", { children: node.value }, void 0, false, { fileName: _jsxFileName, lineNumber: 15, columnNumber: 5 }, this)] }), void 0, true, { fileName: _jsxFileName, lineNumber: 13, columnNumber: 9 }, this);
 };
 ChoiceOption.displayName = "ChoiceOption";
 exports.default = (0, componentify_1.default)(ChoiceOption);
 
-},{"../componentify":28,"react/jsx-dev-runtime":23}],36:[function(require,module,exports){
+},{"../componentify":28,"../use-waml":62,"react":22,"react/jsx-dev-runtime":23}],36:[function(require,module,exports){
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const jsx_dev_runtime_1 = require("react/jsx-dev-runtime");
 const _jsxFileName = "C:/Users/dosel/Dev/waml-viewer/src/components/debug-console.tsx";
 const react_1 = require("react");
+const use_waml_1 = __importDefault(require("../use-waml"));
 const DebugConsole = ({ document }) => {
+    const { value } = (0, use_waml_1.default)();
     const [opened, setOpened] = (0, react_1.useState)(false);
-    return (0, jsx_dev_runtime_1.jsxDEV)("div", { className: "DebugConsole", children: [opened && (0, jsx_dev_runtime_1.jsxDEV)("div", { children: (0, jsx_dev_runtime_1.jsxDEV)("pre", { children: JSON.stringify(document.raw, null, 2) }, void 0, false, { fileName: _jsxFileName, lineNumber: 13, columnNumber: 7 }, this) }, void 0, false, { fileName: _jsxFileName, lineNumber: 12, columnNumber: 15 }, this), (0, jsx_dev_runtime_1.jsxDEV)("button", { onClick: () => setOpened(!opened), children: opened ? "Close" : "Open console" }, void 0, false, { fileName: _jsxFileName, lineNumber: 15, columnNumber: 5 }, this)] }, void 0, true, { fileName: _jsxFileName, lineNumber: 11, columnNumber: 9 }, this);
+    return (0, jsx_dev_runtime_1.jsxDEV)("div", { className: "DebugConsole", children: [opened && (0, jsx_dev_runtime_1.jsxDEV)("div", { children: [(0, jsx_dev_runtime_1.jsxDEV)("h1", { children: "\uB2F5\uC548" }, void 0, false, { fileName: _jsxFileName, lineNumber: 15, columnNumber: 7 }, this), (0, jsx_dev_runtime_1.jsxDEV)("pre", { children: JSON.stringify(value, null, 2) }, void 0, false, { fileName: _jsxFileName, lineNumber: 16, columnNumber: 7 }, this), (0, jsx_dev_runtime_1.jsxDEV)("h1", { children: "AST" }, void 0, false, { fileName: _jsxFileName, lineNumber: 17, columnNumber: 7 }, this), (0, jsx_dev_runtime_1.jsxDEV)("pre", { children: JSON.stringify(document.raw, null, 2) }, void 0, false, { fileName: _jsxFileName, lineNumber: 18, columnNumber: 7 }, this)] }, void 0, true, { fileName: _jsxFileName, lineNumber: 14, columnNumber: 15 }, this), (0, jsx_dev_runtime_1.jsxDEV)("button", { onClick: () => setOpened(!opened), children: opened ? "Close" : "Open console" }, void 0, false, { fileName: _jsxFileName, lineNumber: 20, columnNumber: 5 }, this)] }, void 0, true, { fileName: _jsxFileName, lineNumber: 13, columnNumber: 9 }, this);
 };
 exports.default = DebugConsole;
 
-},{"react":22,"react/jsx-dev-runtime":23}],37:[function(require,module,exports){
+},{"../use-waml":62,"react":22,"react/jsx-dev-runtime":23}],37:[function(require,module,exports){
 "use strict";
 var __rest = (this && this.__rest) || function (s, e) {
     var t = {};
@@ -15340,7 +15360,7 @@ class WAMLErrorBoundary extends react_1.Component {
     }
 }
 
-},{"../componentify":28,"../waml-error":62,"./isoprefixed-line-group-renderer":44,"./semantic-error-handler":53,"@riiid/waml":3,"react":22,"react/jsx-dev-runtime":23}],38:[function(require,module,exports){
+},{"../componentify":28,"../waml-error":63,"./isoprefixed-line-group-renderer":44,"./semantic-error-handler":53,"@riiid/waml":3,"react":22,"react/jsx-dev-runtime":23}],38:[function(require,module,exports){
 "use strict";
 var __rest = (this && this.__rest) || function (s, e) {
     var t = {};
@@ -15482,7 +15502,7 @@ const Image = (_a) => {
 Image.displayName = "Image";
 exports.default = (0, componentify_1.default)(Image);
 
-},{"../componentify":28,"../use-waml":61,"react/jsx-dev-runtime":23}],43:[function(require,module,exports){
+},{"../componentify":28,"../use-waml":62,"react/jsx-dev-runtime":23}],43:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -15696,7 +15716,7 @@ const LineComponent = (_a) => {
 LineComponent.displayName = "LineComponent";
 exports.default = (0, componentify_1.default)(LineComponent);
 
-},{"../componentify":28,"../use-waml":61,"./anchor":29,"./choice-option-line":34,"./figure-caption":38,"./figure-title":39,"./footnote":40,"./hr":41,"./inline":43,"./long-lingual-option":47,"./passage":50,"./short-lingual-option":54,"@riiid/waml":3,"react-latex-next":17,"react/jsx-dev-runtime":23}],46:[function(require,module,exports){
+},{"../componentify":28,"../use-waml":62,"./anchor":29,"./choice-option-line":34,"./figure-caption":38,"./figure-title":39,"./footnote":40,"./hr":41,"./inline":43,"./long-lingual-option":47,"./passage":50,"./short-lingual-option":54,"@riiid/waml":3,"react-latex-next":17,"react/jsx-dev-runtime":23}],46:[function(require,module,exports){
 "use strict";
 var __rest = (this && this.__rest) || function (s, e) {
     var t = {};
@@ -15748,15 +15768,21 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const jsx_dev_runtime_1 = require("react/jsx-dev-runtime");
 const _jsxFileName = "C:/Users/dosel/Dev/waml-viewer/src/components/long-lingual-option.tsx";
+const react_1 = require("react");
 const componentify_1 = __importDefault(require("../componentify"));
+const use_waml_1 = __importDefault(require("../use-waml"));
 const LongLingualOption = (_a) => {
     var { node } = _a, props = __rest(_a, ["node"]);
-    return (0, jsx_dev_runtime_1.jsxDEV)("textarea", Object.assign({ placeholder: node.value }, props), void 0, false, { fileName: _jsxFileName, lineNumber: 4, columnNumber: 85 }, this);
+    const { interactionToken } = (0, use_waml_1.default)(true);
+    const handleChange = (0, react_1.useCallback)(e => {
+        interactionToken.handleInteract(e.currentTarget.value);
+    }, [interactionToken]);
+    return (0, jsx_dev_runtime_1.jsxDEV)("textarea", Object.assign({ placeholder: node.value, value: interactionToken.interactionValue, onChange: handleChange }, props), void 0, false, { fileName: _jsxFileName, lineNumber: 14, columnNumber: 9 }, this);
 };
 LongLingualOption.displayName = "LongLingualOption";
 exports.default = (0, componentify_1.default)(LongLingualOption);
 
-},{"../componentify":28,"react/jsx-dev-runtime":23}],48:[function(require,module,exports){
+},{"../componentify":28,"../use-waml":62,"react":22,"react/jsx-dev-runtime":23}],48:[function(require,module,exports){
 "use strict";
 var __rest = (this && this.__rest) || function (s, e) {
     var t = {};
@@ -15849,7 +15875,7 @@ const Passage = (_a) => {
 Passage.displayName = "Passage";
 exports.default = (0, componentify_1.default)(Passage);
 
-},{"..":58,"../componentify":28,"../use-waml":61,"react":22,"react/jsx-dev-runtime":23}],51:[function(require,module,exports){
+},{"..":58,"../componentify":28,"../use-waml":62,"react":22,"react/jsx-dev-runtime":23}],51:[function(require,module,exports){
 "use strict";
 var __rest = (this && this.__rest) || function (s, e) {
     var t = {};
@@ -15880,7 +15906,7 @@ const PrefixedLine = (_a) => {
 PrefixedLine.displayName = "PrefixedLine";
 exports.default = (0, componentify_1.default)(PrefixedLine);
 
-},{"../componentify":28,"../react":59,"../use-waml":61,"./isoprefixed-line-group-renderer":44,"react/jsx-dev-runtime":23}],52:[function(require,module,exports){
+},{"../componentify":28,"../react":60,"../use-waml":62,"./isoprefixed-line-group-renderer":44,"react/jsx-dev-runtime":23}],52:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const jsx_dev_runtime_1 = require("react/jsx-dev-runtime");
@@ -15943,15 +15969,21 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const jsx_dev_runtime_1 = require("react/jsx-dev-runtime");
 const _jsxFileName = "C:/Users/dosel/Dev/waml-viewer/src/components/short-lingual-option.tsx";
+const react_1 = require("react");
 const componentify_1 = __importDefault(require("../componentify"));
+const use_waml_1 = __importDefault(require("../use-waml"));
 const ShortLingualOption = (_a) => {
     var { node, inline } = _a, props = __rest(_a, ["node", "inline"]);
-    return (0, jsx_dev_runtime_1.jsxDEV)("input", Object.assign({ type: "text" }, inline ? { 'data-inline': true } : {}, node.defaultValue ? { defaultValue: node.value } : { placeholder: node.value }, props), void 0, false, { fileName: _jsxFileName, lineNumber: 4, columnNumber: 95 }, this);
+    const { interactionToken } = (0, use_waml_1.default)(true);
+    const handleChange = (0, react_1.useCallback)(e => {
+        interactionToken.handleInteract(e.currentTarget.value);
+    }, [interactionToken]);
+    return (0, jsx_dev_runtime_1.jsxDEV)("input", Object.assign({ type: "text", value: interactionToken.interactionValue, onChange: handleChange }, inline ? { 'data-inline': true } : {}, node.defaultValue ? { defaultValue: node.value } : { placeholder: node.value }, props), void 0, false, { fileName: _jsxFileName, lineNumber: 14, columnNumber: 9 }, this);
 };
 ShortLingualOption.displayName = "ShortLingualOption";
 exports.default = (0, componentify_1.default)(ShortLingualOption);
 
-},{"../componentify":28,"react/jsx-dev-runtime":23}],55:[function(require,module,exports){
+},{"../componentify":28,"../use-waml":62,"react":22,"react/jsx-dev-runtime":23}],55:[function(require,module,exports){
 "use strict";
 var __rest = (this && this.__rest) || function (s, e) {
     var t = {};
@@ -16018,6 +16050,7 @@ const Table = (_a) => {
                     break;
                 case "columns":
                     if (value === "fixed") {
+                        css.width = "100%";
                         css.tableLayout = "fixed";
                     }
                     else if (columnsPattern.test(value)) {
@@ -16046,27 +16079,27 @@ const Table = (_a) => {
                 if (v.alignment)
                     cellProps.style = { textAlign: v.alignment };
                 if (v.prefix === "#") {
-                    $cells.push((0, jsx_dev_runtime_1.jsxDEV)("th", Object.assign({}, cellProps, { children: (0, jsx_dev_runtime_1.jsxDEV)(document_1.default, { node: v.body }, void 0, false, { fileName: _jsxFileName, lineNumber: 56, columnNumber: 15 }, this) }), $cells.length, false, { fileName: _jsxFileName, lineNumber: 54, columnNumber: 23 }, this));
+                    $cells.push((0, jsx_dev_runtime_1.jsxDEV)("th", Object.assign({}, cellProps, { children: (0, jsx_dev_runtime_1.jsxDEV)(document_1.default, { node: v.body }, void 0, false, { fileName: _jsxFileName, lineNumber: 57, columnNumber: 15 }, this) }), $cells.length, false, { fileName: _jsxFileName, lineNumber: 55, columnNumber: 23 }, this));
                 }
                 else {
-                    $cells.push((0, jsx_dev_runtime_1.jsxDEV)("td", Object.assign({}, cellProps, { children: (0, jsx_dev_runtime_1.jsxDEV)(document_1.default, { node: v.body }, void 0, false, { fileName: _jsxFileName, lineNumber: 62, columnNumber: 15 }, this) }), $cells.length, false, { fileName: _jsxFileName, lineNumber: 60, columnNumber: 23 }, this));
+                    $cells.push((0, jsx_dev_runtime_1.jsxDEV)("td", Object.assign({}, cellProps, { children: (0, jsx_dev_runtime_1.jsxDEV)(document_1.default, { node: v.body }, void 0, false, { fileName: _jsxFileName, lineNumber: 63, columnNumber: 15 }, this) }), $cells.length, false, { fileName: _jsxFileName, lineNumber: 61, columnNumber: 23 }, this));
                 }
             }
             else {
-                R.push((0, jsx_dev_runtime_1.jsxDEV)("tr", { children: $cells }, R.length, false, { fileName: _jsxFileName, lineNumber: 67, columnNumber: 16 }, this));
+                R.push((0, jsx_dev_runtime_1.jsxDEV)("tr", { children: $cells }, R.length, false, { fileName: _jsxFileName, lineNumber: 68, columnNumber: 16 }, this));
                 $cells = [];
             }
         }
         if ($cells.length)
-            R.push((0, jsx_dev_runtime_1.jsxDEV)("tr", { children: $cells }, R.length, false, { fileName: _jsxFileName, lineNumber: 71, columnNumber: 30 }, this));
+            R.push((0, jsx_dev_runtime_1.jsxDEV)("tr", { children: $cells }, R.length, false, { fileName: _jsxFileName, lineNumber: 72, columnNumber: 30 }, this));
         return R;
     }, [node.content]);
-    return ((0, jsx_dev_runtime_1.jsxDEV)("table", Object.assign({ className: attributes.className, style: Object.assign(Object.assign({}, attributes.css), style) }, props, { children: [attributes.columns && ((0, jsx_dev_runtime_1.jsxDEV)("colgroup", { children: attributes.columns.map((v, i) => ((0, jsx_dev_runtime_1.jsxDEV)("col", { width: `${(v / sumOfColumns) * 100}%` }, i, false, { fileName: _jsxFileName, lineNumber: 79, columnNumber: 46 }, this))) }, void 0, false, { fileName: _jsxFileName, lineNumber: 77, columnNumber: 31 }, this)), (0, jsx_dev_runtime_1.jsxDEV)("tbody", { children: $rows }, void 0, false, { fileName: _jsxFileName, lineNumber: 84, columnNumber: 7 }, this)] }), void 0, true, { fileName: _jsxFileName, lineNumber: 75, columnNumber: 11 }, this));
+    return ((0, jsx_dev_runtime_1.jsxDEV)("table", Object.assign({ className: attributes.className, style: Object.assign(Object.assign({}, attributes.css), style) }, props, { children: [attributes.columns && ((0, jsx_dev_runtime_1.jsxDEV)("colgroup", { children: attributes.columns.map((v, i) => ((0, jsx_dev_runtime_1.jsxDEV)("col", { width: `${(v / sumOfColumns) * 100}%` }, i, false, { fileName: _jsxFileName, lineNumber: 80, columnNumber: 46 }, this))) }, void 0, false, { fileName: _jsxFileName, lineNumber: 78, columnNumber: 31 }, this)), (0, jsx_dev_runtime_1.jsxDEV)("tbody", { children: $rows }, void 0, false, { fileName: _jsxFileName, lineNumber: 85, columnNumber: 7 }, this)] }), void 0, true, { fileName: _jsxFileName, lineNumber: 76, columnNumber: 11 }, this));
 };
 Table.displayName = "Table";
 exports.default = (0, componentify_1.default)(Table);
 
-},{"../componentify":28,"../react":59,"../waml-error":62,"./document":37,"@riiid/waml":3,"react":22,"react/jsx-dev-runtime":23}],57:[function(require,module,exports){
+},{"../componentify":28,"../react":60,"../waml-error":63,"./document":37,"@riiid/waml":3,"react":22,"react/jsx-dev-runtime":23}],57:[function(require,module,exports){
 "use strict";
 var __rest = (this && this.__rest) || function (s, e) {
     var t = {};
@@ -16095,7 +16128,7 @@ const Video = (_a) => {
 Video.displayName = "Video";
 exports.default = (0, componentify_1.default)(Video);
 
-},{"../componentify":28,"../use-waml":61,"react/jsx-dev-runtime":23}],58:[function(require,module,exports){
+},{"../componentify":28,"../use-waml":62,"react/jsx-dev-runtime":23}],58:[function(require,module,exports){
 "use strict";
 var __rest = (this && this.__rest) || function (s, e) {
     var t = {};
@@ -16178,7 +16211,117 @@ const WAMLViewer = (_a) => {
 };
 exports.default = WAMLViewer;
 
-},{"./components/builtin-style":31,"./components/debug-console":36,"./components/document":37,"./components/scoped-style":52,"./components/syntax-error-handler":55,"./use-waml":61,"@riiid/waml":3,"react":22,"react-dom":16,"react/jsx-dev-runtime":23}],59:[function(require,module,exports){
+},{"./components/builtin-style":31,"./components/debug-console":36,"./components/document":37,"./components/scoped-style":52,"./components/syntax-error-handler":55,"./use-waml":62,"@riiid/waml":3,"react":22,"react-dom":16,"react/jsx-dev-runtime":23}],59:[function(require,module,exports){
+"use strict";
+var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (receiver, state, kind, f) {
+    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
+    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
+    return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
+};
+var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (receiver, state, value, kind, f) {
+    if (kind === "m") throw new TypeError("Private method is not writable");
+    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a setter");
+    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot write private member to an object whose class did not declare it");
+    return (kind === "a" ? f.call(receiver, value) : f ? f.value = value : state.set(receiver, value)), value;
+};
+var _InteractionToken_interactionValue;
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.unflattenAnswer = exports.flattenAnswer = void 0;
+/* eslint-disable @typescript-eslint/no-parameter-properties */
+const waml_1 = require("@riiid/waml");
+class InteractionToken {
+    get correct() {
+        if (!this.answers.length)
+            return undefined;
+        switch (this.answerType) {
+            case "SINGLE":
+                return this.answers.some(v => v.value[0] === this.interactionValue);
+            case "MULTIPLE":
+                if (this.ordered) {
+                    return this.answers.some(v => v.value[this.index] === this.interactionValue);
+                }
+                return this.answers.some(v => v.value.includes(this.interactionValue));
+        }
+    }
+    get interactionValue() {
+        var _a;
+        if (__classPrivateFieldGet(this, _InteractionToken_interactionValue, "f") === undefined) {
+            // NOTE 주관식이기 때문에 여기로 오는 것
+            return ((_a = this.input) === null || _a === void 0 ? void 0 : _a.value[0]) || "";
+        }
+        return __classPrivateFieldGet(this, _InteractionToken_interactionValue, "f");
+    }
+    get selected() {
+        var _a;
+        return ((_a = this.input) === null || _a === void 0 ? void 0 : _a.value.includes(this.interactionValue)) || false;
+    }
+    constructor(interaction, answers, index, input, callback) {
+        _InteractionToken_interactionValue.set(this, void 0);
+        this.answers = answers;
+        this.index = index;
+        this.input = input;
+        this.callback = callback;
+        switch (interaction.type) {
+            case waml_1.WAML.InteractionType.CHOICE_OPTION:
+            case waml_1.WAML.InteractionType.BUTTON_OPTION:
+                if (interaction.multipleness) {
+                    this.answerType = "MULTIPLE";
+                    this.ordered = interaction.multipleness === "ordered";
+                }
+                else {
+                    this.answerType = "SINGLE";
+                }
+                __classPrivateFieldSet(this, _InteractionToken_interactionValue, interaction.values[index], "f");
+                break;
+            default:
+                this.answerType = "SINGLE";
+        }
+    }
+    getAnswerText() {
+        return this.answers.map(v => v.value.join(', ')).join(', ');
+    }
+    handleInteract(value) {
+        var _a, _b, _c;
+        switch (this.answerType) {
+            case "SINGLE":
+                (_a = this.callback) === null || _a === void 0 ? void 0 : _a.call(this, { type: "SINGLE", value: [value] });
+                break;
+            case "MULTIPLE": {
+                const next = [...((_b = this.input) === null || _b === void 0 ? void 0 : _b.value) || []];
+                const index = next.indexOf(value);
+                if (index === -1)
+                    next.push(value);
+                else
+                    next.splice(index, 1);
+                (_c = this.callback) === null || _c === void 0 ? void 0 : _c.call(this, { type: "MULTIPLE", value: next, ordered: this.ordered });
+                break;
+            }
+            default:
+                throw Error(`Unhandled answerType: ${this.answerType}`);
+        }
+    }
+}
+_InteractionToken_interactionValue = new WeakMap();
+exports.default = InteractionToken;
+function flattenAnswer(answer) {
+    switch (answer.type) {
+        case "SINGLE":
+        case "MULTIPLE":
+            return [answer];
+        case "COMBINED":
+            return answer.children;
+    }
+}
+exports.flattenAnswer = flattenAnswer;
+function unflattenAnswer(answer) {
+    if (answer.length > 1) {
+        return { type: "COMBINED", children: answer };
+    }
+    return answer[0];
+}
+exports.unflattenAnswer = unflattenAnswer;
+
+},{"@riiid/waml":3}],60:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.C = void 0;
@@ -16188,7 +16331,7 @@ function C(...args) {
 }
 exports.C = C;
 
-},{}],60:[function(require,module,exports){
+},{}],61:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -16208,34 +16351,112 @@ const TestPage = () => {
 };
 react_dom_1.default.render((0, jsx_dev_runtime_1.jsxDEV)(TestPage, {}, void 0, false, { fileName: _jsxFileName, lineNumber: 26, columnNumber: 17 }, this), document.querySelector("#stage"));
 
-},{".":58,"react":22,"react-dom":16,"react/jsx-dev-runtime":23}],61:[function(require,module,exports){
+},{".":58,"react":22,"react-dom":16,"react/jsx-dev-runtime":23}],62:[function(require,module,exports){
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.WAMLProvider = void 0;
 const jsx_dev_runtime_1 = require("react/jsx-dev-runtime");
 const _jsxFileName = "C:/Users/dosel/Dev/waml-viewer/src/use-waml.tsx";
 const react_1 = require("react");
+const waml_1 = require("@riiid/waml");
+const interaction_token_1 = __importStar(require("./interaction-token"));
 const context = (0, react_1.createContext)(null);
-const useWAML = () => (0, react_1.useContext)(context);
+const useWAML = (invokingInteractionToken) => {
+    const id = (0, react_1.useId)();
+    const R = (0, react_1.useContext)(context);
+    if (invokingInteractionToken) {
+        R.interactionToken = R.invokeInteractionToken(id);
+    }
+    return R;
+};
 exports.default = useWAML;
 const WAMLProvider = ({ document, options, children }) => {
     const $renderingVariables = (0, react_1.useRef)({
-        pendingClasses: []
+        pendingClasses: [],
+        interactionTokenIndex: {}
     });
-    const value = (0, react_1.useMemo)(() => ({
+    const [value, setValue] = (0, react_1.useState)();
+    const flatValue = (0, react_1.useMemo)(() => value ? (0, interaction_token_1.flattenAnswer)(value) : [], [value]);
+    const interactionTokens = (0, react_1.useMemo)(() => {
+        if ('error' in document)
+            return [];
+        const { metadata } = document;
+        const R = [];
+        const flatAnswers = metadata === null || metadata === void 0 ? void 0 : metadata.answers.map(interaction_token_1.flattenAnswer);
+        for (let i = 0; i < metadata.answerFormat.interactions.length; i++) {
+            const v = metadata.answerFormat.interactions[i];
+            switch (v.type) {
+                case waml_1.WAML.InteractionType.CHOICE_OPTION:
+                case waml_1.WAML.InteractionType.BUTTON_OPTION: {
+                    for (let j = 0; j < v.values.length; j++)
+                        R.push(newToken(j));
+                    break;
+                }
+                default:
+                    R.push(newToken());
+            }
+            function newToken(index = 0) {
+                return new interaction_token_1.default(v, flatAnswers.map(w => w[i]), index, flatValue[i], next => {
+                    const nextInput = [...flatValue];
+                    nextInput[i] = next;
+                    setValue((0, interaction_token_1.unflattenAnswer)(nextInput));
+                });
+            }
+        }
+        $renderingVariables.current.interactionTokenIndex = {};
+        return R;
+    }, [document, flatValue]);
+    const R = (0, react_1.useMemo)(() => ({
         metadata: 'error' in document ? null : document.metadata,
         commonOptions: {
             noDefaultClassName: options.noDefaultClassName || false
         },
         getComponentOptions: type => options[type],
         getURL: options.uriResolver || (uri => uri),
+        interactionToken: null,
+        invokeInteractionToken: id => {
+            let index = $renderingVariables.current.interactionTokenIndex[id];
+            if (index === undefined) {
+                index = Object.keys($renderingVariables.current.interactionTokenIndex).length;
+                $renderingVariables.current.interactionTokenIndex[id] = index;
+            }
+            const r = interactionTokens[index];
+            if (!r) {
+                throw Error(`Unexpected interaction token index: ${index}`);
+            }
+            return r;
+        },
+        value,
         renderingVariables: $renderingVariables.current
-    }), [document, options]);
-    return (0, jsx_dev_runtime_1.jsxDEV)(context.Provider, { value: value, children: children }, void 0, false, { fileName: _jsxFileName, lineNumber: 50, columnNumber: 9 }, this);
+    }), [document, interactionTokens, options, value]);
+    return (0, jsx_dev_runtime_1.jsxDEV)(context.Provider, { value: R, children: children }, void 0, false, { fileName: _jsxFileName, lineNumber: 117, columnNumber: 9 }, this);
 };
 exports.WAMLProvider = WAMLProvider;
 
-},{"react":22,"react/jsx-dev-runtime":23}],62:[function(require,module,exports){
+},{"./interaction-token":59,"@riiid/waml":3,"react":22,"react/jsx-dev-runtime":23}],63:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.NOT_YET_IMPLEMENTED = void 0;
@@ -16248,4 +16469,4 @@ class WAMLError extends Error {
 exports.default = WAMLError;
 exports.NOT_YET_IMPLEMENTED = new WAMLError("Not yet implemented");
 
-},{}]},{},[60]);
+},{}]},{},[61]);
