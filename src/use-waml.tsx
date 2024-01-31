@@ -1,8 +1,8 @@
 import { createContext, useContext, useId, useMemo, useRef, useState } from "react";
 import type { WAMLDocument } from "@riiid/waml";
 import { WAML } from "@riiid/waml";
-import type { FCWithChildren, WAMLComponentType, WAMLViewerOptions } from "./types";
-import InteractionToken, { flattenAnswer, unflattenAnswer } from "./interaction-token";
+import type { FCWithChildren, WAMLComponentType, WAMLViewerOptions } from "./types.js";
+import InteractionToken, { flattenAnswer, unflattenAnswer } from "./interaction-token.js";
 
 type SplittedFormOf<T extends string> = T extends `${infer A}${infer B}`
   ? B extends ""
@@ -11,22 +11,31 @@ type SplittedFormOf<T extends string> = T extends `${infer A}${infer B}`
   : []
 ;
 type FirstLetterOf<T extends string> = SplittedFormOf<T>[0];
+type DraggingObject = {
+  'displayName': WAMLComponentType,
+  'node': WAML.ButtonOption,
+  '$target': HTMLElement
+};
 
 type Context = {
-  'metadata': WAML.Metadata,
   'commonOptions': {
     [key in keyof WAMLViewerOptions as FirstLetterOf<key> extends Lowercase<FirstLetterOf<key>> ? key : never]: WAMLViewerOptions[key]
   },
-  'getComponentOptions': <T extends WAMLComponentType>(type:T) => WAMLViewerOptions[T],
-  'getURL': (uri:string) => string,
-  'value': WAML.Answer|undefined,
-  'invokeInteractionToken': (id:string) => InteractionToken,
+  'draggingObject': DraggingObject|null,
   'interactionToken': InteractionToken,
-
+  'metadata': WAML.Metadata,
   'renderingVariables': {
     'pendingClasses': string[],
-    'interactionTokenIndex': Record<string, number>
-  }
+    'interactionTokenIndex': Record<string, number>,
+    'buttonOptionUsed': Record<string, number[]>
+  },
+  'value': WAML.Answer|undefined,
+
+  'checkButtonOptionUsed': (node:WAML.ButtonOption) => boolean,
+  'getComponentOptions': <T extends WAMLComponentType>(type:T) => WAMLViewerOptions[T],
+  'getURL': (uri:string) => string,
+  'invokeInteractionToken': (id:string) => InteractionToken,
+  'setDraggingObject': (value:DraggingObject|null) => void
 };
 type Props = {
   'document': WAMLDocument|WAML.ParserError,
@@ -48,39 +57,50 @@ export default useWAML;
 export const WAMLProvider:FCWithChildren<Props> = ({ document, options, children }) => {
   const $renderingVariables = useRef<Context['renderingVariables']>({
     pendingClasses: [],
-    interactionTokenIndex: {}
+    interactionTokenIndex: {},
+    buttonOptionUsed: {}
   });
   const [ value, setValue ] = useState<WAML.Answer>();
+  const [ draggingObject, setDraggingObject ] = useState<DraggingObject|null>(null);
 
   const flatValue = useMemo(() => value ? flattenAnswer(value) : [], [ value ]);
+  const buttonOptionState = useMemo(() => {
+    if('error' in document) return {};
+    const R:Record<string, number[]> = {};
+
+    for(const v of document.metadata.answerFormat.interactions){
+      if(v.type !== WAML.InteractionType.BUTTON_OPTION) continue;
+      for(const w of flatValue[v.index]?.value || []){
+        R[w] ??= [];
+        R[w].push(v.index);
+      }
+    }
+    return R;
+  }, [ document, flatValue ]);
   const interactionTokens = useMemo(() => {
     if('error' in document) return [];
     const { metadata } = document;
     const R:InteractionToken[] = [];
     const flatAnswers = metadata?.answers.map(flattenAnswer);
 
-    for(let i = 0; i < metadata.answerFormat.interactions.length; i++){
-      const v = metadata.answerFormat.interactions[i];
-
+    for(const v of metadata.answerFormat.interactions){
       switch(v.type){
         case WAML.InteractionType.CHOICE_OPTION:
-        case WAML.InteractionType.BUTTON_OPTION: {
           for(let j = 0; j < v.values.length; j++) R.push(newToken(j));
           break;
-        }
         default:
           R.push(newToken());
       }
       function newToken(index:number = 0):InteractionToken{
         return new InteractionToken(
           v,
-          flatAnswers.map(w => w[i]),
+          flatAnswers.map(w => w[v.index]),
           index,
-          flatValue[i],
+          flatValue[v.index],
           next => {
             const nextInput = [ ...flatValue ];
 
-            nextInput[i] = next;
+            nextInput[v.index] = next;
             setValue(unflattenAnswer(nextInput));
           }
         );
@@ -91,10 +111,18 @@ export const WAMLProvider:FCWithChildren<Props> = ({ document, options, children
   }, [ document, flatValue ]);
 
   const R = useMemo<Context>(() => ({
-    metadata: 'error' in document ? null! : document.metadata,
+    checkButtonOptionUsed: node => {
+      // 같은 value의 두 노드 중 한 노드만 답안으로 선택된 경우 먼저 등장한 노드부터 사용된 것으로 처리한다.
+      const usedNodes = $renderingVariables.current.buttonOptionUsed[node.value] ||= [];
+      let sequence = usedNodes.indexOf(node.id);
+      if(sequence === -1) sequence = usedNodes.push(node.id) - 1;
+
+      return node.value in buttonOptionState && buttonOptionState[node.value].length > sequence;
+    },
     commonOptions: {
       noDefaultClassName: options.noDefaultClassName || false
     },
+    draggingObject,
     getComponentOptions: type => options[type],
     getURL: options.uriResolver || (uri => uri),
     interactionToken: null!,
@@ -110,9 +138,11 @@ export const WAMLProvider:FCWithChildren<Props> = ({ document, options, children
       }
       return r;
     },
-    value,
-    renderingVariables: $renderingVariables.current
-  }), [ document, interactionTokens, options, value ]);
+    metadata: 'error' in document ? null! : document.metadata,
+    renderingVariables: $renderingVariables.current,
+    setDraggingObject,
+    value
+  }), [ buttonOptionState, document, draggingObject, interactionTokens, options, value ]);
 
   return <context.Provider value={R}>
     {children}

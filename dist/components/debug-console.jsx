@@ -12,6 +12,8 @@ const DebugConsole = ({ document }) => {
     {opened && <div>
       <h1>답안</h1>
       <pre>{JSON.stringify(value, null, 2)}</pre>
+      <h1>메타데이터</h1>
+      <pre>{JSON.stringify(document.metadata, null, 2)}</pre>
       <h1>AST</h1>
       <pre>{JSON.stringify(document.raw, null, 2)}</pre>
     </div>}

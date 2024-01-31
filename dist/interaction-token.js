@@ -32,8 +32,8 @@ class InteractionToken {
     get interactionValue() {
         var _a;
         if (__classPrivateFieldGet(this, _InteractionToken_interactionValue, "f") === undefined) {
-            // NOTE 주관식이기 때문에 여기로 오는 것
-            return ((_a = this.input) === null || _a === void 0 ? void 0 : _a.value[0]) || "";
+            // NOTE 주관식이나 버튼인 경우 여기로 옴
+            return ((_a = this.input) === null || _a === void 0 ? void 0 : _a.value.join(' ')) || "";
         }
         return __classPrivateFieldGet(this, _InteractionToken_interactionValue, "f");
     }
@@ -49,7 +49,6 @@ class InteractionToken {
         this.callback = callback;
         switch (interaction.type) {
             case waml_1.WAML.InteractionType.CHOICE_OPTION:
-            case waml_1.WAML.InteractionType.BUTTON_OPTION:
                 if (interaction.multipleness) {
                     this.answerType = "MULTIPLE";
                     this.ordered = interaction.multipleness === "ordered";
@@ -58,6 +57,15 @@ class InteractionToken {
                     this.answerType = "SINGLE";
                 }
                 __classPrivateFieldSet(this, _InteractionToken_interactionValue, interaction.values[index], "f");
+                break;
+            case waml_1.WAML.InteractionType.BUTTON_OPTION:
+                if (interaction.multipleness) {
+                    this.answerType = "MULTIPLE";
+                    this.ordered = interaction.multipleness === "ordered";
+                }
+                else {
+                    this.answerType = "SINGLE";
+                }
                 break;
             default:
                 this.answerType = "SINGLE";
@@ -85,6 +93,10 @@ class InteractionToken {
             default:
                 throw Error(`Unhandled answerType: ${this.answerType}`);
         }
+    }
+    unsetInteract() {
+        var _a;
+        (_a = this.callback) === null || _a === void 0 ? void 0 : _a.call(this, null);
     }
 }
 _InteractionToken_interactionValue = new WeakMap();

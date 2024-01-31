@@ -4,12 +4,33 @@
 }
 
 .ButtonBlank {
-  display: inline-block;
-  width: 80px;
-  height: 1em;
-  padding: 2px;
+  display: inline-flex;
+  gap: 4px;
+  min-width: 80px;
+  min-height: 1em;
+  padding: 1px;
   border-bottom: 1px solid #666;
   background-color: #EEE;
+
+  >span {
+    padding: 2px;
+    border: 1px solid #CCC;
+    cursor: pointer;
+    font-size: small;
+  }
+}
+
+.ButtonBlank[data-preview]> :last-child {
+  opacity: 0.5;
+}
+
+.ButtonOption[data-dragging] {
+  position: fixed;
+  pointer-events: none;
+}
+
+.ButtonOption:disabled {
+  pointer-events: none;
 }
 
 .ChoiceOption {

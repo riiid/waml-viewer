@@ -1,10 +1,10 @@
 import { WAML } from "@riiid/waml";
 export default class InteractionToken {
     #private;
+    readonly input?: ReturnType<typeof flattenAnswer>[number];
     private readonly answers;
     private readonly callback?;
     private readonly index;
-    private readonly input?;
     private answerType;
     private ordered?;
     get correct(): boolean | undefined;
@@ -13,6 +13,7 @@ export default class InteractionToken {
     constructor(interaction: WAML.Interaction, answers: ReturnType<typeof flattenAnswer>, index: number, input?: ReturnType<typeof flattenAnswer>[number], callback?: (next: Exclude<typeof input, undefined>) => void);
     getAnswerText(): string;
     handleInteract(value: string): void;
+    unsetInteract(): void;
 }
 export declare function flattenAnswer(answer: WAML.Answer): ({
     type: "SINGLE";

@@ -2,10 +2,10 @@
 import { WAML } from "@riiid/waml";
 
 export default class InteractionToken{
+  public readonly input?:ReturnType<typeof flattenAnswer>[number];
   private readonly answers:ReturnType<typeof flattenAnswer>;
   private readonly callback?:(next:ReturnType<typeof flattenAnswer>[number]) => void;
   private readonly index:number;
-  private readonly input?:ReturnType<typeof flattenAnswer>[number];
   #interactionValue?:string;
   private answerType:Exclude<WAML.Answer['type'], 'COMBINED'>;
   private ordered?:boolean;
@@ -24,8 +24,8 @@ export default class InteractionToken{
   }
   public get interactionValue():string{
     if(this.#interactionValue === undefined){
-      // NOTE 주관식이기 때문에 여기로 오는 것
-      return this.input?.value[0] || "";
+      // NOTE 주관식이나 버튼인 경우 여기로 옴
+      return this.input?.value.join(' ') || "";
     }
     return this.#interactionValue;
   }
@@ -46,7 +46,6 @@ export default class InteractionToken{
     this.callback = callback;
     switch(interaction.type){
       case WAML.InteractionType.CHOICE_OPTION:
-      case WAML.InteractionType.BUTTON_OPTION:
         if(interaction.multipleness){
           this.answerType = "MULTIPLE";
           this.ordered = interaction.multipleness === "ordered";
@@ -54,6 +53,14 @@ export default class InteractionToken{
           this.answerType = "SINGLE";
         }
         this.#interactionValue = interaction.values[index];
+        break;
+      case WAML.InteractionType.BUTTON_OPTION:
+        if(interaction.multipleness){
+          this.answerType = "MULTIPLE";
+          this.ordered = interaction.multipleness === "ordered";
+        }else{
+          this.answerType = "SINGLE";
+        }
         break;
       default:
         this.answerType = "SINGLE";
@@ -80,6 +87,9 @@ export default class InteractionToken{
       default:
         throw Error(`Unhandled answerType: ${this.answerType}`);
     }
+  }
+  public unsetInteract():void{
+    this.callback?.(null!);
   }
 }
 export function flattenAnswer(answer:WAML.Answer){

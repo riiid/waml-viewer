@@ -181,8 +181,8 @@ function getAnswerFormat(document, answer) {
   const choiceOptionValues = getChoiceOptionValues(document);
   const interactions = [];
   const existingChoiceOptionGroup = {};
-  const existingButtonOptionGroup = {};
   const existingPairingNetGroup = {};
+  const buttonOptionValues = {};
   for (const v of document) {
     if (typeof v === "string" || !(0, _check.hasKind)(v, "Line") || !v.component) continue;
     if ((0, _check.isMooToken)(v.component, "longLingualOption")) {
@@ -226,7 +226,7 @@ function getAnswerFormat(document, answer) {
   function checkInline(inline) {
     if (typeof inline === "string") return;
     if ((0, _check.isMooToken)(inline, "buttonBlank")) {
-      handleButtonOption("");
+      handleButtonOption("", inline.value);
       return;
     }
     if ((0, _check.hasKind)(inline, "XMLElement") && inline.tag === "pog") {
@@ -259,7 +259,7 @@ function getAnswerFormat(document, answer) {
     } else if ((0, _check.hasKind)(inline, "ChoiceOption")) {
       handleChoiceOption(inline.value);
     } else if ((0, _check.hasKind)(inline, "ButtonOption")) {
-      handleButtonOption(inline.value);
+      handleButtonOption(inline.value, inline.group);
     } else if ((0, _check.hasKind)(inline, "ShortLingualOption")) {
       interactions.push({
         index: interactions.length,
@@ -289,20 +289,21 @@ function getAnswerFormat(document, answer) {
       });
     }
   }
-  function handleButtonOption(value) {
-    // TODO 추후 그룹 이름 지정이 들어가야 할 수도...
-    const group = "default";
-    if (existingButtonOptionGroup[group]) {
-      existingButtonOptionGroup[group].values.push(value);
-      return;
+  function handleButtonOption(value, group) {
+    for (const v of group) {
+      const values = buttonOptionValues[v] || (buttonOptionValues[v] = []);
+      if (value === "") {
+        interactions.push({
+          index: interactions.length,
+          type: _type.WAML.InteractionType.BUTTON_OPTION,
+          group: v,
+          values,
+          multipleness: getMultipleness(interactions.length)
+        });
+      } else {
+        values.push(value);
+      }
     }
-    interactions.push(existingButtonOptionGroup[group] = {
-      index: interactions.length,
-      type: _type.WAML.InteractionType.BUTTON_OPTION,
-      group,
-      values: [value],
-      multipleness: getMultipleness(interactions.length)
-    });
   }
   function getMultipleness(index) {
     const chunk = flattenAnswers[index];
@@ -607,8 +608,8 @@ function id(x) { return x[0]; }
     prefix: textual.prefix,
     longLingualOption: { match: /\{{3}.*?\}{3}/, value: chunk => chunk.slice(3, -3) },
     shortLingualOptionOpen: { match: /{{/, push: "option" },
-    buttonBlank: { match: /{\[_{3,}\]}/, value: "default" },
-    buttonOptionOpen: { match: /{\[/, push: "singleButtonOption" },
+    buttonBlank: { match: /{[\d,]*\[_{3,}\]}/, value: chunk => (chunk.match(/^{([\d,]*)\[/)[1] || "0").split(',').filter(v => v).map(v => parseInt(v)) },
+    buttonOptionOpen: { match: /{[\d,]*\[/, value: chunk => chunk.match(/^{([\d,]*)\[/)[1] || "0", push: "singleButtonOption" },
     choiceOptionOpen: { match: /{/, push: "singleChoiceOption" },
     pairingOptionGroupOpen: { match: /<pog>/ },
 
@@ -998,11 +999,12 @@ var grammar = {
     {"name": "ButtonOption$ebnf$1", "symbols": ["ButtonOption$ebnf$1", "Text"], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
     {"name": "ButtonOption$ebnf$2", "symbols": ["OptionRest"], "postprocess": id},
     {"name": "ButtonOption$ebnf$2", "symbols": [], "postprocess": function(d) {return null;}},
-    {"name": "ButtonOption", "symbols": [(lexer.has("buttonOptionOpen") ? {type: "buttonOptionOpen"} : buttonOptionOpen), "ButtonOption$ebnf$1", "ButtonOption$ebnf$2", (lexer.has("buttonOptionClose") ? {type: "buttonOptionClose"} : buttonOptionClose)], "postprocess":  ([ , first, rest, close ]) => {
+    {"name": "ButtonOption", "symbols": [(lexer.has("buttonOptionOpen") ? {type: "buttonOptionOpen"} : buttonOptionOpen), "ButtonOption$ebnf$1", "ButtonOption$ebnf$2", (lexer.has("buttonOptionClose") ? {type: "buttonOptionClose"} : buttonOptionClose)], "postprocess":  ([ open, first, rest, close ]) => {
           const multiple = rest || close.value.startsWith(",");
           return {
             kind: "ButtonOption",
             id: ++buttonOptionCounter,
+            group: open.value.split(',').filter(v => v).map(v => parseInt(v)),
             value: multiple ? [ first.join(''), ...(rest?.value || []) ] : first.join(''),
             ordered: multiple ? rest?.kind === "OrderedOptionRest" : undefined
           };
@@ -15173,15 +15175,59 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const jsx_dev_runtime_1 = require("react/jsx-dev-runtime");
 const _jsxFileName = "C:/Users/dosel/Dev/waml-viewer/src/components/button-blank.tsx";
+const react_1 = require("react");
 const componentify_1 = __importDefault(require("../componentify"));
+const use_waml_1 = __importDefault(require("../use-waml"));
+const utility_1 = require("../utility");
 const ButtonBlank = (_a) => {
-    var { node } = _a, props = __rest(_a, ["node"]);
-    return (0, jsx_dev_runtime_1.jsxDEV)("span", Object.assign({}, props), void 0, false, { fileName: _jsxFileName, lineNumber: 4, columnNumber: 73 }, this);
+    var _b, _c;
+    var { node, onPointerEnter, onPointerLeave, onPointerUp } = _a, props = __rest(_a, ["node", "onPointerEnter", "onPointerLeave", "onPointerUp"]);
+    const { draggingObject, interactionToken } = (0, use_waml_1.default)(true);
+    const [preview, setPreview] = (0, react_1.useState)();
+    const multiple = ((_b = interactionToken.input) === null || _b === void 0 ? void 0 : _b.type) === "MULTIPLE";
+    const handlePointerEnter = (0, react_1.useCallback)(e => {
+        onPointerEnter === null || onPointerEnter === void 0 ? void 0 : onPointerEnter(e);
+        if (e.defaultPrevented)
+            return;
+        if (!draggingObject)
+            return;
+        if (!(0, utility_1.getIntersection)(draggingObject.node.group, node.value).length)
+            return;
+        setPreview(draggingObject.node.value);
+    }, [draggingObject, node.value, onPointerEnter]);
+    const handlePointerLeave = (0, react_1.useCallback)(e => {
+        onPointerLeave === null || onPointerLeave === void 0 ? void 0 : onPointerLeave(e);
+        if (e.defaultPrevented)
+            return;
+        if (!draggingObject)
+            return;
+        setPreview(undefined);
+    }, [draggingObject, onPointerLeave]);
+    const handlePointerUp = (0, react_1.useCallback)(e => {
+        onPointerUp === null || onPointerUp === void 0 ? void 0 : onPointerUp(e);
+        if (e.defaultPrevented)
+            return;
+        if (!draggingObject)
+            return;
+        if (!(0, utility_1.getIntersection)(draggingObject.node.group, node.value).length)
+            return;
+        interactionToken.handleInteract(draggingObject.node.value);
+        setPreview(undefined);
+    }, [draggingObject, interactionToken, node.value, onPointerUp]);
+    const handleClick = (0, react_1.useCallback)(e => {
+        if (multiple) {
+            interactionToken.handleInteract(e.currentTarget.textContent);
+        }
+        else {
+            interactionToken.unsetInteract();
+        }
+    }, [interactionToken, multiple]);
+    return (0, jsx_dev_runtime_1.jsxDEV)("span", Object.assign({ onPointerEnter: handlePointerEnter, onPointerLeave: handlePointerLeave, onPointerUp: handlePointerUp }, props, preview ? { 'data-preview': true } : {}, { children: [(multiple || !preview) && ((_c = interactionToken.input) === null || _c === void 0 ? void 0 : _c.value.map((v, i) => ((0, jsx_dev_runtime_1.jsxDEV)("span", { onClick: handleClick, children: v }, i, false, { fileName: _jsxFileName, lineNumber: 50, columnNumber: 77 }, this)))), Boolean(preview) && (0, jsx_dev_runtime_1.jsxDEV)("span", { children: preview }, void 0, false, { fileName: _jsxFileName, lineNumber: 53, columnNumber: 25 }, this)] }), void 0, true, { fileName: _jsxFileName, lineNumber: 43, columnNumber: 9 }, this);
 };
 ButtonBlank.displayName = "ButtonBlank";
 exports.default = (0, componentify_1.default)(ButtonBlank);
 
-},{"../componentify":28,"react/jsx-dev-runtime":23}],33:[function(require,module,exports){
+},{"../componentify":28,"../use-waml":62,"../utility":63,"react":22,"react/jsx-dev-runtime":23}],33:[function(require,module,exports){
 "use strict";
 var __rest = (this && this.__rest) || function (s, e) {
     var t = {};
@@ -15200,15 +15246,44 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const jsx_dev_runtime_1 = require("react/jsx-dev-runtime");
 const _jsxFileName = "C:/Users/dosel/Dev/waml-viewer/src/components/button-option.tsx";
+const react_1 = require("react");
 const componentify_1 = __importDefault(require("../componentify"));
+const use_waml_1 = __importDefault(require("../use-waml"));
 const ButtonOption = (_a) => {
-    var { node } = _a, props = __rest(_a, ["node"]);
-    return (0, jsx_dev_runtime_1.jsxDEV)("button", Object.assign({}, props, { children: node.value }), void 0, false, { fileName: _jsxFileName, lineNumber: 4, columnNumber: 75 }, this);
+    var { node, onPointerDown } = _a, props = __rest(_a, ["node", "onPointerDown"]);
+    const { draggingObject, setDraggingObject, checkButtonOptionUsed } = (0, use_waml_1.default)();
+    const used = checkButtonOptionUsed(node);
+    const handlePointerDown = (0, react_1.useCallback)(e => {
+        onPointerDown === null || onPointerDown === void 0 ? void 0 : onPointerDown(e);
+        if (e.defaultPrevented)
+            return;
+        const $target = e.currentTarget;
+        const startX = e.clientX;
+        const startY = e.clientY;
+        const { top, left } = $target.getBoundingClientRect();
+        const onPointerMove = (f) => {
+            const deltaX = f.clientX - startX;
+            const deltaY = f.clientY - startY;
+            $target.style.top = `${top + deltaY}px`;
+            $target.style.left = `${left + deltaX}px`;
+        };
+        const onPointerUp = () => {
+            $target.style.top = "";
+            $target.style.left = "";
+            window.removeEventListener('pointermove', onPointerMove);
+            window.removeEventListener('pointerup', onPointerUp);
+            setDraggingObject(null);
+        };
+        window.addEventListener('pointermove', onPointerMove);
+        window.addEventListener('pointerup', onPointerUp);
+        setDraggingObject({ displayName: "ButtonOption", node, $target });
+    }, [node, onPointerDown, setDraggingObject]);
+    return (0, jsx_dev_runtime_1.jsxDEV)("button", Object.assign({ disabled: used, onPointerDown: handlePointerDown }, props, node.id === (draggingObject === null || draggingObject === void 0 ? void 0 : draggingObject.node.id) ? { 'data-dragging': true } : {}, { children: node.value }), void 0, false, { fileName: _jsxFileName, lineNumber: 38, columnNumber: 9 }, this);
 };
 ButtonOption.displayName = "ButtonOption";
 exports.default = (0, componentify_1.default)(ButtonOption);
 
-},{"../componentify":28,"react/jsx-dev-runtime":23}],34:[function(require,module,exports){
+},{"../componentify":28,"../use-waml":62,"react":22,"react/jsx-dev-runtime":23}],34:[function(require,module,exports){
 "use strict";
 var __rest = (this && this.__rest) || function (s, e) {
     var t = {};
@@ -15283,7 +15358,7 @@ const use_waml_1 = __importDefault(require("../use-waml"));
 const DebugConsole = ({ document }) => {
     const { value } = (0, use_waml_1.default)();
     const [opened, setOpened] = (0, react_1.useState)(false);
-    return (0, jsx_dev_runtime_1.jsxDEV)("div", { className: "DebugConsole", children: [opened && (0, jsx_dev_runtime_1.jsxDEV)("div", { children: [(0, jsx_dev_runtime_1.jsxDEV)("h1", { children: "\uB2F5\uC548" }, void 0, false, { fileName: _jsxFileName, lineNumber: 15, columnNumber: 7 }, this), (0, jsx_dev_runtime_1.jsxDEV)("pre", { children: JSON.stringify(value, null, 2) }, void 0, false, { fileName: _jsxFileName, lineNumber: 16, columnNumber: 7 }, this), (0, jsx_dev_runtime_1.jsxDEV)("h1", { children: "AST" }, void 0, false, { fileName: _jsxFileName, lineNumber: 17, columnNumber: 7 }, this), (0, jsx_dev_runtime_1.jsxDEV)("pre", { children: JSON.stringify(document.raw, null, 2) }, void 0, false, { fileName: _jsxFileName, lineNumber: 18, columnNumber: 7 }, this)] }, void 0, true, { fileName: _jsxFileName, lineNumber: 14, columnNumber: 15 }, this), (0, jsx_dev_runtime_1.jsxDEV)("button", { onClick: () => setOpened(!opened), children: opened ? "Close" : "Open console" }, void 0, false, { fileName: _jsxFileName, lineNumber: 20, columnNumber: 5 }, this)] }, void 0, true, { fileName: _jsxFileName, lineNumber: 13, columnNumber: 9 }, this);
+    return (0, jsx_dev_runtime_1.jsxDEV)("div", { className: "DebugConsole", children: [opened && (0, jsx_dev_runtime_1.jsxDEV)("div", { children: [(0, jsx_dev_runtime_1.jsxDEV)("h1", { children: "\uB2F5\uC548" }, void 0, false, { fileName: _jsxFileName, lineNumber: 15, columnNumber: 7 }, this), (0, jsx_dev_runtime_1.jsxDEV)("pre", { children: JSON.stringify(value, null, 2) }, void 0, false, { fileName: _jsxFileName, lineNumber: 16, columnNumber: 7 }, this), (0, jsx_dev_runtime_1.jsxDEV)("h1", { children: "\uBA54\uD0C0\uB370\uC774\uD130" }, void 0, false, { fileName: _jsxFileName, lineNumber: 17, columnNumber: 7 }, this), (0, jsx_dev_runtime_1.jsxDEV)("pre", { children: JSON.stringify(document.metadata, null, 2) }, void 0, false, { fileName: _jsxFileName, lineNumber: 18, columnNumber: 7 }, this), (0, jsx_dev_runtime_1.jsxDEV)("h1", { children: "AST" }, void 0, false, { fileName: _jsxFileName, lineNumber: 19, columnNumber: 7 }, this), (0, jsx_dev_runtime_1.jsxDEV)("pre", { children: JSON.stringify(document.raw, null, 2) }, void 0, false, { fileName: _jsxFileName, lineNumber: 20, columnNumber: 7 }, this)] }, void 0, true, { fileName: _jsxFileName, lineNumber: 14, columnNumber: 15 }, this), (0, jsx_dev_runtime_1.jsxDEV)("button", { onClick: () => setOpened(!opened), children: opened ? "Close" : "Open console" }, void 0, false, { fileName: _jsxFileName, lineNumber: 22, columnNumber: 5 }, this)] }, void 0, true, { fileName: _jsxFileName, lineNumber: 13, columnNumber: 9 }, this);
 };
 exports.default = DebugConsole;
 
@@ -15360,7 +15435,7 @@ class WAMLErrorBoundary extends react_1.Component {
     }
 }
 
-},{"../componentify":28,"../waml-error":63,"./isoprefixed-line-group-renderer":44,"./semantic-error-handler":53,"@riiid/waml":3,"react":22,"react/jsx-dev-runtime":23}],38:[function(require,module,exports){
+},{"../componentify":28,"../waml-error":64,"./isoprefixed-line-group-renderer":44,"./semantic-error-handler":53,"@riiid/waml":3,"react":22,"react/jsx-dev-runtime":23}],38:[function(require,module,exports){
 "use strict";
 var __rest = (this && this.__rest) || function (s, e) {
     var t = {};
@@ -16099,7 +16174,7 @@ const Table = (_a) => {
 Table.displayName = "Table";
 exports.default = (0, componentify_1.default)(Table);
 
-},{"../componentify":28,"../react":60,"../waml-error":63,"./document":37,"@riiid/waml":3,"react":22,"react/jsx-dev-runtime":23}],57:[function(require,module,exports){
+},{"../componentify":28,"../react":60,"../waml-error":64,"./document":37,"@riiid/waml":3,"react":22,"react/jsx-dev-runtime":23}],57:[function(require,module,exports){
 "use strict";
 var __rest = (this && this.__rest) || function (s, e) {
     var t = {};
@@ -16246,8 +16321,8 @@ class InteractionToken {
     get interactionValue() {
         var _a;
         if (__classPrivateFieldGet(this, _InteractionToken_interactionValue, "f") === undefined) {
-            // NOTE 주관식이기 때문에 여기로 오는 것
-            return ((_a = this.input) === null || _a === void 0 ? void 0 : _a.value[0]) || "";
+            // NOTE 주관식이나 버튼인 경우 여기로 옴
+            return ((_a = this.input) === null || _a === void 0 ? void 0 : _a.value.join(' ')) || "";
         }
         return __classPrivateFieldGet(this, _InteractionToken_interactionValue, "f");
     }
@@ -16263,7 +16338,6 @@ class InteractionToken {
         this.callback = callback;
         switch (interaction.type) {
             case waml_1.WAML.InteractionType.CHOICE_OPTION:
-            case waml_1.WAML.InteractionType.BUTTON_OPTION:
                 if (interaction.multipleness) {
                     this.answerType = "MULTIPLE";
                     this.ordered = interaction.multipleness === "ordered";
@@ -16272,6 +16346,15 @@ class InteractionToken {
                     this.answerType = "SINGLE";
                 }
                 __classPrivateFieldSet(this, _InteractionToken_interactionValue, interaction.values[index], "f");
+                break;
+            case waml_1.WAML.InteractionType.BUTTON_OPTION:
+                if (interaction.multipleness) {
+                    this.answerType = "MULTIPLE";
+                    this.ordered = interaction.multipleness === "ordered";
+                }
+                else {
+                    this.answerType = "SINGLE";
+                }
                 break;
             default:
                 this.answerType = "SINGLE";
@@ -16299,6 +16382,10 @@ class InteractionToken {
             default:
                 throw Error(`Unhandled answerType: ${this.answerType}`);
         }
+    }
+    unsetInteract() {
+        var _a;
+        (_a = this.callback) === null || _a === void 0 ? void 0 : _a.call(this, null);
     }
 }
 _InteractionToken_interactionValue = new WeakMap();
@@ -16382,7 +16469,7 @@ const jsx_dev_runtime_1 = require("react/jsx-dev-runtime");
 const _jsxFileName = "C:/Users/dosel/Dev/waml-viewer/src/use-waml.tsx";
 const react_1 = require("react");
 const waml_1 = require("@riiid/waml");
-const interaction_token_1 = __importStar(require("./interaction-token"));
+const interaction_token_js_1 = __importStar(require("./interaction-token.js"));
 const context = (0, react_1.createContext)(null);
 const useWAML = (invokingInteractionToken) => {
     const id = (0, react_1.useId)();
@@ -16396,33 +16483,47 @@ exports.default = useWAML;
 const WAMLProvider = ({ document, options, children }) => {
     const $renderingVariables = (0, react_1.useRef)({
         pendingClasses: [],
-        interactionTokenIndex: {}
+        interactionTokenIndex: {},
+        buttonOptionUsed: {}
     });
     const [value, setValue] = (0, react_1.useState)();
-    const flatValue = (0, react_1.useMemo)(() => value ? (0, interaction_token_1.flattenAnswer)(value) : [], [value]);
+    const [draggingObject, setDraggingObject] = (0, react_1.useState)(null);
+    const flatValue = (0, react_1.useMemo)(() => value ? (0, interaction_token_js_1.flattenAnswer)(value) : [], [value]);
+    const buttonOptionState = (0, react_1.useMemo)(() => {
+        var _a, _b;
+        if ('error' in document)
+            return {};
+        const R = {};
+        for (const v of document.metadata.answerFormat.interactions) {
+            if (v.type !== waml_1.WAML.InteractionType.BUTTON_OPTION)
+                continue;
+            for (const w of ((_a = flatValue[v.index]) === null || _a === void 0 ? void 0 : _a.value) || []) {
+                (_b = R[w]) !== null && _b !== void 0 ? _b : (R[w] = []);
+                R[w].push(v.index);
+            }
+        }
+        return R;
+    }, [document, flatValue]);
     const interactionTokens = (0, react_1.useMemo)(() => {
         if ('error' in document)
             return [];
         const { metadata } = document;
         const R = [];
-        const flatAnswers = metadata === null || metadata === void 0 ? void 0 : metadata.answers.map(interaction_token_1.flattenAnswer);
-        for (let i = 0; i < metadata.answerFormat.interactions.length; i++) {
-            const v = metadata.answerFormat.interactions[i];
+        const flatAnswers = metadata === null || metadata === void 0 ? void 0 : metadata.answers.map(interaction_token_js_1.flattenAnswer);
+        for (const v of metadata.answerFormat.interactions) {
             switch (v.type) {
                 case waml_1.WAML.InteractionType.CHOICE_OPTION:
-                case waml_1.WAML.InteractionType.BUTTON_OPTION: {
                     for (let j = 0; j < v.values.length; j++)
                         R.push(newToken(j));
                     break;
-                }
                 default:
                     R.push(newToken());
             }
             function newToken(index = 0) {
-                return new interaction_token_1.default(v, flatAnswers.map(w => w[i]), index, flatValue[i], next => {
+                return new interaction_token_js_1.default(v, flatAnswers.map(w => w[v.index]), index, flatValue[v.index], next => {
                     const nextInput = [...flatValue];
-                    nextInput[i] = next;
-                    setValue((0, interaction_token_1.unflattenAnswer)(nextInput));
+                    nextInput[v.index] = next;
+                    setValue((0, interaction_token_js_1.unflattenAnswer)(nextInput));
                 });
             }
         }
@@ -16430,10 +16531,19 @@ const WAMLProvider = ({ document, options, children }) => {
         return R;
     }, [document, flatValue]);
     const R = (0, react_1.useMemo)(() => ({
-        metadata: 'error' in document ? null : document.metadata,
+        checkButtonOptionUsed: node => {
+            var _a, _b;
+            // 같은 value의 두 노드 중 한 노드만 답안으로 선택된 경우 먼저 등장한 노드부터 사용된 것으로 처리한다.
+            const usedNodes = (_a = $renderingVariables.current.buttonOptionUsed)[_b = node.value] || (_a[_b] = []);
+            let sequence = usedNodes.indexOf(node.id);
+            if (sequence === -1)
+                sequence = usedNodes.push(node.id) - 1;
+            return node.value in buttonOptionState && buttonOptionState[node.value].length > sequence;
+        },
         commonOptions: {
             noDefaultClassName: options.noDefaultClassName || false
         },
+        draggingObject,
         getComponentOptions: type => options[type],
         getURL: options.uriResolver || (uri => uri),
         interactionToken: null,
@@ -16449,14 +16559,29 @@ const WAMLProvider = ({ document, options, children }) => {
             }
             return r;
         },
-        value,
-        renderingVariables: $renderingVariables.current
-    }), [document, interactionTokens, options, value]);
-    return (0, jsx_dev_runtime_1.jsxDEV)(context.Provider, { value: R, children: children }, void 0, false, { fileName: _jsxFileName, lineNumber: 117, columnNumber: 9 }, this);
+        metadata: 'error' in document ? null : document.metadata,
+        renderingVariables: $renderingVariables.current,
+        setDraggingObject,
+        value
+    }), [buttonOptionState, document, draggingObject, interactionTokens, options, value]);
+    return (0, jsx_dev_runtime_1.jsxDEV)(context.Provider, { value: R, children: children }, void 0, false, { fileName: _jsxFileName, lineNumber: 147, columnNumber: 9 }, this);
 };
 exports.WAMLProvider = WAMLProvider;
 
-},{"./interaction-token":59,"@riiid/waml":3,"react":22,"react/jsx-dev-runtime":23}],63:[function(require,module,exports){
+},{"./interaction-token.js":59,"@riiid/waml":3,"react":22,"react/jsx-dev-runtime":23}],63:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.getIntersection = void 0;
+function getIntersection(a, b) {
+    const table = a.reduce((pv, v) => {
+        pv[v] = true;
+        return pv;
+    }, {});
+    return b.filter(v => v in table);
+}
+exports.getIntersection = getIntersection;
+
+},{}],64:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.NOT_YET_IMPLEMENTED = void 0;
