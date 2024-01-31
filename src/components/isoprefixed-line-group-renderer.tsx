@@ -3,6 +3,7 @@ import type { FC } from "react";
 import { Fragment, useMemo } from "react";
 import Line from "./line";
 import PrefixedLine from "./prefixed-line";
+import React from "react";
 
 type Props = {
   'depth'?: number,

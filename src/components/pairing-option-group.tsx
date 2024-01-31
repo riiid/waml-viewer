@@ -1,3 +1,4 @@
+import React from "react";
 import componentify from "../componentify";
 import type { WAMLComponent } from "../types";
 import PairingOption from "./pairing-option";

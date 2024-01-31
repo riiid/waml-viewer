@@ -1,7 +1,7 @@
 {
   "name": "waml-viewer",
   "version": "1.0.0",
-  "main": "dist/index.jsx",
+  "main": "dist/index.js",
   "repository": "https://github.com/riiid/waml-viewer.git",
   "author": "Juyeong Jeong <juyeong.jeong@riiid.co>",
   "devDependencies": {
@@ -12,7 +12,6 @@
     "browserify": "^17.0.0",
     "eslint": "^8.56.0",
     "esmify": "^2.1.1",
-    "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "typescript": "^5.3.3"
   },
@@ -22,10 +21,8 @@
     "build:test": "tsc --jsx react-jsxdev --outDir test/dist && browserify test/dist/test.js -p esmify -o test/index.js"
   },
   "dependencies": {
+    "react": "^18.2.0",
     "@riiid/waml": "github:riiid/waml#ab2fe39786d8b69dad20ddb3fc5bff5f580f5555",
     "react-latex-next": "^2.2.0"
-  },
-  "peerDependencies": {
-    "react": "^18.2.0"
   }
 }

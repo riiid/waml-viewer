@@ -6,6 +6,7 @@ import type { WAMLComponent } from "../types";
 import WAMLError from "../waml-error";
 import { C } from "../react";
 import Document from "./document";
+import React from "react";
 
 const columnsPattern = /^\d+(:\d+)*$/;
 

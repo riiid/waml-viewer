@@ -11,6 +11,7 @@ import Audio from "./audio";
 import ButtonOption from "./button-option";
 import Table from "./table";
 import PairingOptionGroup from "./pairing-option-group";
+import React from "react";
 
 const Inline:WAMLComponent<'Inline'> = ({ node }) => {
   if(typeof node === "string"){

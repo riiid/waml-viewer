@@ -1,3 +1,3 @@
-/// <reference types="react" />
-declare const _default: import("react").NamedExoticComponent<{}>;
+import React from "react";
+declare const _default: React.NamedExoticComponent<{}>;
 export default _default;

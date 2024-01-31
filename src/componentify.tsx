@@ -1,7 +1,7 @@
-import { memo, type ReactElement } from "react";
-import { C } from "./react";
-import type { WAMLComponent, WAMLComponentType } from "./types";
-import useWAML from "./use-waml";
+import React, { memo, type ReactElement } from "react";
+import { C } from "./react.js";
+import type { WAMLComponent, WAMLComponentType } from "./types.js";
+import useWAML from "./use-waml.js";
 
 export default function componentify<T extends WAMLComponentType>(Component:WAMLComponent<T>):WAMLComponent<T>{
   const R:WAMLComponent<T> = ({ node, ...props }) => {

@@ -3,6 +3,7 @@ import { useCallback } from "react";
 import componentify from "../componentify";
 import type { WAMLComponent } from "../types";
 import useWAML from "../use-waml";
+import React from "react";
 
 const ShortLingualOption:WAMLComponent<'ShortLingualOption'> = ({ node, inline, ...props }) => {
   const { interactionToken } = useWAML(true);

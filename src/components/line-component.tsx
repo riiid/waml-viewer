@@ -13,6 +13,7 @@ import LongLingualOption from "./long-lingual-option";
 import HR from "./hr";
 import Passage from "./passage";
 import Footnote from "./footnote";
+import React from "react";
 
 const LineComponent:WAMLComponent<'LineComponent'> = ({ node, ...props }) => {
   const { renderingVariables } = useWAML();

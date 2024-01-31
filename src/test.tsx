@@ -1,5 +1,5 @@
 import type { ChangeEventHandler, FC } from "react";
-import { useCallback, useState } from "react";
+import React, { useCallback, useState } from "react";
 import ReactDOM from "react-dom";
 import WAMLViewer from ".";
 

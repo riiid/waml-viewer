@@ -2,6 +2,7 @@ import { hasKind } from "@riiid/waml";
 import componentify from "../componentify";
 import type { WAMLComponent } from "../types";
 import LineComponent from "./line-component";
+import React from "react";
 
 const Line:WAMLComponent<'Line'> = ({ node, next, ...props }) => {
   if(node.component && hasKind(node.component, 'Anchor')){

@@ -1,5 +1,5 @@
 import type { PointerEventHandler } from "react";
-import { useCallback } from "react";
+import React, { useCallback } from "react";
 import componentify from "../componentify";
 import type { WAMLComponent } from "../types";
 import useWAML from "../use-waml";

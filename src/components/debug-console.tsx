@@ -2,6 +2,7 @@ import type { FC } from "react";
 import { useState } from "react";
 import type { WAMLDocument } from "@riiid/waml";
 import useWAML from "../use-waml";
+import React from "react";
 
 type Props = {
   document: WAMLDocument

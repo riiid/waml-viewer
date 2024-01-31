@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Component, useMemo } from "react";
+import React, { Component, useMemo } from "react";
 import type { WAML } from "@riiid/waml";
 import { hasKind } from "@riiid/waml";
 import componentify from "../componentify";

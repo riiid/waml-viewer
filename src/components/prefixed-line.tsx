@@ -1,3 +1,4 @@
+import React from "react";
 import componentify from "../componentify";
 import { C } from "../react";
 import type { WAMLComponent } from "../types";

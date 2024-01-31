@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.NOT_YET_IMPLEMENTED = void 0;
 class WAMLError extends Error {
+    node;
     constructor(message, node) {
         super(message);
         this.node = node;

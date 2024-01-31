@@ -1,4 +1,5 @@
 import type { FC } from "react";
+import React from "react";
 import { memo, useCallback } from "react";
 
 type Props = {

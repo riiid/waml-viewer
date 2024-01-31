@@ -1,4 +1,4 @@
-import { createContext, useContext, useId, useMemo, useRef, useState } from "react";
+import React, { createContext, useContext, useId, useMemo, useRef, useState } from "react";
 import type { WAMLDocument } from "@riiid/waml";
 import { WAML } from "@riiid/waml";
 import type { FCWithChildren, WAMLComponentType, WAMLViewerOptions } from "./types.js";

@@ -3,6 +3,7 @@ import { WAMLDocument, hasKind, parseWAML } from "@riiid/waml";
 import type { FC, HTMLAttributes, ReactNode } from "react";
 import { useMemo } from "react";
 import { createPortal } from "react-dom";
+import React from "react";
 import BuiltinStyle from "./components/builtin-style";
 import DebugConsole from "./components/debug-console";
 import Document from "./components/document";
