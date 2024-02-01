@@ -8,6 +8,7 @@ const ButtonOption:WAMLComponent<'ButtonOption'> = ({ node, onPointerDown, ...pr
   const { draggingObject, setDraggingObject, checkButtonOptionUsed } = useWAML();
 
   const used = checkButtonOptionUsed(node);
+  const dragging = draggingObject?.node === node;
 
   const handlePointerDown = useCallback<PointerEventHandler<HTMLButtonElement>>(e => {
     onPointerDown?.(e);
@@ -39,7 +40,7 @@ const ButtonOption:WAMLComponent<'ButtonOption'> = ({ node, onPointerDown, ...pr
     disabled={used}
     onPointerDown={handlePointerDown}
     {...props}
-    {...node.id === draggingObject?.node.id ? { 'data-dragging': true } : {}}
+    {...dragging ? { 'data-dragging': true } : {}}
   >
     {node.value}
   </button>;

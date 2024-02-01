@@ -1,7 +1,7 @@
 {
   "extends": "@tsconfig/strictest",
   "compilerOptions": {
-    "target": "ESNext",
+    "target": "ES2018",
     "module": "CommonJS",
     "moduleResolution": "Node",
     "rootDir": "src",

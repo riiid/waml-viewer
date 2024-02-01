@@ -32,8 +32,9 @@ const use_waml_1 = __importDefault(require("../use-waml"));
 const ButtonOption = ({ node, onPointerDown, ...props }) => {
     const { draggingObject, setDraggingObject, checkButtonOptionUsed } = (0, use_waml_1.default)();
     const used = checkButtonOptionUsed(node);
+    const dragging = (draggingObject === null || draggingObject === void 0 ? void 0 : draggingObject.node) === node;
     const handlePointerDown = (0, react_1.useCallback)(e => {
-        onPointerDown?.(e);
+        onPointerDown === null || onPointerDown === void 0 ? void 0 : onPointerDown(e);
         if (e.defaultPrevented)
             return;
         const $target = e.currentTarget;
@@ -57,7 +58,7 @@ const ButtonOption = ({ node, onPointerDown, ...props }) => {
         window.addEventListener('pointerup', onPointerUp);
         setDraggingObject({ displayName: "ButtonOption", node, $target });
     }, [node, onPointerDown, setDraggingObject]);
-    return react_1.default.createElement("button", { disabled: used, onPointerDown: handlePointerDown, ...props, ...node.id === draggingObject?.node.id ? { 'data-dragging': true } : {} }, node.value);
+    return react_1.default.createElement("button", { disabled: used, onPointerDown: handlePointerDown, ...props, ...dragging ? { 'data-dragging': true } : {} }, node.value);
 };
 ButtonOption.displayName = "ButtonOption";
 exports.default = (0, componentify_1.default)(ButtonOption);

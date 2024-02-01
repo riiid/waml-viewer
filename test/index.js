@@ -183,38 +183,48 @@ function getAnswerFormat(document, answer) {
   const existingChoiceOptionGroup = {};
   const existingPairingNetGroup = {};
   const buttonOptionValues = {};
-  for (const v of document) {
-    if (typeof v === "string" || !(0, _check.hasKind)(v, "Line") || !v.component) continue;
-    if ((0, _check.isMooToken)(v.component, "longLingualOption")) {
-      interactions.push({
-        index: interactions.length,
-        type: _type.WAML.InteractionType.LONG_LINGUAL_OPTION,
-        placeholder: v.component.value
-      });
-      continue;
-    }
-    if ((0, _check.hasKind)(v.component, "LineComponent") && v.component.headOption) {
-      handleChoiceOption(v.component.headOption.value);
-    }
-    if ((0, _check.hasKind)(v.component, "ShortLingualOption")) {
-      checkInline(v.component);
-    }
-    if ("inlines" in v.component) {
-      for (const w of iterate(v.component.inlines)) {
-        checkInline(w);
-      }
-    }
-  }
+  iterateDocument(document);
   return {
     interactions
   };
+  function iterateDocument(document) {
+    for (const v of document) {
+      if (typeof v === "string" || !(0, _check.hasKind)(v, "Line") || !v.component) continue;
+      if ((0, _check.isMooToken)(v.component, "longLingualOption")) {
+        interactions.push({
+          index: interactions.length,
+          type: _type.WAML.InteractionType.LONG_LINGUAL_OPTION,
+          placeholder: v.component.value
+        });
+        continue;
+      }
+      if ((0, _check.hasKind)(v.component, "LineComponent") && v.component.headOption) {
+        handleChoiceOption(v.component.headOption.value);
+      }
+      if ((0, _check.hasKind)(v.component, "ShortLingualOption")) {
+        checkInline(v.component);
+      }
+      if ("inlines" in v.component) {
+        for (const w of iterate(v.component.inlines)) {
+          checkInline(w);
+        }
+      }
+    }
+  }
   function* iterate(inlines) {
     for (const v of inlines) {
       yield v;
       if (typeof v === "string") continue;
-      if ((0, _check.hasKind)(v, "XMLElement") && v.tag === "pog") {
-        for (const w of v.content) {
-          yield* iterate(w.inlines);
+      if ((0, _check.hasKind)(v, "XMLElement")) {
+        if (v.tag === "pog") {
+          for (const w of v.content) {
+            yield* iterate(w.inlines);
+          }
+        } else if (v.tag === "table") {
+          for (const w of v.content) {
+            if (!(0, _check.hasKind)(w, "Cell")) continue;
+            iterateDocument(w.body);
+          }
         }
         continue;
       }
@@ -7453,7 +7463,7 @@ if(/^(https?|file):$/.test(protocol)){// eslint-disable-next-line react-internal
 console.info('%cDownload the React DevTools '+'for a better development experience: '+'https://reactjs.org/link/react-devtools'+(protocol==='file:'?'\nYou might need to use a local HTTP server (instead of file://): '+'https://reactjs.org/link/react-devtools-faq':''),'font-weight:bold');}}}}exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED=Internals;exports.createPortal=createPortal$1;exports.createRoot=createRoot$1;exports.findDOMNode=findDOMNode;exports.flushSync=flushSync$1;exports.hydrate=hydrate;exports.hydrateRoot=hydrateRoot$1;exports.render=render;exports.unmountComponentAtNode=unmountComponentAtNode;exports.unstable_batchedUpdates=batchedUpdates$1;exports.unstable_renderSubtreeIntoContainer=renderSubtreeIntoContainer;exports.version=ReactVersion;/* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */if(typeof __REACT_DEVTOOLS_GLOBAL_HOOK__!=='undefined'&&typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop==='function'){__REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop(new Error());}})();}
 
 }).call(this)}).call(this,require('_process'))
-},{"_process":13,"react":22,"scheduler":26}],15:[function(require,module,exports){
+},{"_process":13,"react":20,"scheduler":23}],15:[function(require,module,exports){
 /**
  * @license React
  * react-dom.production.min.js
@@ -7778,7 +7788,7 @@ exports.hydrateRoot=function(a,b,c){if(!ol(a))throw Error(p(405));var d=null!=c&
 e);return new nl(b)};exports.render=function(a,b,c){if(!pl(b))throw Error(p(200));return sl(null,a,b,!1,c)};exports.unmountComponentAtNode=function(a){if(!pl(a))throw Error(p(40));return a._reactRootContainer?(Sk(function(){sl(null,null,a,!1,function(){a._reactRootContainer=null;a[uf]=null})}),!0):!1};exports.unstable_batchedUpdates=Rk;
 exports.unstable_renderSubtreeIntoContainer=function(a,b,c,d){if(!pl(c))throw Error(p(200));if(null==a||void 0===a._reactInternals)throw Error(p(38));return sl(a,b,c,!1,d)};exports.version="18.2.0-next-9e3b772b8-20220608";
 
-},{"react":22,"scheduler":26}],16:[function(require,module,exports){
+},{"react":20,"scheduler":23}],16:[function(require,module,exports){
 (function (process){(function (){
 'use strict';
 
@@ -10700,1135 +10710,7 @@ if(typeof document!=="undefined"){if(document.compatMode!=="CSS1Compat"){typeof 
 var i=delimiters.findIndex(function(delim){return text.startsWith(delim.left);});index=findEndOfMath(delimiters[i].right,text,delimiters[i].left.length);if(index===-1){break;}var rawData=text.slice(0,index+delimiters[i].right.length);var math=amsRegex.test(rawData)?rawData:text.slice(delimiters[i].left.length,index);data.push({type:"math",data:math,rawData:rawData,display:delimiters[i].display});text=text.slice(index+delimiters[i].right.length);}if(text!==""){data.push({type:"text",data:text});}return data;}/** Adapted from /contrib/auto-render/auto-render.js at github.com/Khan/KaTeX */function renderLatexInTextAsHTMLString(text,delimiters,strict,macros){var data=splitAtDelimiters(text,delimiters);var fragments=[];for(var i=0;i<data.length;i++){if(data[i].type==='text'){fragments.push(data[i].data);}else{var latex=data[i].data;var displayMode=data[i].display;try{var rendered=katex_2(latex,{displayMode:displayMode,macros:macros});fragments.push(rendered);}catch(error){if(strict){throw error;}fragments.push(data[i].data);}}}return fragments.join('');}__$styleInject(".___Latex___1nfc2_1 ._latex_1nfc2_1 {\n  font: inherit\n}\n",{});var Latex$1=/** @class */function(_super){__extends(Latex,_super);function Latex(){return _super!==null&&_super.apply(this,arguments)||this;}Latex.prototype.render=function(){var _a=this.props,children=_a.children,delimiters=_a.delimiters,strict=_a.strict,macros=_a.macros;var renderedLatex=renderLatexInTextAsHTMLString(children,delimiters,strict,macros);return(0,_react.createElement)("span",{className:"__Latex__",dangerouslySetInnerHTML:{__html:renderedLatex}});};Latex.defaultProps={delimiters:[{left:'$$',right:'$$',display:true},{left:'\\(',right:'\\)',display:false},{left:'$',right:'$',display:false},{left:'\\[',right:'\\]',display:true}],strict:false};return Latex;}(_react.Component);var _default=exports.default=Latex$1;
 
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"react":22}],18:[function(require,module,exports){
-(function (process){(function (){
-/**
- * @license React
- * react-jsx-dev-runtime.development.js
- *
- * Copyright (c) Facebook, Inc. and its affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
-'use strict';
-
-if (process.env.NODE_ENV !== "production") {
-  (function () {
-    'use strict';
-
-    var React = require('react');
-
-    // ATTENTION
-    // When adding new symbols to this file,
-    // Please consider also adding to 'react-devtools-shared/src/backend/ReactSymbols'
-    // The Symbol used to tag the ReactElement-like types.
-    var REACT_ELEMENT_TYPE = Symbol.for('react.element');
-    var REACT_PORTAL_TYPE = Symbol.for('react.portal');
-    var REACT_FRAGMENT_TYPE = Symbol.for('react.fragment');
-    var REACT_STRICT_MODE_TYPE = Symbol.for('react.strict_mode');
-    var REACT_PROFILER_TYPE = Symbol.for('react.profiler');
-    var REACT_PROVIDER_TYPE = Symbol.for('react.provider');
-    var REACT_CONTEXT_TYPE = Symbol.for('react.context');
-    var REACT_FORWARD_REF_TYPE = Symbol.for('react.forward_ref');
-    var REACT_SUSPENSE_TYPE = Symbol.for('react.suspense');
-    var REACT_SUSPENSE_LIST_TYPE = Symbol.for('react.suspense_list');
-    var REACT_MEMO_TYPE = Symbol.for('react.memo');
-    var REACT_LAZY_TYPE = Symbol.for('react.lazy');
-    var REACT_OFFSCREEN_TYPE = Symbol.for('react.offscreen');
-    var MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
-    var FAUX_ITERATOR_SYMBOL = '@@iterator';
-    function getIteratorFn(maybeIterable) {
-      if (maybeIterable === null || typeof maybeIterable !== 'object') {
-        return null;
-      }
-      var maybeIterator = MAYBE_ITERATOR_SYMBOL && maybeIterable[MAYBE_ITERATOR_SYMBOL] || maybeIterable[FAUX_ITERATOR_SYMBOL];
-      if (typeof maybeIterator === 'function') {
-        return maybeIterator;
-      }
-      return null;
-    }
-    var ReactSharedInternals = React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
-    function error(format) {
-      {
-        {
-          for (var _len2 = arguments.length, args = new Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
-            args[_key2 - 1] = arguments[_key2];
-          }
-          printWarning('error', format, args);
-        }
-      }
-    }
-    function printWarning(level, format, args) {
-      // When changing this logic, you might want to also
-      // update consoleWithStackDev.www.js as well.
-      {
-        var ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
-        var stack = ReactDebugCurrentFrame.getStackAddendum();
-        if (stack !== '') {
-          format += '%s';
-          args = args.concat([stack]);
-        } // eslint-disable-next-line react-internal/safe-string-coercion
-
-        var argsWithFormat = args.map(function (item) {
-          return String(item);
-        }); // Careful: RN currently depends on this prefix
-
-        argsWithFormat.unshift('Warning: ' + format); // We intentionally don't use spread (or .apply) directly because it
-        // breaks IE9: https://github.com/facebook/react/issues/13610
-        // eslint-disable-next-line react-internal/no-production-logging
-
-        Function.prototype.apply.call(console[level], console, argsWithFormat);
-      }
-    }
-
-    // -----------------------------------------------------------------------------
-
-    var enableScopeAPI = false; // Experimental Create Event Handle API.
-    var enableCacheElement = false;
-    var enableTransitionTracing = false; // No known bugs, but needs performance testing
-
-    var enableLegacyHidden = false; // Enables unstable_avoidThisFallback feature in Fiber
-    // stuff. Intended to enable React core members to more easily debug scheduling
-    // issues in DEV builds.
-
-    var enableDebugTracing = false; // Track which Fiber(s) schedule render work.
-
-    var REACT_MODULE_REFERENCE;
-    {
-      REACT_MODULE_REFERENCE = Symbol.for('react.module.reference');
-    }
-    function isValidElementType(type) {
-      if (typeof type === 'string' || typeof type === 'function') {
-        return true;
-      } // Note: typeof might be other than 'symbol' or 'number' (e.g. if it's a polyfill).
-
-      if (type === REACT_FRAGMENT_TYPE || type === REACT_PROFILER_TYPE || enableDebugTracing || type === REACT_STRICT_MODE_TYPE || type === REACT_SUSPENSE_TYPE || type === REACT_SUSPENSE_LIST_TYPE || enableLegacyHidden || type === REACT_OFFSCREEN_TYPE || enableScopeAPI || enableCacheElement || enableTransitionTracing) {
-        return true;
-      }
-      if (typeof type === 'object' && type !== null) {
-        if (type.$$typeof === REACT_LAZY_TYPE || type.$$typeof === REACT_MEMO_TYPE || type.$$typeof === REACT_PROVIDER_TYPE || type.$$typeof === REACT_CONTEXT_TYPE || type.$$typeof === REACT_FORWARD_REF_TYPE ||
-        // This needs to include all possible module reference object
-        // types supported by any Flight configuration anywhere since
-        // we don't know which Flight build this will end up being used
-        // with.
-        type.$$typeof === REACT_MODULE_REFERENCE || type.getModuleId !== undefined) {
-          return true;
-        }
-      }
-      return false;
-    }
-    function getWrappedName(outerType, innerType, wrapperName) {
-      var displayName = outerType.displayName;
-      if (displayName) {
-        return displayName;
-      }
-      var functionName = innerType.displayName || innerType.name || '';
-      return functionName !== '' ? wrapperName + "(" + functionName + ")" : wrapperName;
-    } // Keep in sync with react-reconciler/getComponentNameFromFiber
-
-    function getContextName(type) {
-      return type.displayName || 'Context';
-    } // Note that the reconciler package should generally prefer to use getComponentNameFromFiber() instead.
-
-    function getComponentNameFromType(type) {
-      if (type == null) {
-        // Host root, text node or just invalid type.
-        return null;
-      }
-      {
-        if (typeof type.tag === 'number') {
-          error('Received an unexpected object in getComponentNameFromType(). ' + 'This is likely a bug in React. Please file an issue.');
-        }
-      }
-      if (typeof type === 'function') {
-        return type.displayName || type.name || null;
-      }
-      if (typeof type === 'string') {
-        return type;
-      }
-      switch (type) {
-        case REACT_FRAGMENT_TYPE:
-          return 'Fragment';
-        case REACT_PORTAL_TYPE:
-          return 'Portal';
-        case REACT_PROFILER_TYPE:
-          return 'Profiler';
-        case REACT_STRICT_MODE_TYPE:
-          return 'StrictMode';
-        case REACT_SUSPENSE_TYPE:
-          return 'Suspense';
-        case REACT_SUSPENSE_LIST_TYPE:
-          return 'SuspenseList';
-      }
-      if (typeof type === 'object') {
-        switch (type.$$typeof) {
-          case REACT_CONTEXT_TYPE:
-            var context = type;
-            return getContextName(context) + '.Consumer';
-          case REACT_PROVIDER_TYPE:
-            var provider = type;
-            return getContextName(provider._context) + '.Provider';
-          case REACT_FORWARD_REF_TYPE:
-            return getWrappedName(type, type.render, 'ForwardRef');
-          case REACT_MEMO_TYPE:
-            var outerName = type.displayName || null;
-            if (outerName !== null) {
-              return outerName;
-            }
-            return getComponentNameFromType(type.type) || 'Memo';
-          case REACT_LAZY_TYPE:
-            {
-              var lazyComponent = type;
-              var payload = lazyComponent._payload;
-              var init = lazyComponent._init;
-              try {
-                return getComponentNameFromType(init(payload));
-              } catch (x) {
-                return null;
-              }
-            }
-
-          // eslint-disable-next-line no-fallthrough
-        }
-      }
-      return null;
-    }
-    var assign = Object.assign;
-
-    // Helpers to patch console.logs to avoid logging during side-effect free
-    // replaying on render function. This currently only patches the object
-    // lazily which won't cover if the log function was extracted eagerly.
-    // We could also eagerly patch the method.
-    var disabledDepth = 0;
-    var prevLog;
-    var prevInfo;
-    var prevWarn;
-    var prevError;
-    var prevGroup;
-    var prevGroupCollapsed;
-    var prevGroupEnd;
-    function disabledLog() {}
-    disabledLog.__reactDisabledLog = true;
-    function disableLogs() {
-      {
-        if (disabledDepth === 0) {
-          /* eslint-disable react-internal/no-production-logging */
-          prevLog = console.log;
-          prevInfo = console.info;
-          prevWarn = console.warn;
-          prevError = console.error;
-          prevGroup = console.group;
-          prevGroupCollapsed = console.groupCollapsed;
-          prevGroupEnd = console.groupEnd; // https://github.com/facebook/react/issues/19099
-
-          var props = {
-            configurable: true,
-            enumerable: true,
-            value: disabledLog,
-            writable: true
-          }; // $FlowFixMe Flow thinks console is immutable.
-
-          Object.defineProperties(console, {
-            info: props,
-            log: props,
-            warn: props,
-            error: props,
-            group: props,
-            groupCollapsed: props,
-            groupEnd: props
-          });
-          /* eslint-enable react-internal/no-production-logging */
-        }
-        disabledDepth++;
-      }
-    }
-    function reenableLogs() {
-      {
-        disabledDepth--;
-        if (disabledDepth === 0) {
-          /* eslint-disable react-internal/no-production-logging */
-          var props = {
-            configurable: true,
-            enumerable: true,
-            writable: true
-          }; // $FlowFixMe Flow thinks console is immutable.
-
-          Object.defineProperties(console, {
-            log: assign({}, props, {
-              value: prevLog
-            }),
-            info: assign({}, props, {
-              value: prevInfo
-            }),
-            warn: assign({}, props, {
-              value: prevWarn
-            }),
-            error: assign({}, props, {
-              value: prevError
-            }),
-            group: assign({}, props, {
-              value: prevGroup
-            }),
-            groupCollapsed: assign({}, props, {
-              value: prevGroupCollapsed
-            }),
-            groupEnd: assign({}, props, {
-              value: prevGroupEnd
-            })
-          });
-          /* eslint-enable react-internal/no-production-logging */
-        }
-        if (disabledDepth < 0) {
-          error('disabledDepth fell below zero. ' + 'This is a bug in React. Please file an issue.');
-        }
-      }
-    }
-    var ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
-    var prefix;
-    function describeBuiltInComponentFrame(name, source, ownerFn) {
-      {
-        if (prefix === undefined) {
-          // Extract the VM specific prefix used by each line.
-          try {
-            throw Error();
-          } catch (x) {
-            var match = x.stack.trim().match(/\n( *(at )?)/);
-            prefix = match && match[1] || '';
-          }
-        } // We use the prefix to ensure our stacks line up with native stack frames.
-
-        return '\n' + prefix + name;
-      }
-    }
-    var reentry = false;
-    var componentFrameCache;
-    {
-      var PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
-      componentFrameCache = new PossiblyWeakMap();
-    }
-    function describeNativeComponentFrame(fn, construct) {
-      // If something asked for a stack inside a fake render, it should get ignored.
-      if (!fn || reentry) {
-        return '';
-      }
-      {
-        var frame = componentFrameCache.get(fn);
-        if (frame !== undefined) {
-          return frame;
-        }
-      }
-      var control;
-      reentry = true;
-      var previousPrepareStackTrace = Error.prepareStackTrace; // $FlowFixMe It does accept undefined.
-
-      Error.prepareStackTrace = undefined;
-      var previousDispatcher;
-      {
-        previousDispatcher = ReactCurrentDispatcher.current; // Set the dispatcher in DEV because this might be call in the render function
-        // for warnings.
-
-        ReactCurrentDispatcher.current = null;
-        disableLogs();
-      }
-      try {
-        // This should throw.
-        if (construct) {
-          // Something should be setting the props in the constructor.
-          var Fake = function () {
-            throw Error();
-          }; // $FlowFixMe
-
-          Object.defineProperty(Fake.prototype, 'props', {
-            set: function () {
-              // We use a throwing setter instead of frozen or non-writable props
-              // because that won't throw in a non-strict mode function.
-              throw Error();
-            }
-          });
-          if (typeof Reflect === 'object' && Reflect.construct) {
-            // We construct a different control for this case to include any extra
-            // frames added by the construct call.
-            try {
-              Reflect.construct(Fake, []);
-            } catch (x) {
-              control = x;
-            }
-            Reflect.construct(fn, [], Fake);
-          } else {
-            try {
-              Fake.call();
-            } catch (x) {
-              control = x;
-            }
-            fn.call(Fake.prototype);
-          }
-        } else {
-          try {
-            throw Error();
-          } catch (x) {
-            control = x;
-          }
-          fn();
-        }
-      } catch (sample) {
-        // This is inlined manually because closure doesn't do it for us.
-        if (sample && control && typeof sample.stack === 'string') {
-          // This extracts the first frame from the sample that isn't also in the control.
-          // Skipping one frame that we assume is the frame that calls the two.
-          var sampleLines = sample.stack.split('\n');
-          var controlLines = control.stack.split('\n');
-          var s = sampleLines.length - 1;
-          var c = controlLines.length - 1;
-          while (s >= 1 && c >= 0 && sampleLines[s] !== controlLines[c]) {
-            // We expect at least one stack frame to be shared.
-            // Typically this will be the root most one. However, stack frames may be
-            // cut off due to maximum stack limits. In this case, one maybe cut off
-            // earlier than the other. We assume that the sample is longer or the same
-            // and there for cut off earlier. So we should find the root most frame in
-            // the sample somewhere in the control.
-            c--;
-          }
-          for (; s >= 1 && c >= 0; s--, c--) {
-            // Next we find the first one that isn't the same which should be the
-            // frame that called our sample function and the control.
-            if (sampleLines[s] !== controlLines[c]) {
-              // In V8, the first line is describing the message but other VMs don't.
-              // If we're about to return the first line, and the control is also on the same
-              // line, that's a pretty good indicator that our sample threw at same line as
-              // the control. I.e. before we entered the sample frame. So we ignore this result.
-              // This can happen if you passed a class to function component, or non-function.
-              if (s !== 1 || c !== 1) {
-                do {
-                  s--;
-                  c--; // We may still have similar intermediate frames from the construct call.
-                  // The next one that isn't the same should be our match though.
-
-                  if (c < 0 || sampleLines[s] !== controlLines[c]) {
-                    // V8 adds a "new" prefix for native classes. Let's remove it to make it prettier.
-                    var _frame = '\n' + sampleLines[s].replace(' at new ', ' at '); // If our component frame is labeled "<anonymous>"
-                    // but we have a user-provided "displayName"
-                    // splice it in to make the stack more readable.
-
-                    if (fn.displayName && _frame.includes('<anonymous>')) {
-                      _frame = _frame.replace('<anonymous>', fn.displayName);
-                    }
-                    {
-                      if (typeof fn === 'function') {
-                        componentFrameCache.set(fn, _frame);
-                      }
-                    } // Return the line we found.
-
-                    return _frame;
-                  }
-                } while (s >= 1 && c >= 0);
-              }
-              break;
-            }
-          }
-        }
-      } finally {
-        reentry = false;
-        {
-          ReactCurrentDispatcher.current = previousDispatcher;
-          reenableLogs();
-        }
-        Error.prepareStackTrace = previousPrepareStackTrace;
-      } // Fallback to just using the name if we couldn't make it throw.
-
-      var name = fn ? fn.displayName || fn.name : '';
-      var syntheticFrame = name ? describeBuiltInComponentFrame(name) : '';
-      {
-        if (typeof fn === 'function') {
-          componentFrameCache.set(fn, syntheticFrame);
-        }
-      }
-      return syntheticFrame;
-    }
-    function describeFunctionComponentFrame(fn, source, ownerFn) {
-      {
-        return describeNativeComponentFrame(fn, false);
-      }
-    }
-    function shouldConstruct(Component) {
-      var prototype = Component.prototype;
-      return !!(prototype && prototype.isReactComponent);
-    }
-    function describeUnknownElementTypeFrameInDEV(type, source, ownerFn) {
-      if (type == null) {
-        return '';
-      }
-      if (typeof type === 'function') {
-        {
-          return describeNativeComponentFrame(type, shouldConstruct(type));
-        }
-      }
-      if (typeof type === 'string') {
-        return describeBuiltInComponentFrame(type);
-      }
-      switch (type) {
-        case REACT_SUSPENSE_TYPE:
-          return describeBuiltInComponentFrame('Suspense');
-        case REACT_SUSPENSE_LIST_TYPE:
-          return describeBuiltInComponentFrame('SuspenseList');
-      }
-      if (typeof type === 'object') {
-        switch (type.$$typeof) {
-          case REACT_FORWARD_REF_TYPE:
-            return describeFunctionComponentFrame(type.render);
-          case REACT_MEMO_TYPE:
-            // Memo may contain any component type so we recursively resolve it.
-            return describeUnknownElementTypeFrameInDEV(type.type, source, ownerFn);
-          case REACT_LAZY_TYPE:
-            {
-              var lazyComponent = type;
-              var payload = lazyComponent._payload;
-              var init = lazyComponent._init;
-              try {
-                // Lazy may contain any component type so we recursively resolve it.
-                return describeUnknownElementTypeFrameInDEV(init(payload), source, ownerFn);
-              } catch (x) {}
-            }
-        }
-      }
-      return '';
-    }
-    var hasOwnProperty = Object.prototype.hasOwnProperty;
-    var loggedTypeFailures = {};
-    var ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
-    function setCurrentlyValidatingElement(element) {
-      {
-        if (element) {
-          var owner = element._owner;
-          var stack = describeUnknownElementTypeFrameInDEV(element.type, element._source, owner ? owner.type : null);
-          ReactDebugCurrentFrame.setExtraStackFrame(stack);
-        } else {
-          ReactDebugCurrentFrame.setExtraStackFrame(null);
-        }
-      }
-    }
-    function checkPropTypes(typeSpecs, values, location, componentName, element) {
-      {
-        // $FlowFixMe This is okay but Flow doesn't know it.
-        var has = Function.call.bind(hasOwnProperty);
-        for (var typeSpecName in typeSpecs) {
-          if (has(typeSpecs, typeSpecName)) {
-            var error$1 = void 0; // Prop type validation may throw. In case they do, we don't want to
-            // fail the render phase where it didn't fail before. So we log it.
-            // After these have been cleaned up, we'll let them throw.
-
-            try {
-              // This is intentionally an invariant that gets caught. It's the same
-              // behavior as without this statement except with a better message.
-              if (typeof typeSpecs[typeSpecName] !== 'function') {
-                // eslint-disable-next-line react-internal/prod-error-codes
-                var err = Error((componentName || 'React class') + ': ' + location + ' type `' + typeSpecName + '` is invalid; ' + 'it must be a function, usually from the `prop-types` package, but received `' + typeof typeSpecs[typeSpecName] + '`.' + 'This often happens because of typos such as `PropTypes.function` instead of `PropTypes.func`.');
-                err.name = 'Invariant Violation';
-                throw err;
-              }
-              error$1 = typeSpecs[typeSpecName](values, typeSpecName, componentName, location, null, 'SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED');
-            } catch (ex) {
-              error$1 = ex;
-            }
-            if (error$1 && !(error$1 instanceof Error)) {
-              setCurrentlyValidatingElement(element);
-              error('%s: type specification of %s' + ' `%s` is invalid; the type checker ' + 'function must return `null` or an `Error` but returned a %s. ' + 'You may have forgotten to pass an argument to the type checker ' + 'creator (arrayOf, instanceOf, objectOf, oneOf, oneOfType, and ' + 'shape all require an argument).', componentName || 'React class', location, typeSpecName, typeof error$1);
-              setCurrentlyValidatingElement(null);
-            }
-            if (error$1 instanceof Error && !(error$1.message in loggedTypeFailures)) {
-              // Only monitor this failure once because there tends to be a lot of the
-              // same error.
-              loggedTypeFailures[error$1.message] = true;
-              setCurrentlyValidatingElement(element);
-              error('Failed %s type: %s', location, error$1.message);
-              setCurrentlyValidatingElement(null);
-            }
-          }
-        }
-      }
-    }
-    var isArrayImpl = Array.isArray; // eslint-disable-next-line no-redeclare
-
-    function isArray(a) {
-      return isArrayImpl(a);
-    }
-
-    /*
-     * The `'' + value` pattern (used in in perf-sensitive code) throws for Symbol
-     * and Temporal.* types. See https://github.com/facebook/react/pull/22064.
-     *
-     * The functions in this module will throw an easier-to-understand,
-     * easier-to-debug exception with a clear errors message message explaining the
-     * problem. (Instead of a confusing exception thrown inside the implementation
-     * of the `value` object).
-     */
-    // $FlowFixMe only called in DEV, so void return is not possible.
-    function typeName(value) {
-      {
-        // toStringTag is needed for namespaced types like Temporal.Instant
-        var hasToStringTag = typeof Symbol === 'function' && Symbol.toStringTag;
-        var type = hasToStringTag && value[Symbol.toStringTag] || value.constructor.name || 'Object';
-        return type;
-      }
-    } // $FlowFixMe only called in DEV, so void return is not possible.
-
-    function willCoercionThrow(value) {
-      {
-        try {
-          testStringCoercion(value);
-          return false;
-        } catch (e) {
-          return true;
-        }
-      }
-    }
-    function testStringCoercion(value) {
-      // If you ended up here by following an exception call stack, here's what's
-      // happened: you supplied an object or symbol value to React (as a prop, key,
-      // DOM attribute, CSS property, string ref, etc.) and when React tried to
-      // coerce it to a string using `'' + value`, an exception was thrown.
-      //
-      // The most common types that will cause this exception are `Symbol` instances
-      // and Temporal objects like `Temporal.Instant`. But any object that has a
-      // `valueOf` or `[Symbol.toPrimitive]` method that throws will also cause this
-      // exception. (Library authors do this to prevent users from using built-in
-      // numeric operators like `+` or comparison operators like `>=` because custom
-      // methods are needed to perform accurate arithmetic or comparison.)
-      //
-      // To fix the problem, coerce this object or symbol value to a string before
-      // passing it to React. The most reliable way is usually `String(value)`.
-      //
-      // To find which value is throwing, check the browser or debugger console.
-      // Before this exception was thrown, there should be `console.error` output
-      // that shows the type (Symbol, Temporal.PlainDate, etc.) that caused the
-      // problem and how that type was used: key, atrribute, input value prop, etc.
-      // In most cases, this console output also shows the component and its
-      // ancestor components where the exception happened.
-      //
-      // eslint-disable-next-line react-internal/safe-string-coercion
-      return '' + value;
-    }
-    function checkKeyStringCoercion(value) {
-      {
-        if (willCoercionThrow(value)) {
-          error('The provided key is an unsupported type %s.' + ' This value must be coerced to a string before before using it here.', typeName(value));
-          return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
-        }
-      }
-    }
-    var ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
-    var RESERVED_PROPS = {
-      key: true,
-      ref: true,
-      __self: true,
-      __source: true
-    };
-    var specialPropKeyWarningShown;
-    var specialPropRefWarningShown;
-    var didWarnAboutStringRefs;
-    {
-      didWarnAboutStringRefs = {};
-    }
-    function hasValidRef(config) {
-      {
-        if (hasOwnProperty.call(config, 'ref')) {
-          var getter = Object.getOwnPropertyDescriptor(config, 'ref').get;
-          if (getter && getter.isReactWarning) {
-            return false;
-          }
-        }
-      }
-      return config.ref !== undefined;
-    }
-    function hasValidKey(config) {
-      {
-        if (hasOwnProperty.call(config, 'key')) {
-          var getter = Object.getOwnPropertyDescriptor(config, 'key').get;
-          if (getter && getter.isReactWarning) {
-            return false;
-          }
-        }
-      }
-      return config.key !== undefined;
-    }
-    function warnIfStringRefCannotBeAutoConverted(config, self) {
-      {
-        if (typeof config.ref === 'string' && ReactCurrentOwner.current && self && ReactCurrentOwner.current.stateNode !== self) {
-          var componentName = getComponentNameFromType(ReactCurrentOwner.current.type);
-          if (!didWarnAboutStringRefs[componentName]) {
-            error('Component "%s" contains the string ref "%s". ' + 'Support for string refs will be removed in a future major release. ' + 'This case cannot be automatically converted to an arrow function. ' + 'We ask you to manually fix this case by using useRef() or createRef() instead. ' + 'Learn more about using refs safely here: ' + 'https://reactjs.org/link/strict-mode-string-ref', getComponentNameFromType(ReactCurrentOwner.current.type), config.ref);
-            didWarnAboutStringRefs[componentName] = true;
-          }
-        }
-      }
-    }
-    function defineKeyPropWarningGetter(props, displayName) {
-      {
-        var warnAboutAccessingKey = function () {
-          if (!specialPropKeyWarningShown) {
-            specialPropKeyWarningShown = true;
-            error('%s: `key` is not a prop. Trying to access it will result ' + 'in `undefined` being returned. If you need to access the same ' + 'value within the child component, you should pass it as a different ' + 'prop. (https://reactjs.org/link/special-props)', displayName);
-          }
-        };
-        warnAboutAccessingKey.isReactWarning = true;
-        Object.defineProperty(props, 'key', {
-          get: warnAboutAccessingKey,
-          configurable: true
-        });
-      }
-    }
-    function defineRefPropWarningGetter(props, displayName) {
-      {
-        var warnAboutAccessingRef = function () {
-          if (!specialPropRefWarningShown) {
-            specialPropRefWarningShown = true;
-            error('%s: `ref` is not a prop. Trying to access it will result ' + 'in `undefined` being returned. If you need to access the same ' + 'value within the child component, you should pass it as a different ' + 'prop. (https://reactjs.org/link/special-props)', displayName);
-          }
-        };
-        warnAboutAccessingRef.isReactWarning = true;
-        Object.defineProperty(props, 'ref', {
-          get: warnAboutAccessingRef,
-          configurable: true
-        });
-      }
-    }
-    /**
-     * Factory method to create a new React element. This no longer adheres to
-     * the class pattern, so do not use new to call it. Also, instanceof check
-     * will not work. Instead test $$typeof field against Symbol.for('react.element') to check
-     * if something is a React Element.
-     *
-     * @param {*} type
-     * @param {*} props
-     * @param {*} key
-     * @param {string|object} ref
-     * @param {*} owner
-     * @param {*} self A *temporary* helper to detect places where `this` is
-     * different from the `owner` when React.createElement is called, so that we
-     * can warn. We want to get rid of owner and replace string `ref`s with arrow
-     * functions, and as long as `this` and owner are the same, there will be no
-     * change in behavior.
-     * @param {*} source An annotation object (added by a transpiler or otherwise)
-     * indicating filename, line number, and/or other information.
-     * @internal
-     */
-
-    var ReactElement = function (type, key, ref, self, source, owner, props) {
-      var element = {
-        // This tag allows us to uniquely identify this as a React Element
-        $$typeof: REACT_ELEMENT_TYPE,
-        // Built-in properties that belong on the element
-        type: type,
-        key: key,
-        ref: ref,
-        props: props,
-        // Record the component responsible for creating this element.
-        _owner: owner
-      };
-      {
-        // The validation flag is currently mutative. We put it on
-        // an external backing store so that we can freeze the whole object.
-        // This can be replaced with a WeakMap once they are implemented in
-        // commonly used development environments.
-        element._store = {}; // To make comparing ReactElements easier for testing purposes, we make
-        // the validation flag non-enumerable (where possible, which should
-        // include every environment we run tests in), so the test framework
-        // ignores it.
-
-        Object.defineProperty(element._store, 'validated', {
-          configurable: false,
-          enumerable: false,
-          writable: true,
-          value: false
-        }); // self and source are DEV only properties.
-
-        Object.defineProperty(element, '_self', {
-          configurable: false,
-          enumerable: false,
-          writable: false,
-          value: self
-        }); // Two elements created in two different places should be considered
-        // equal for testing purposes and therefore we hide it from enumeration.
-
-        Object.defineProperty(element, '_source', {
-          configurable: false,
-          enumerable: false,
-          writable: false,
-          value: source
-        });
-        if (Object.freeze) {
-          Object.freeze(element.props);
-          Object.freeze(element);
-        }
-      }
-      return element;
-    };
-    /**
-     * https://github.com/reactjs/rfcs/pull/107
-     * @param {*} type
-     * @param {object} props
-     * @param {string} key
-     */
-
-    function jsxDEV(type, config, maybeKey, source, self) {
-      {
-        var propName; // Reserved names are extracted
-
-        var props = {};
-        var key = null;
-        var ref = null; // Currently, key can be spread in as a prop. This causes a potential
-        // issue if key is also explicitly declared (ie. <div {...props} key="Hi" />
-        // or <div key="Hi" {...props} /> ). We want to deprecate key spread,
-        // but as an intermediary step, we will use jsxDEV for everything except
-        // <div {...props} key="Hi" />, because we aren't currently able to tell if
-        // key is explicitly declared to be undefined or not.
-
-        if (maybeKey !== undefined) {
-          {
-            checkKeyStringCoercion(maybeKey);
-          }
-          key = '' + maybeKey;
-        }
-        if (hasValidKey(config)) {
-          {
-            checkKeyStringCoercion(config.key);
-          }
-          key = '' + config.key;
-        }
-        if (hasValidRef(config)) {
-          ref = config.ref;
-          warnIfStringRefCannotBeAutoConverted(config, self);
-        } // Remaining properties are added to a new props object
-
-        for (propName in config) {
-          if (hasOwnProperty.call(config, propName) && !RESERVED_PROPS.hasOwnProperty(propName)) {
-            props[propName] = config[propName];
-          }
-        } // Resolve default props
-
-        if (type && type.defaultProps) {
-          var defaultProps = type.defaultProps;
-          for (propName in defaultProps) {
-            if (props[propName] === undefined) {
-              props[propName] = defaultProps[propName];
-            }
-          }
-        }
-        if (key || ref) {
-          var displayName = typeof type === 'function' ? type.displayName || type.name || 'Unknown' : type;
-          if (key) {
-            defineKeyPropWarningGetter(props, displayName);
-          }
-          if (ref) {
-            defineRefPropWarningGetter(props, displayName);
-          }
-        }
-        return ReactElement(type, key, ref, self, source, ReactCurrentOwner.current, props);
-      }
-    }
-    var ReactCurrentOwner$1 = ReactSharedInternals.ReactCurrentOwner;
-    var ReactDebugCurrentFrame$1 = ReactSharedInternals.ReactDebugCurrentFrame;
-    function setCurrentlyValidatingElement$1(element) {
-      {
-        if (element) {
-          var owner = element._owner;
-          var stack = describeUnknownElementTypeFrameInDEV(element.type, element._source, owner ? owner.type : null);
-          ReactDebugCurrentFrame$1.setExtraStackFrame(stack);
-        } else {
-          ReactDebugCurrentFrame$1.setExtraStackFrame(null);
-        }
-      }
-    }
-    var propTypesMisspellWarningShown;
-    {
-      propTypesMisspellWarningShown = false;
-    }
-    /**
-     * Verifies the object is a ReactElement.
-     * See https://reactjs.org/docs/react-api.html#isvalidelement
-     * @param {?object} object
-     * @return {boolean} True if `object` is a ReactElement.
-     * @final
-     */
-
-    function isValidElement(object) {
-      {
-        return typeof object === 'object' && object !== null && object.$$typeof === REACT_ELEMENT_TYPE;
-      }
-    }
-    function getDeclarationErrorAddendum() {
-      {
-        if (ReactCurrentOwner$1.current) {
-          var name = getComponentNameFromType(ReactCurrentOwner$1.current.type);
-          if (name) {
-            return '\n\nCheck the render method of `' + name + '`.';
-          }
-        }
-        return '';
-      }
-    }
-    function getSourceInfoErrorAddendum(source) {
-      {
-        if (source !== undefined) {
-          var fileName = source.fileName.replace(/^.*[\\\/]/, '');
-          var lineNumber = source.lineNumber;
-          return '\n\nCheck your code at ' + fileName + ':' + lineNumber + '.';
-        }
-        return '';
-      }
-    }
-    /**
-     * Warn if there's no key explicitly set on dynamic arrays of children or
-     * object keys are not valid. This allows us to keep track of children between
-     * updates.
-     */
-
-    var ownerHasKeyUseWarning = {};
-    function getCurrentComponentErrorInfo(parentType) {
-      {
-        var info = getDeclarationErrorAddendum();
-        if (!info) {
-          var parentName = typeof parentType === 'string' ? parentType : parentType.displayName || parentType.name;
-          if (parentName) {
-            info = "\n\nCheck the top-level render call using <" + parentName + ">.";
-          }
-        }
-        return info;
-      }
-    }
-    /**
-     * Warn if the element doesn't have an explicit key assigned to it.
-     * This element is in an array. The array could grow and shrink or be
-     * reordered. All children that haven't already been validated are required to
-     * have a "key" property assigned to it. Error statuses are cached so a warning
-     * will only be shown once.
-     *
-     * @internal
-     * @param {ReactElement} element Element that requires a key.
-     * @param {*} parentType element's parent's type.
-     */
-
-    function validateExplicitKey(element, parentType) {
-      {
-        if (!element._store || element._store.validated || element.key != null) {
-          return;
-        }
-        element._store.validated = true;
-        var currentComponentErrorInfo = getCurrentComponentErrorInfo(parentType);
-        if (ownerHasKeyUseWarning[currentComponentErrorInfo]) {
-          return;
-        }
-        ownerHasKeyUseWarning[currentComponentErrorInfo] = true; // Usually the current owner is the offender, but if it accepts children as a
-        // property, it may be the creator of the child that's responsible for
-        // assigning it a key.
-
-        var childOwner = '';
-        if (element && element._owner && element._owner !== ReactCurrentOwner$1.current) {
-          // Give the component that originally created this child.
-          childOwner = " It was passed a child from " + getComponentNameFromType(element._owner.type) + ".";
-        }
-        setCurrentlyValidatingElement$1(element);
-        error('Each child in a list should have a unique "key" prop.' + '%s%s See https://reactjs.org/link/warning-keys for more information.', currentComponentErrorInfo, childOwner);
-        setCurrentlyValidatingElement$1(null);
-      }
-    }
-    /**
-     * Ensure that every element either is passed in a static location, in an
-     * array with an explicit keys property defined, or in an object literal
-     * with valid key property.
-     *
-     * @internal
-     * @param {ReactNode} node Statically passed child of any type.
-     * @param {*} parentType node's parent's type.
-     */
-
-    function validateChildKeys(node, parentType) {
-      {
-        if (typeof node !== 'object') {
-          return;
-        }
-        if (isArray(node)) {
-          for (var i = 0; i < node.length; i++) {
-            var child = node[i];
-            if (isValidElement(child)) {
-              validateExplicitKey(child, parentType);
-            }
-          }
-        } else if (isValidElement(node)) {
-          // This element was passed in a valid location.
-          if (node._store) {
-            node._store.validated = true;
-          }
-        } else if (node) {
-          var iteratorFn = getIteratorFn(node);
-          if (typeof iteratorFn === 'function') {
-            // Entry iterators used to provide implicit keys,
-            // but now we print a separate warning for them later.
-            if (iteratorFn !== node.entries) {
-              var iterator = iteratorFn.call(node);
-              var step;
-              while (!(step = iterator.next()).done) {
-                if (isValidElement(step.value)) {
-                  validateExplicitKey(step.value, parentType);
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-    /**
-     * Given an element, validate that its props follow the propTypes definition,
-     * provided by the type.
-     *
-     * @param {ReactElement} element
-     */
-
-    function validatePropTypes(element) {
-      {
-        var type = element.type;
-        if (type === null || type === undefined || typeof type === 'string') {
-          return;
-        }
-        var propTypes;
-        if (typeof type === 'function') {
-          propTypes = type.propTypes;
-        } else if (typeof type === 'object' && (type.$$typeof === REACT_FORWARD_REF_TYPE ||
-        // Note: Memo only checks outer props here.
-        // Inner props are checked in the reconciler.
-        type.$$typeof === REACT_MEMO_TYPE)) {
-          propTypes = type.propTypes;
-        } else {
-          return;
-        }
-        if (propTypes) {
-          // Intentionally inside to avoid triggering lazy initializers:
-          var name = getComponentNameFromType(type);
-          checkPropTypes(propTypes, element.props, 'prop', name, element);
-        } else if (type.PropTypes !== undefined && !propTypesMisspellWarningShown) {
-          propTypesMisspellWarningShown = true; // Intentionally inside to avoid triggering lazy initializers:
-
-          var _name = getComponentNameFromType(type);
-          error('Component %s declared `PropTypes` instead of `propTypes`. Did you misspell the property assignment?', _name || 'Unknown');
-        }
-        if (typeof type.getDefaultProps === 'function' && !type.getDefaultProps.isReactClassApproved) {
-          error('getDefaultProps is only used on classic React.createClass ' + 'definitions. Use a static property named `defaultProps` instead.');
-        }
-      }
-    }
-    /**
-     * Given a fragment, validate that it can only be provided with fragment props
-     * @param {ReactElement} fragment
-     */
-
-    function validateFragmentProps(fragment) {
-      {
-        var keys = Object.keys(fragment.props);
-        for (var i = 0; i < keys.length; i++) {
-          var key = keys[i];
-          if (key !== 'children' && key !== 'key') {
-            setCurrentlyValidatingElement$1(fragment);
-            error('Invalid prop `%s` supplied to `React.Fragment`. ' + 'React.Fragment can only have `key` and `children` props.', key);
-            setCurrentlyValidatingElement$1(null);
-            break;
-          }
-        }
-        if (fragment.ref !== null) {
-          setCurrentlyValidatingElement$1(fragment);
-          error('Invalid attribute `ref` supplied to `React.Fragment`.');
-          setCurrentlyValidatingElement$1(null);
-        }
-      }
-    }
-    function jsxWithValidation(type, props, key, isStaticChildren, source, self) {
-      {
-        var validType = isValidElementType(type); // We warn in this case but don't throw. We expect the element creation to
-        // succeed and there will likely be errors in render.
-
-        if (!validType) {
-          var info = '';
-          if (type === undefined || typeof type === 'object' && type !== null && Object.keys(type).length === 0) {
-            info += ' You likely forgot to export your component from the file ' + "it's defined in, or you might have mixed up default and named imports.";
-          }
-          var sourceInfo = getSourceInfoErrorAddendum(source);
-          if (sourceInfo) {
-            info += sourceInfo;
-          } else {
-            info += getDeclarationErrorAddendum();
-          }
-          var typeString;
-          if (type === null) {
-            typeString = 'null';
-          } else if (isArray(type)) {
-            typeString = 'array';
-          } else if (type !== undefined && type.$$typeof === REACT_ELEMENT_TYPE) {
-            typeString = "<" + (getComponentNameFromType(type.type) || 'Unknown') + " />";
-            info = ' Did you accidentally export a JSX literal instead of a component?';
-          } else {
-            typeString = typeof type;
-          }
-          error('React.jsx: type is invalid -- expected a string (for ' + 'built-in components) or a class/function (for composite ' + 'components) but got: %s.%s', typeString, info);
-        }
-        var element = jsxDEV(type, props, key, source, self); // The result can be nullish if a mock or a custom function is used.
-        // TODO: Drop this when these are no longer allowed as the type argument.
-
-        if (element == null) {
-          return element;
-        } // Skip key warning if the type isn't valid since our key validation logic
-        // doesn't expect a non-string/function type and can throw confusing errors.
-        // We don't want exception behavior to differ between dev and prod.
-        // (Rendering will throw with a helpful message and as soon as the type is
-        // fixed, the key warnings will appear.)
-
-        if (validType) {
-          var children = props.children;
-          if (children !== undefined) {
-            if (isStaticChildren) {
-              if (isArray(children)) {
-                for (var i = 0; i < children.length; i++) {
-                  validateChildKeys(children[i], type);
-                }
-                if (Object.freeze) {
-                  Object.freeze(children);
-                }
-              } else {
-                error('React.jsx: Static children should always be an array. ' + 'You are likely explicitly calling React.jsxs or React.jsxDEV. ' + 'Use the Babel transform instead.');
-              }
-            } else {
-              validateChildKeys(children, type);
-            }
-          }
-        }
-        if (type === REACT_FRAGMENT_TYPE) {
-          validateFragmentProps(element);
-        } else {
-          validatePropTypes(element);
-        }
-        return element;
-      }
-    } // These two functions exist to still get child warnings in dev
-
-    var jsxDEV$1 = jsxWithValidation;
-    exports.Fragment = REACT_FRAGMENT_TYPE;
-    exports.jsxDEV = jsxDEV$1;
-  })();
-}
-
-}).call(this)}).call(this,require('_process'))
-},{"_process":13,"react":22}],19:[function(require,module,exports){
-/**
- * @license React
- * react-jsx-dev-runtime.production.min.js
- *
- * Copyright (c) Facebook, Inc. and its affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-'use strict';var a=Symbol.for("react.fragment");exports.Fragment=a;exports.jsxDEV=void 0;
-
-},{}],20:[function(require,module,exports){
+},{"react":20}],18:[function(require,module,exports){
 (function (process){(function (){
 /**
  * @license React
@@ -14228,7 +13110,7 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 }).call(this)}).call(this,require('_process'))
-},{"_process":13}],21:[function(require,module,exports){
+},{"_process":13}],19:[function(require,module,exports){
 /**
  * @license React
  * react.production.min.js
@@ -14256,7 +13138,7 @@ exports.useCallback=function(a,b){return U.current.useCallback(a,b)};exports.use
 exports.useInsertionEffect=function(a,b){return U.current.useInsertionEffect(a,b)};exports.useLayoutEffect=function(a,b){return U.current.useLayoutEffect(a,b)};exports.useMemo=function(a,b){return U.current.useMemo(a,b)};exports.useReducer=function(a,b,e){return U.current.useReducer(a,b,e)};exports.useRef=function(a){return U.current.useRef(a)};exports.useState=function(a){return U.current.useState(a)};exports.useSyncExternalStore=function(a,b,e){return U.current.useSyncExternalStore(a,b,e)};
 exports.useTransition=function(){return U.current.useTransition()};exports.version="18.2.0";
 
-},{}],22:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 (function (process){(function (){
 'use strict';
 
@@ -14267,18 +13149,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 }).call(this)}).call(this,require('_process'))
-},{"./cjs/react.development.js":20,"./cjs/react.production.min.js":21,"_process":13}],23:[function(require,module,exports){
-(function (process){(function (){
-'use strict';
-
-if (process.env.NODE_ENV === 'production') {
-  module.exports = require('./cjs/react-jsx-dev-runtime.production.min.js');
-} else {
-  module.exports = require('./cjs/react-jsx-dev-runtime.development.js');
-}
-
-}).call(this)}).call(this,require('_process'))
-},{"./cjs/react-jsx-dev-runtime.development.js":18,"./cjs/react-jsx-dev-runtime.production.min.js":19,"_process":13}],24:[function(require,module,exports){
+},{"./cjs/react.development.js":18,"./cjs/react.production.min.js":19,"_process":13}],21:[function(require,module,exports){
 (function (process,setImmediate){(function (){
 /**
  * @license React
@@ -14916,7 +13787,7 @@ if (
 }
 
 }).call(this)}).call(this,require('_process'),require("timers").setImmediate)
-},{"_process":13,"timers":27}],25:[function(require,module,exports){
+},{"_process":13,"timers":24}],22:[function(require,module,exports){
 (function (setImmediate){(function (){
 /**
  * @license React
@@ -14939,7 +13810,7 @@ exports.unstable_scheduleCallback=function(a,b,c){var d=exports.unstable_now();"
 exports.unstable_shouldYield=M;exports.unstable_wrapCallback=function(a){var b=y;return function(){var c=y;y=b;try{return a.apply(this,arguments)}finally{y=c}}};
 
 }).call(this)}).call(this,require("timers").setImmediate)
-},{"timers":27}],26:[function(require,module,exports){
+},{"timers":24}],23:[function(require,module,exports){
 (function (process){(function (){
 'use strict';
 
@@ -14950,7 +13821,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 }).call(this)}).call(this,require('_process'))
-},{"./cjs/scheduler.development.js":24,"./cjs/scheduler.production.min.js":25,"_process":13}],27:[function(require,module,exports){
+},{"./cjs/scheduler.development.js":21,"./cjs/scheduler.production.min.js":22,"_process":13}],24:[function(require,module,exports){
 (function (setImmediate,clearImmediate){(function (){
 var nextTick = require('process/browser.js').nextTick;
 var apply = Function.prototype.apply;
@@ -15029,110 +13900,122 @@ exports.clearImmediate = typeof clearImmediate === "function" ? clearImmediate :
   delete immediateIds[id];
 };
 }).call(this)}).call(this,require("timers").setImmediate,require("timers").clearImmediate)
-},{"process/browser.js":13,"timers":27}],28:[function(require,module,exports){
+},{"process/browser.js":13,"timers":24}],25:[function(require,module,exports){
 "use strict";
-var __rest = (this && this.__rest) || function (s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
-            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-                t[p[i]] = s[p[i]];
-        }
-    return t;
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
 };
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const jsx_dev_runtime_1 = require("react/jsx-dev-runtime");
-const _jsxFileName = "C:/Users/dosel/Dev/waml-viewer/src/componentify.tsx";
-const react_1 = require("react");
-const react_2 = require("./react");
-const use_waml_1 = __importDefault(require("./use-waml"));
+const react_1 = __importStar(require("react"));
+const react_js_1 = require("./react.js");
+const use_waml_js_1 = __importDefault(require("./use-waml.js"));
 function componentify(Component) {
-    const R = (_a) => {
-        var { node } = _a, props = __rest(_a, ["node"]);
-        const { commonOptions, getComponentOptions } = (0, use_waml_1.default)();
+    const R = ({ node, ...props }) => {
+        const { commonOptions, getComponentOptions } = (0, use_waml_js_1.default)();
         const componentOptions = getComponentOptions(Component.displayName);
         if (!commonOptions.noDefaultClassName) {
-            Object.assign(props, { className: (0, react_2.C)(Component.displayName, props.className) });
+            Object.assign(props, { className: (0, react_js_1.C)(Component.displayName, props.className) });
         }
         if (typeof componentOptions === "function") {
-            const children = Component(Object.assign({ node }, props));
+            const children = Component({ node, ...props });
             return componentOptions({
                 node,
                 children: typeof children === "object" ? children === null || children === void 0 ? void 0 : children.props['children'] : null
             });
         }
-        return (0, jsx_dev_runtime_1.jsxDEV)(Component, Object.assign({ node: node }, props, componentOptions), void 0, false, { fileName: _jsxFileName, lineNumber: 23, columnNumber: 11 }, this);
+        return react_1.default.createElement(Component, { node: node, ...props, ...componentOptions });
     };
     R.displayName = Component.displayName;
     return Object.assign((0, react_1.memo)(R), { displayName: R.displayName });
 }
 exports.default = componentify;
 
-},{"./react":60,"./use-waml":62,"react":22,"react/jsx-dev-runtime":23}],29:[function(require,module,exports){
+},{"./react.js":59,"./use-waml.js":61,"react":20}],26:[function(require,module,exports){
 "use strict";
-var __rest = (this && this.__rest) || function (s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
-            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-                t[p[i]] = s[p[i]];
-        }
-    return t;
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const jsx_dev_runtime_1 = require("react/jsx-dev-runtime");
-const _jsxFileName = "C:/Users/dosel/Dev/waml-viewer/src/components/anchor.tsx";
+const react_1 = __importDefault(require("react"));
 const componentify_1 = __importDefault(require("../componentify"));
 const inline_1 = __importDefault(require("./inline"));
-const Anchor = (_a) => {
-    var { node } = _a, props = __rest(_a, ["node"]);
-    return (0, jsx_dev_runtime_1.jsxDEV)("div", Object.assign({}, props, { children: node.inlines.map((v, i) => (0, jsx_dev_runtime_1.jsxDEV)(inline_1.default, { node: v }, i, false, { fileName: _jsxFileName, lineNumber: 6, columnNumber: 30 }, this)) }), void 0, false, { fileName: _jsxFileName, lineNumber: 5, columnNumber: 63 }, this);
-};
+const Anchor = ({ node, ...props }) => react_1.default.createElement("div", { ...props }, node.inlines.map((v, i) => react_1.default.createElement(inline_1.default, { key: i, node: v })));
 Anchor.displayName = "Anchor";
 exports.default = (0, componentify_1.default)(Anchor);
 
-},{"../componentify":28,"./inline":43,"react/jsx-dev-runtime":23}],30:[function(require,module,exports){
+},{"../componentify":25,"./inline":40,"react":20}],27:[function(require,module,exports){
 "use strict";
-var __rest = (this && this.__rest) || function (s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
-            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-                t[p[i]] = s[p[i]];
-        }
-    return t;
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const jsx_dev_runtime_1 = require("react/jsx-dev-runtime");
-const _jsxFileName = "C:/Users/dosel/Dev/waml-viewer/src/components/audio.tsx";
+const react_1 = __importDefault(require("react"));
 const componentify_1 = __importDefault(require("../componentify"));
 const use_waml_1 = __importDefault(require("../use-waml"));
-const Audio = (_a) => {
-    var { node } = _a, props = __rest(_a, ["node"]);
+const Audio = ({ node, ...props }) => {
     const { getURL } = (0, use_waml_1.default)();
-    return (0, jsx_dev_runtime_1.jsxDEV)("audio", Object.assign({ title: node.value.alt, src: getURL(node.value.uri), controls: true }, props), void 0, false, { fileName: _jsxFileName, lineNumber: 8, columnNumber: 9 }, this);
+    return react_1.default.createElement("audio", { title: node.value.alt, src: getURL(node.value.uri), controls: true, ...props });
 };
 Audio.displayName = "Audio";
 exports.default = (0, componentify_1.default)(Audio);
 
-},{"../componentify":28,"../use-waml":62,"react/jsx-dev-runtime":23}],31:[function(require,module,exports){
+},{"../componentify":25,"../use-waml":61,"react":20}],28:[function(require,module,exports){
 "use strict";
 
+var __createBinding = void 0 && (void 0).__createBinding || (Object.create ? function (o, m, k, k2) {
+  if (k2 === undefined) k2 = k;
+  var desc = Object.getOwnPropertyDescriptor(m, k);
+  if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+    desc = {
+      enumerable: true,
+      get: function () {
+        return m[k];
+      }
+    };
+  }
+  Object.defineProperty(o, k2, desc);
+} : function (o, m, k, k2) {
+  if (k2 === undefined) k2 = k;
+  o[k2] = m[k];
+});
+var __setModuleDefault = void 0 && (void 0).__setModuleDefault || (Object.create ? function (o, v) {
+  Object.defineProperty(o, "default", {
+    enumerable: true,
+    value: v
+  });
+} : function (o, v) {
+  o["default"] = v;
+});
+var __importStar = void 0 && (void 0).__importStar || function (mod) {
+  if (mod && mod.__esModule) return mod;
+  var result = {};
+  if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+  __setModuleDefault(result, mod);
+  return result;
+};
 var __importDefault = void 0 && (void 0).__importDefault || function (mod) {
   return mod && mod.__esModule ? mod : {
     "default": mod
@@ -15141,55 +14024,59 @@ var __importDefault = void 0 && (void 0).__importDefault || function (mod) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-const jsx_dev_runtime_1 = require("react/jsx-dev-runtime");
-const _jsxFileName = "C:/Users/dosel/Dev/waml-viewer/src/components/builtin-style.tsx";
-const react_1 = require("react");
+const react_1 = __importStar(require("react"));
 const scoped_style_1 = __importDefault(require("./scoped-style"));
-const BuiltinStyle = () => (0, jsx_dev_runtime_1.jsxDEV)(scoped_style_1.default, {
-  children: `
+const BuiltinStyle = () => react_1.default.createElement(scoped_style_1.default, null, `
   @import "https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.css";
-`
-}, void 0, false, {
-  fileName: _jsxFileName,
-  lineNumber: 5,
-  columnNumber: 30
-}, void 0);
+`);
 exports.default = (0, react_1.memo)(BuiltinStyle);
 
-},{"./scoped-style":52,"react":22,"react/jsx-dev-runtime":23}],32:[function(require,module,exports){
+},{"./scoped-style":51,"react":20}],29:[function(require,module,exports){
 "use strict";
-var __rest = (this && this.__rest) || function (s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
-            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-                t[p[i]] = s[p[i]];
-        }
-    return t;
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
 };
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const jsx_dev_runtime_1 = require("react/jsx-dev-runtime");
-const _jsxFileName = "C:/Users/dosel/Dev/waml-viewer/src/components/button-blank.tsx";
-const react_1 = require("react");
+const react_1 = __importStar(require("react"));
 const componentify_1 = __importDefault(require("../componentify"));
 const use_waml_1 = __importDefault(require("../use-waml"));
 const utility_1 = require("../utility");
-const ButtonBlank = (_a) => {
-    var _b, _c;
-    var { node, onPointerEnter, onPointerLeave, onPointerUp } = _a, props = __rest(_a, ["node", "onPointerEnter", "onPointerLeave", "onPointerUp"]);
+const waml_1 = require("@riiid/waml");
+const ButtonBlank = ({ node, onPointerEnter, onPointerLeave, onPointerUp, ...props }) => {
+    var _a, _b;
     const { draggingObject, interactionToken } = (0, use_waml_1.default)(true);
     const [preview, setPreview] = (0, react_1.useState)();
-    const multiple = ((_b = interactionToken.input) === null || _b === void 0 ? void 0 : _b.type) === "MULTIPLE";
+    const multiple = ((_a = interactionToken.input) === null || _a === void 0 ? void 0 : _a.type) === "MULTIPLE";
     const handlePointerEnter = (0, react_1.useCallback)(e => {
         onPointerEnter === null || onPointerEnter === void 0 ? void 0 : onPointerEnter(e);
         if (e.defaultPrevented)
             return;
         if (!draggingObject)
+            return;
+        if (!(0, waml_1.hasKind)(draggingObject.node, "ButtonOption"))
             return;
         if (!(0, utility_1.getIntersection)(draggingObject.node.group, node.value).length)
             return;
@@ -15209,6 +14096,8 @@ const ButtonBlank = (_a) => {
             return;
         if (!draggingObject)
             return;
+        if (!(0, waml_1.hasKind)(draggingObject.node, "ButtonOption"))
+            return;
         if (!(0, utility_1.getIntersection)(draggingObject.node.group, node.value).length)
             return;
         interactionToken.handleInteract(draggingObject.node.value);
@@ -15222,37 +14111,49 @@ const ButtonBlank = (_a) => {
             interactionToken.unsetInteract();
         }
     }, [interactionToken, multiple]);
-    return (0, jsx_dev_runtime_1.jsxDEV)("span", Object.assign({ onPointerEnter: handlePointerEnter, onPointerLeave: handlePointerLeave, onPointerUp: handlePointerUp }, props, preview ? { 'data-preview': true } : {}, { children: [(multiple || !preview) && ((_c = interactionToken.input) === null || _c === void 0 ? void 0 : _c.value.map((v, i) => ((0, jsx_dev_runtime_1.jsxDEV)("span", { onClick: handleClick, children: v }, i, false, { fileName: _jsxFileName, lineNumber: 50, columnNumber: 77 }, this)))), Boolean(preview) && (0, jsx_dev_runtime_1.jsxDEV)("span", { children: preview }, void 0, false, { fileName: _jsxFileName, lineNumber: 53, columnNumber: 25 }, this)] }), void 0, true, { fileName: _jsxFileName, lineNumber: 43, columnNumber: 9 }, this);
+    return react_1.default.createElement("span", { onPointerEnter: handlePointerEnter, onPointerLeave: handlePointerLeave, onPointerUp: handlePointerUp, ...props, ...preview ? { 'data-preview': true } : {} },
+        (multiple || !preview) && ((_b = interactionToken.input) === null || _b === void 0 ? void 0 : _b.value.map((v, i) => (react_1.default.createElement("span", { key: i, onClick: handleClick }, v)))),
+        Boolean(preview) && react_1.default.createElement("span", null, preview));
 };
 ButtonBlank.displayName = "ButtonBlank";
 exports.default = (0, componentify_1.default)(ButtonBlank);
 
-},{"../componentify":28,"../use-waml":62,"../utility":63,"react":22,"react/jsx-dev-runtime":23}],33:[function(require,module,exports){
+},{"../componentify":25,"../use-waml":61,"../utility":62,"@riiid/waml":3,"react":20}],30:[function(require,module,exports){
 "use strict";
-var __rest = (this && this.__rest) || function (s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
-            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-                t[p[i]] = s[p[i]];
-        }
-    return t;
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
 };
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const jsx_dev_runtime_1 = require("react/jsx-dev-runtime");
-const _jsxFileName = "C:/Users/dosel/Dev/waml-viewer/src/components/button-option.tsx";
-const react_1 = require("react");
+const react_1 = __importStar(require("react"));
 const componentify_1 = __importDefault(require("../componentify"));
 const use_waml_1 = __importDefault(require("../use-waml"));
-const ButtonOption = (_a) => {
-    var { node, onPointerDown } = _a, props = __rest(_a, ["node", "onPointerDown"]);
+const ButtonOption = ({ node, onPointerDown, ...props }) => {
     const { draggingObject, setDraggingObject, checkButtonOptionUsed } = (0, use_waml_1.default)();
     const used = checkButtonOptionUsed(node);
+    const dragging = (draggingObject === null || draggingObject === void 0 ? void 0 : draggingObject.node) === node;
     const handlePointerDown = (0, react_1.useCallback)(e => {
         onPointerDown === null || onPointerDown === void 0 ? void 0 : onPointerDown(e);
         if (e.defaultPrevented)
@@ -15278,117 +14179,131 @@ const ButtonOption = (_a) => {
         window.addEventListener('pointerup', onPointerUp);
         setDraggingObject({ displayName: "ButtonOption", node, $target });
     }, [node, onPointerDown, setDraggingObject]);
-    return (0, jsx_dev_runtime_1.jsxDEV)("button", Object.assign({ disabled: used, onPointerDown: handlePointerDown }, props, node.id === (draggingObject === null || draggingObject === void 0 ? void 0 : draggingObject.node.id) ? { 'data-dragging': true } : {}, { children: node.value }), void 0, false, { fileName: _jsxFileName, lineNumber: 38, columnNumber: 9 }, this);
+    return react_1.default.createElement("button", { disabled: used, onPointerDown: handlePointerDown, ...props, ...dragging ? { 'data-dragging': true } : {} }, node.value);
 };
 ButtonOption.displayName = "ButtonOption";
 exports.default = (0, componentify_1.default)(ButtonOption);
 
-},{"../componentify":28,"../use-waml":62,"react":22,"react/jsx-dev-runtime":23}],34:[function(require,module,exports){
+},{"../componentify":25,"../use-waml":61,"react":20}],31:[function(require,module,exports){
 "use strict";
-var __rest = (this && this.__rest) || function (s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
-            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-                t[p[i]] = s[p[i]];
-        }
-    return t;
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const jsx_dev_runtime_1 = require("react/jsx-dev-runtime");
-const _jsxFileName = "C:/Users/dosel/Dev/waml-viewer/src/components/choice-option-line.tsx";
+const react_1 = __importDefault(require("react"));
 const componentify_1 = __importDefault(require("../componentify"));
 const choice_option_1 = __importDefault(require("./choice-option"));
 const inline_1 = __importDefault(require("./inline"));
-const ChoiceOptionLine = (_a) => {
-    var { node } = _a, props = __rest(_a, ["node"]);
-    return (0, jsx_dev_runtime_1.jsxDEV)("label", Object.assign({}, props, { children: [(0, jsx_dev_runtime_1.jsxDEV)(choice_option_1.default, { node: node.headOption }, void 0, false, { fileName: _jsxFileName, lineNumber: 7, columnNumber: 3 }, this), node.inlines.map((v, i) => (0, jsx_dev_runtime_1.jsxDEV)(inline_1.default, { node: v }, i, false, { fileName: _jsxFileName, lineNumber: 8, columnNumber: 30 }, this))] }), void 0, true, { fileName: _jsxFileName, lineNumber: 6, columnNumber: 83 }, this);
-};
+const ChoiceOptionLine = ({ node, ...props }) => react_1.default.createElement("label", { ...props },
+    react_1.default.createElement(choice_option_1.default, { node: node.headOption }),
+    node.inlines.map((v, i) => react_1.default.createElement(inline_1.default, { key: i, node: v })));
 ChoiceOptionLine.displayName = "ChoiceOptionLine";
 exports.default = (0, componentify_1.default)(ChoiceOptionLine);
 
-},{"../componentify":28,"./choice-option":35,"./inline":43,"react/jsx-dev-runtime":23}],35:[function(require,module,exports){
+},{"../componentify":25,"./choice-option":32,"./inline":40,"react":20}],32:[function(require,module,exports){
 "use strict";
-var __rest = (this && this.__rest) || function (s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
-            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-                t[p[i]] = s[p[i]];
-        }
-    return t;
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
 };
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const jsx_dev_runtime_1 = require("react/jsx-dev-runtime");
-const _jsxFileName = "C:/Users/dosel/Dev/waml-viewer/src/components/choice-option.tsx";
-const react_1 = require("react");
+const react_1 = __importStar(require("react"));
 const componentify_1 = __importDefault(require("../componentify"));
 const use_waml_1 = __importDefault(require("../use-waml"));
-const ChoiceOption = (_a) => {
-    var { node } = _a, props = __rest(_a, ["node"]);
+const ChoiceOption = ({ node, ...props }) => {
     const { interactionToken } = (0, use_waml_1.default)(true);
     const handleChange = (0, react_1.useCallback)(() => {
         interactionToken.handleInteract(interactionToken.interactionValue);
     }, [interactionToken]);
-    return (0, jsx_dev_runtime_1.jsxDEV)("span", Object.assign({}, props, { children: [(0, jsx_dev_runtime_1.jsxDEV)("input", { type: "checkbox", checked: interactionToken.selected, onChange: handleChange }, void 0, false, { fileName: _jsxFileName, lineNumber: 14, columnNumber: 5 }, this), (0, jsx_dev_runtime_1.jsxDEV)("i", { children: node.value }, void 0, false, { fileName: _jsxFileName, lineNumber: 15, columnNumber: 5 }, this)] }), void 0, true, { fileName: _jsxFileName, lineNumber: 13, columnNumber: 9 }, this);
+    return react_1.default.createElement("span", { ...props },
+        react_1.default.createElement("input", { type: "checkbox", checked: interactionToken.selected, onChange: handleChange }),
+        react_1.default.createElement("i", null, node.value));
 };
 ChoiceOption.displayName = "ChoiceOption";
 exports.default = (0, componentify_1.default)(ChoiceOption);
 
-},{"../componentify":28,"../use-waml":62,"react":22,"react/jsx-dev-runtime":23}],36:[function(require,module,exports){
+},{"../componentify":25,"../use-waml":61,"react":20}],33:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const jsx_dev_runtime_1 = require("react/jsx-dev-runtime");
-const _jsxFileName = "C:/Users/dosel/Dev/waml-viewer/src/components/debug-console.tsx";
 const react_1 = require("react");
 const use_waml_1 = __importDefault(require("../use-waml"));
+const react_2 = __importDefault(require("react"));
 const DebugConsole = ({ document }) => {
     const { value } = (0, use_waml_1.default)();
     const [opened, setOpened] = (0, react_1.useState)(false);
-    return (0, jsx_dev_runtime_1.jsxDEV)("div", { className: "DebugConsole", children: [opened && (0, jsx_dev_runtime_1.jsxDEV)("div", { children: [(0, jsx_dev_runtime_1.jsxDEV)("h1", { children: "\uB2F5\uC548" }, void 0, false, { fileName: _jsxFileName, lineNumber: 15, columnNumber: 7 }, this), (0, jsx_dev_runtime_1.jsxDEV)("pre", { children: JSON.stringify(value, null, 2) }, void 0, false, { fileName: _jsxFileName, lineNumber: 16, columnNumber: 7 }, this), (0, jsx_dev_runtime_1.jsxDEV)("h1", { children: "\uBA54\uD0C0\uB370\uC774\uD130" }, void 0, false, { fileName: _jsxFileName, lineNumber: 17, columnNumber: 7 }, this), (0, jsx_dev_runtime_1.jsxDEV)("pre", { children: JSON.stringify(document.metadata, null, 2) }, void 0, false, { fileName: _jsxFileName, lineNumber: 18, columnNumber: 7 }, this), (0, jsx_dev_runtime_1.jsxDEV)("h1", { children: "AST" }, void 0, false, { fileName: _jsxFileName, lineNumber: 19, columnNumber: 7 }, this), (0, jsx_dev_runtime_1.jsxDEV)("pre", { children: JSON.stringify(document.raw, null, 2) }, void 0, false, { fileName: _jsxFileName, lineNumber: 20, columnNumber: 7 }, this)] }, void 0, true, { fileName: _jsxFileName, lineNumber: 14, columnNumber: 15 }, this), (0, jsx_dev_runtime_1.jsxDEV)("button", { onClick: () => setOpened(!opened), children: opened ? "Close" : "Open console" }, void 0, false, { fileName: _jsxFileName, lineNumber: 22, columnNumber: 5 }, this)] }, void 0, true, { fileName: _jsxFileName, lineNumber: 13, columnNumber: 9 }, this);
+    return react_2.default.createElement("div", { className: "DebugConsole" },
+        opened && react_2.default.createElement("div", null,
+            react_2.default.createElement("h1", null, "\uB2F5\uC548"),
+            react_2.default.createElement("pre", null, JSON.stringify(value, null, 2)),
+            react_2.default.createElement("h1", null, "\uBA54\uD0C0\uB370\uC774\uD130"),
+            react_2.default.createElement("pre", null, JSON.stringify(document.metadata, null, 2)),
+            react_2.default.createElement("h1", null, "AST"),
+            react_2.default.createElement("pre", null, JSON.stringify(document.raw, null, 2))),
+        react_2.default.createElement("button", { onClick: () => setOpened(!opened) }, opened ? "Close" : "Open console"));
 };
 exports.default = DebugConsole;
 
-},{"../use-waml":62,"react":22,"react/jsx-dev-runtime":23}],37:[function(require,module,exports){
+},{"../use-waml":61,"react":20}],34:[function(require,module,exports){
 "use strict";
-var __rest = (this && this.__rest) || function (s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
-            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-                t[p[i]] = s[p[i]];
-        }
-    return t;
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
 };
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const jsx_dev_runtime_1 = require("react/jsx-dev-runtime");
-const _jsxFileName = "C:/Users/dosel/Dev/waml-viewer/src/components/document.tsx";
-const react_1 = require("react");
+const react_1 = __importStar(require("react"));
 const waml_1 = require("@riiid/waml");
 const componentify_1 = __importDefault(require("../componentify"));
 const waml_error_1 = __importDefault(require("../waml-error"));
 const semantic_error_handler_1 = __importDefault(require("./semantic-error-handler"));
 const isoprefixed_line_group_renderer_1 = __importDefault(require("./isoprefixed-line-group-renderer"));
-const Document = (_a) => {
-    var { node } = _a, props = __rest(_a, ["node"]);
+const Document = ({ node, ...props }) => {
     const lines = (0, react_1.useMemo)(() => {
         const R = [];
         let lastMeaningfulLineIndex = 0;
@@ -15404,7 +14319,9 @@ const Document = (_a) => {
         }
         return R.slice(0, lastMeaningfulLineIndex + 1);
     }, [node]);
-    return (0, jsx_dev_runtime_1.jsxDEV)(WAMLErrorBoundary, { document: node, children: (0, jsx_dev_runtime_1.jsxDEV)("section", Object.assign({}, props, { children: (0, jsx_dev_runtime_1.jsxDEV)(isoprefixed_line_group_renderer_1.default, { lines: lines }, void 0, false, { fileName: _jsxFileName, lineNumber: 28, columnNumber: 7 }, this) }), void 0, false, { fileName: _jsxFileName, lineNumber: 27, columnNumber: 5 }, this) }, void 0, false, { fileName: _jsxFileName, lineNumber: 26, columnNumber: 9 }, this);
+    return react_1.default.createElement(WAMLErrorBoundary, { document: node },
+        react_1.default.createElement("section", { ...props },
+            react_1.default.createElement(isoprefixed_line_group_renderer_1.default, { lines: lines })));
 };
 Document.displayName = "Document";
 exports.default = (0, componentify_1.default)(Document);
@@ -15429,162 +14346,91 @@ class WAMLErrorBoundary extends react_1.Component {
     }
     render() {
         if (this.state.error) {
-            return (0, jsx_dev_runtime_1.jsxDEV)(semantic_error_handler_1.default, { node: this.state.error }, void 0, false, { fileName: _jsxFileName, lineNumber: 56, columnNumber: 13 }, this);
+            return react_1.default.createElement(semantic_error_handler_1.default, { node: this.state.error });
         }
         return this.props.children;
     }
 }
 
-},{"../componentify":28,"../waml-error":64,"./isoprefixed-line-group-renderer":44,"./semantic-error-handler":53,"@riiid/waml":3,"react":22,"react/jsx-dev-runtime":23}],38:[function(require,module,exports){
+},{"../componentify":25,"../waml-error":63,"./isoprefixed-line-group-renderer":41,"./semantic-error-handler":52,"@riiid/waml":3,"react":20}],35:[function(require,module,exports){
 "use strict";
-var __rest = (this && this.__rest) || function (s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
-            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-                t[p[i]] = s[p[i]];
-        }
-    return t;
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const jsx_dev_runtime_1 = require("react/jsx-dev-runtime");
-const _jsxFileName = "C:/Users/dosel/Dev/waml-viewer/src/components/figure-caption.tsx";
+const react_1 = __importDefault(require("react"));
 const componentify_1 = __importDefault(require("../componentify"));
 const inline_1 = __importDefault(require("./inline"));
-const FigureCaption = (_a) => {
-    var { node } = _a, props = __rest(_a, ["node"]);
-    const children = node.inlines.map((v, i) => (0, jsx_dev_runtime_1.jsxDEV)(inline_1.default, { node: v }, i, false, { fileName: _jsxFileName, lineNumber: 6, columnNumber: 46 }, this));
-    return (0, jsx_dev_runtime_1.jsxDEV)("div", Object.assign({}, props, { children: children }), void 0, false, { fileName: _jsxFileName, lineNumber: 8, columnNumber: 9 }, this);
+const FigureCaption = ({ node, ...props }) => {
+    const children = node.inlines.map((v, i) => react_1.default.createElement(inline_1.default, { key: i, node: v }));
+    return react_1.default.createElement("div", { ...props }, children);
 };
 FigureCaption.displayName = "FigureCaption";
 exports.default = (0, componentify_1.default)(FigureCaption);
 
-},{"../componentify":28,"./inline":43,"react/jsx-dev-runtime":23}],39:[function(require,module,exports){
+},{"../componentify":25,"./inline":40,"react":20}],36:[function(require,module,exports){
 "use strict";
-var __rest = (this && this.__rest) || function (s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
-            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-                t[p[i]] = s[p[i]];
-        }
-    return t;
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const jsx_dev_runtime_1 = require("react/jsx-dev-runtime");
-const _jsxFileName = "C:/Users/dosel/Dev/waml-viewer/src/components/figure-title.tsx";
+const react_1 = __importDefault(require("react"));
 const componentify_1 = __importDefault(require("../componentify"));
 const inline_1 = __importDefault(require("./inline"));
-const FigureTitle = (_a) => {
-    var { node } = _a, props = __rest(_a, ["node"]);
-    const children = node.inlines.map((v, i) => (0, jsx_dev_runtime_1.jsxDEV)(inline_1.default, { node: v }, i, false, { fileName: _jsxFileName, lineNumber: 6, columnNumber: 46 }, this));
-    return (0, jsx_dev_runtime_1.jsxDEV)("div", Object.assign({}, props, { children: children }), void 0, false, { fileName: _jsxFileName, lineNumber: 8, columnNumber: 9 }, this);
+const FigureTitle = ({ node, ...props }) => {
+    const children = node.inlines.map((v, i) => react_1.default.createElement(inline_1.default, { key: i, node: v }));
+    return react_1.default.createElement("div", { ...props }, children);
 };
 FigureTitle.displayName = "FigureTitle";
 exports.default = (0, componentify_1.default)(FigureTitle);
 
-},{"../componentify":28,"./inline":43,"react/jsx-dev-runtime":23}],40:[function(require,module,exports){
+},{"../componentify":25,"./inline":40,"react":20}],37:[function(require,module,exports){
 "use strict";
-var __rest = (this && this.__rest) || function (s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
-            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-                t[p[i]] = s[p[i]];
-        }
-    return t;
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const jsx_dev_runtime_1 = require("react/jsx-dev-runtime");
-const _jsxFileName = "C:/Users/dosel/Dev/waml-viewer/src/components/footnote.tsx";
+const react_1 = __importDefault(require("react"));
 const componentify_1 = __importDefault(require("../componentify"));
 const inline_1 = __importDefault(require("./inline"));
-const Footnote = (_a) => {
-    var { node } = _a, props = __rest(_a, ["node"]);
-    return (0, jsx_dev_runtime_1.jsxDEV)("div", Object.assign({}, props, { children: node.inlines.map((v, i) => (0, jsx_dev_runtime_1.jsxDEV)(inline_1.default, { node: v }, i, false, { fileName: _jsxFileName, lineNumber: 6, columnNumber: 30 }, this)) }), void 0, false, { fileName: _jsxFileName, lineNumber: 5, columnNumber: 67 }, this);
-};
+const Footnote = ({ node, ...props }) => react_1.default.createElement("div", { ...props }, node.inlines.map((v, i) => react_1.default.createElement(inline_1.default, { key: i, node: v })));
 Footnote.displayName = "Footnote";
 exports.default = (0, componentify_1.default)(Footnote);
 
-},{"../componentify":28,"./inline":43,"react/jsx-dev-runtime":23}],41:[function(require,module,exports){
+},{"../componentify":25,"./inline":40,"react":20}],38:[function(require,module,exports){
 "use strict";
-var __rest = (this && this.__rest) || function (s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
-            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-                t[p[i]] = s[p[i]];
-        }
-    return t;
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const jsx_dev_runtime_1 = require("react/jsx-dev-runtime");
-const _jsxFileName = "C:/Users/dosel/Dev/waml-viewer/src/components/hr.tsx";
+const react_1 = __importDefault(require("react"));
 const componentify_1 = __importDefault(require("../componentify"));
-const HR = (_a) => {
-    var { node } = _a, props = __rest(_a, ["node"]);
-    return (0, jsx_dev_runtime_1.jsxDEV)("hr", Object.assign({}, props), void 0, false, { fileName: _jsxFileName, lineNumber: 4, columnNumber: 55 }, this);
-};
+const HR = ({ node, ...props }) => react_1.default.createElement("hr", { ...props });
 HR.displayName = "HR";
 exports.default = (0, componentify_1.default)(HR);
 
-},{"../componentify":28,"react/jsx-dev-runtime":23}],42:[function(require,module,exports){
+},{"../componentify":25,"react":20}],39:[function(require,module,exports){
 "use strict";
-var __rest = (this && this.__rest) || function (s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
-            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-                t[p[i]] = s[p[i]];
-        }
-    return t;
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const jsx_dev_runtime_1 = require("react/jsx-dev-runtime");
-const _jsxFileName = "C:/Users/dosel/Dev/waml-viewer/src/components/image.tsx";
+const react_1 = __importDefault(require("react"));
 const componentify_1 = __importDefault(require("../componentify"));
 const use_waml_1 = __importDefault(require("../use-waml"));
-const Image = (_a) => {
-    var { node } = _a, props = __rest(_a, ["node"]);
+const Image = ({ node, ...props }) => {
     const { getURL } = (0, use_waml_1.default)();
-    return (0, jsx_dev_runtime_1.jsxDEV)("img", Object.assign({ alt: node.value.alt, src: getURL(node.value.uri) }, props), void 0, false, { fileName: _jsxFileName, lineNumber: 8, columnNumber: 9 }, this);
+    return react_1.default.createElement("img", { alt: node.value.alt, src: getURL(node.value.uri), ...props });
 };
 Image.displayName = "Image";
 exports.default = (0, componentify_1.default)(Image);
 
-},{"../componentify":28,"../use-waml":62,"react/jsx-dev-runtime":23}],43:[function(require,module,exports){
+},{"../componentify":25,"../use-waml":61,"react":20}],40:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const jsx_dev_runtime_1 = require("react/jsx-dev-runtime");
-const _jsxFileName = "C:/Users/dosel/Dev/waml-viewer/src/components/inline.tsx";
 const waml_1 = require("@riiid/waml");
 const react_latex_next_1 = __importDefault(require("react-latex-next"));
 const componentify_1 = __importDefault(require("../componentify"));
@@ -15597,52 +14443,53 @@ const audio_1 = __importDefault(require("./audio"));
 const button_option_1 = __importDefault(require("./button-option"));
 const table_1 = __importDefault(require("./table"));
 const pairing_option_group_1 = __importDefault(require("./pairing-option-group"));
+const react_1 = __importDefault(require("react"));
 const Inline = ({ node }) => {
     if (typeof node === "string") {
         return node;
     }
     if ((0, waml_1.isMooToken)(node, 'buttonBlank')) {
-        return (0, jsx_dev_runtime_1.jsxDEV)(button_blank_1.default, { node: node }, void 0, false, { fileName: _jsxFileName, lineNumber: 20, columnNumber: 11 }, this);
+        return react_1.default.createElement(button_blank_1.default, { node: node });
     }
     if ((0, waml_1.isMooToken)(node, 'medium')) {
         switch (node.value.type) {
-            case "image": return (0, jsx_dev_runtime_1.jsxDEV)(image_1.default, { node: node }, void 0, false, { fileName: _jsxFileName, lineNumber: 24, columnNumber: 27 }, this);
-            case "audio": return (0, jsx_dev_runtime_1.jsxDEV)(audio_1.default, { node: node }, void 0, false, { fileName: _jsxFileName, lineNumber: 25, columnNumber: 27 }, this);
-            case "video": return (0, jsx_dev_runtime_1.jsxDEV)(video_1.default, { node: node }, void 0, false, { fileName: _jsxFileName, lineNumber: 26, columnNumber: 27 }, this);
+            case "image": return react_1.default.createElement(image_1.default, { node: node });
+            case "audio": return react_1.default.createElement(audio_1.default, { node: node });
+            case "video": return react_1.default.createElement(video_1.default, { node: node });
             default: throw Error(`Unhandled medium type: ${node.value.type}`);
         }
     }
     switch (node.kind) {
         case "StyledInline": {
-            const $inlines = node.inlines.map((v, i) => (0, jsx_dev_runtime_1.jsxDEV)(Inline, { node: v }, i, false, { fileName: _jsxFileName, lineNumber: 32, columnNumber: 50 }, this));
+            const $inlines = node.inlines.map((v, i) => react_1.default.createElement(Inline, { key: i, node: v }));
             switch (node.style) {
                 case "underline":
-                    return (0, jsx_dev_runtime_1.jsxDEV)("u", { children: $inlines }, void 0, false, { fileName: _jsxFileName, lineNumber: 36, columnNumber: 17 }, this);
+                    return react_1.default.createElement("u", null, $inlines);
                 case "bold":
-                    return (0, jsx_dev_runtime_1.jsxDEV)("b", { children: $inlines }, void 0, false, { fileName: _jsxFileName, lineNumber: 38, columnNumber: 17 }, this);
+                    return react_1.default.createElement("b", null, $inlines);
                 case "italic":
-                    return (0, jsx_dev_runtime_1.jsxDEV)("i", { children: $inlines }, void 0, false, { fileName: _jsxFileName, lineNumber: 40, columnNumber: 17 }, this);
+                    return react_1.default.createElement("i", null, $inlines);
                 case "strikethrough":
-                    return (0, jsx_dev_runtime_1.jsxDEV)("s", { children: $inlines }, void 0, false, { fileName: _jsxFileName, lineNumber: 42, columnNumber: 17 }, this);
+                    return react_1.default.createElement("s", null, $inlines);
             }
         }
         case "XMLElement":
             switch (node.tag) {
                 case "pog":
-                    return (0, jsx_dev_runtime_1.jsxDEV)(pairing_option_group_1.default, { node: node.content }, void 0, false, { fileName: _jsxFileName, lineNumber: 48, columnNumber: 17 }, this);
+                    return react_1.default.createElement(pairing_option_group_1.default, { node: node.content });
                 case "table":
-                    return (0, jsx_dev_runtime_1.jsxDEV)(table_1.default, { node: node }, void 0, false, { fileName: _jsxFileName, lineNumber: 50, columnNumber: 17 }, this);
+                    return react_1.default.createElement(table_1.default, { node: node });
             }
         case "Math":
-            return (0, jsx_dev_runtime_1.jsxDEV)(react_latex_next_1.default, { children: `$${node.content}$` }, void 0, false, { fileName: _jsxFileName, lineNumber: 53, columnNumber: 13 }, this);
+            return react_1.default.createElement(react_latex_next_1.default, null, `$${node.content}$`);
         case "ChoiceOption":
-            return (0, jsx_dev_runtime_1.jsxDEV)(choice_option_1.default, { node: node }, void 0, false, { fileName: _jsxFileName, lineNumber: 55, columnNumber: 13 }, this);
+            return react_1.default.createElement(choice_option_1.default, { node: node });
         case "ButtonOption":
-            return (0, jsx_dev_runtime_1.jsxDEV)(button_option_1.default, { node: node }, void 0, false, { fileName: _jsxFileName, lineNumber: 57, columnNumber: 13 }, this);
+            return react_1.default.createElement(button_option_1.default, { node: node });
         case "ShortLingualOption":
-            return (0, jsx_dev_runtime_1.jsxDEV)(short_lingual_option_1.default, { node: node, inline: true }, void 0, false, { fileName: _jsxFileName, lineNumber: 59, columnNumber: 13 }, this);
+            return react_1.default.createElement(short_lingual_option_1.default, { node: node, inline: true });
         case "ClassedInline":
-            return ((0, jsx_dev_runtime_1.jsxDEV)("span", { className: node.name, children: node.inlines.map((v, i) => ((0, jsx_dev_runtime_1.jsxDEV)(Inline, { node: v }, i, false, { fileName: _jsxFileName, lineNumber: 63, columnNumber: 40 }, this))) }, void 0, false, { fileName: _jsxFileName, lineNumber: 61, columnNumber: 15 }, this));
+            return (react_1.default.createElement("span", { className: node.name }, node.inlines.map((v, i) => (react_1.default.createElement(Inline, { key: i, node: v })))));
         default:
     }
     throw Error(`Unhandled inline node: ${JSON.stringify(node)}`);
@@ -15650,34 +14497,33 @@ const Inline = ({ node }) => {
 Inline.displayName = "Inline";
 exports.default = (0, componentify_1.default)(Inline);
 
-},{"../componentify":28,"./audio":30,"./button-blank":32,"./button-option":33,"./choice-option":35,"./image":42,"./pairing-option-group":48,"./short-lingual-option":54,"./table":56,"./video":57,"@riiid/waml":3,"react-latex-next":17,"react/jsx-dev-runtime":23}],44:[function(require,module,exports){
+},{"../componentify":25,"./audio":27,"./button-blank":29,"./button-option":30,"./choice-option":32,"./image":39,"./pairing-option-group":47,"./short-lingual-option":53,"./table":55,"./video":56,"@riiid/waml":3,"react":20,"react-latex-next":17}],41:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const jsx_dev_runtime_1 = require("react/jsx-dev-runtime");
-const _jsxFileName = "C:/Users/dosel/Dev/waml-viewer/src/components/isoprefixed-line-group-renderer.tsx";
 const waml_1 = require("@riiid/waml");
 const react_1 = require("react");
 const line_1 = __importDefault(require("./line"));
 const prefixed_line_1 = __importDefault(require("./prefixed-line"));
+const react_2 = __importDefault(require("react"));
 const IsoprefixedLineGroupRenderer = ({ depth = 0, lines }) => {
     const lineGroups = (0, react_1.useMemo)(() => getIsoprefixedLineGroups(lines, depth), [depth, lines]);
-    return ((0, jsx_dev_runtime_1.jsxDEV)(jsx_dev_runtime_1.Fragment, { children: lineGroups.map(({ prefix, lines: sublines }, i) => {
-            switch (prefix) {
-                case "":
-                    return ((0, jsx_dev_runtime_1.jsxDEV)(react_1.Fragment, { children: sublines.map((w, j) => (0, jsx_dev_runtime_1.jsxDEV)(line_1.default, { node: w, next: sublines[j + 1] }, j, false, { fileName: _jsxFileName, lineNumber: 21, columnNumber: 40 }, this)) }, i, false, { fileName: _jsxFileName, lineNumber: 19, columnNumber: 21 }, this));
-                case waml_1.WAML.LinePrefix.QUESTION:
-                    return (0, jsx_dev_runtime_1.jsxDEV)(prefixed_line_1.default, { type: "Question", depth: depth + 1, node: sublines }, i, false, { fileName: _jsxFileName, lineNumber: 25, columnNumber: 19 }, this);
-                case waml_1.WAML.LinePrefix.QUOTATION:
-                    return (0, jsx_dev_runtime_1.jsxDEV)(prefixed_line_1.default, { type: "Quotation", depth: depth + 1, node: sublines }, i, false, { fileName: _jsxFileName, lineNumber: 27, columnNumber: 19 }, this);
-                case waml_1.WAML.LinePrefix.INDENTATION:
-                    return (0, jsx_dev_runtime_1.jsxDEV)(prefixed_line_1.default, { type: "Indentation", depth: depth + 1, node: sublines }, i, false, { fileName: _jsxFileName, lineNumber: 29, columnNumber: 19 }, this);
-                default:
-                    throw Error(`Unhandled prefix: ${prefix}`);
-            }
-        }) }, void 0, false, { fileName: _jsxFileName, lineNumber: 14, columnNumber: 11 }, this));
+    return (react_2.default.createElement(react_2.default.Fragment, null, lineGroups.map(({ prefix, lines: sublines }, i) => {
+        switch (prefix) {
+            case "":
+                return (react_2.default.createElement(react_1.Fragment, { key: i }, sublines.map((w, j) => react_2.default.createElement(line_1.default, { key: j, node: w, next: sublines[j + 1] }))));
+            case waml_1.WAML.LinePrefix.QUESTION:
+                return react_2.default.createElement(prefixed_line_1.default, { key: i, type: "Question", depth: depth + 1, node: sublines });
+            case waml_1.WAML.LinePrefix.QUOTATION:
+                return react_2.default.createElement(prefixed_line_1.default, { key: i, type: "Quotation", depth: depth + 1, node: sublines });
+            case waml_1.WAML.LinePrefix.INDENTATION:
+                return react_2.default.createElement(prefixed_line_1.default, { key: i, type: "Indentation", depth: depth + 1, node: sublines });
+            default:
+                throw Error(`Unhandled prefix: ${prefix}`);
+        }
+    })));
 };
 exports.default = IsoprefixedLineGroupRenderer;
 function getIsoprefixedLineGroups(lines, depth = 0) {
@@ -15706,25 +14552,12 @@ function getIsoprefixedLineGroups(lines, depth = 0) {
     return R;
 }
 
-},{"./line":46,"./prefixed-line":51,"@riiid/waml":3,"react":22,"react/jsx-dev-runtime":23}],45:[function(require,module,exports){
+},{"./line":43,"./prefixed-line":50,"@riiid/waml":3,"react":20}],42:[function(require,module,exports){
 "use strict";
-var __rest = (this && this.__rest) || function (s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
-            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-                t[p[i]] = s[p[i]];
-        }
-    return t;
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const jsx_dev_runtime_1 = require("react/jsx-dev-runtime");
-const _jsxFileName = "C:/Users/dosel/Dev/waml-viewer/src/components/line-component.tsx";
 const waml_1 = require("@riiid/waml");
 const react_latex_next_1 = __importDefault(require("react-latex-next"));
 const componentify_1 = __importDefault(require("../componentify"));
@@ -15739,36 +14572,36 @@ const long_lingual_option_1 = __importDefault(require("./long-lingual-option"));
 const hr_1 = __importDefault(require("./hr"));
 const passage_1 = __importDefault(require("./passage"));
 const footnote_1 = __importDefault(require("./footnote"));
-const LineComponent = (_a) => {
-    var { node } = _a, props = __rest(_a, ["node"]);
+const react_1 = __importDefault(require("react"));
+const LineComponent = ({ node, ...props }) => {
     const { renderingVariables } = (0, use_waml_1.default)();
     if (node === null)
-        return (0, jsx_dev_runtime_1.jsxDEV)("br", {}, void 0, false, { fileName: _jsxFileName, lineNumber: 20, columnNumber: 27 }, this);
+        return react_1.default.createElement("br", null);
     if ((0, waml_1.isMooToken)(node, 'longLingualOption')) {
-        return (0, jsx_dev_runtime_1.jsxDEV)(long_lingual_option_1.default, { node: node }, void 0, false, { fileName: _jsxFileName, lineNumber: 22, columnNumber: 11 }, this);
+        return react_1.default.createElement(long_lingual_option_1.default, { node: node });
     }
     if ((0, waml_1.isMooToken)(node, 'hr')) {
-        return (0, jsx_dev_runtime_1.jsxDEV)(hr_1.default, { node: node }, void 0, false, { fileName: _jsxFileName, lineNumber: 25, columnNumber: 11 }, this);
+        return react_1.default.createElement(hr_1.default, { node: node });
     }
     switch (node.kind) {
         case "LineComponent": {
-            const children = node.inlines.map((v, i) => (0, jsx_dev_runtime_1.jsxDEV)(inline_1.default, { node: v }, i, false, { fileName: _jsxFileName, lineNumber: 29, columnNumber: 50 }, this));
+            const children = node.inlines.map((v, i) => react_1.default.createElement(inline_1.default, { key: i, node: v }));
             if (node.headOption) {
-                return (0, jsx_dev_runtime_1.jsxDEV)(choice_option_line_1.default, { node: node }, void 0, false, { fileName: _jsxFileName, lineNumber: 32, columnNumber: 15 }, this);
+                return react_1.default.createElement(choice_option_line_1.default, { node: node });
             }
-            return (0, jsx_dev_runtime_1.jsxDEV)("span", Object.assign({}, props, { children: children }), void 0, false, { fileName: _jsxFileName, lineNumber: 34, columnNumber: 13 }, this);
+            return react_1.default.createElement("span", { ...props }, children);
         }
         case "ClassedBlock":
             renderingVariables.pendingClasses.push(node.name);
             return null;
         case "Math":
-            return (0, jsx_dev_runtime_1.jsxDEV)(react_latex_next_1.default, { children: `$$${node.content}$$` }, void 0, false, { fileName: _jsxFileName, lineNumber: 40, columnNumber: 13 }, this);
+            return react_1.default.createElement(react_latex_next_1.default, null, `$$${node.content}$$`);
         case "FigureAddon":
             switch (node.type) {
                 case "title":
-                    return (0, jsx_dev_runtime_1.jsxDEV)(figure_title_1.default, { node: node }, void 0, false, { fileName: _jsxFileName, lineNumber: 44, columnNumber: 17 }, this);
+                    return react_1.default.createElement(figure_title_1.default, { node: node });
                 case "caption":
-                    return (0, jsx_dev_runtime_1.jsxDEV)(figure_caption_1.default, { node: node }, void 0, false, { fileName: _jsxFileName, lineNumber: 46, columnNumber: 17 }, this);
+                    return react_1.default.createElement(figure_caption_1.default, { node: node });
             }
         case "Directive":
             switch (node.name) {
@@ -15776,14 +14609,14 @@ const LineComponent = (_a) => {
                 case "answertype":
                     return null;
                 case "passage":
-                    return (0, jsx_dev_runtime_1.jsxDEV)(passage_1.default, { node: node }, void 0, false, { fileName: _jsxFileName, lineNumber: 54, columnNumber: 17 }, this);
+                    return react_1.default.createElement(passage_1.default, { node: node });
             }
         case "Anchor":
-            return (0, jsx_dev_runtime_1.jsxDEV)(anchor_1.default, { node: node }, void 0, false, { fileName: _jsxFileName, lineNumber: 57, columnNumber: 13 }, this);
+            return react_1.default.createElement(anchor_1.default, { node: node });
         case "ShortLingualOption":
-            return (0, jsx_dev_runtime_1.jsxDEV)(short_lingual_option_1.default, { node: node, inline: false }, void 0, false, { fileName: _jsxFileName, lineNumber: 59, columnNumber: 13 }, this);
+            return react_1.default.createElement(short_lingual_option_1.default, { node: node, inline: false });
         case "Footnote":
-            return (0, jsx_dev_runtime_1.jsxDEV)(footnote_1.default, { node: node }, void 0, false, { fileName: _jsxFileName, lineNumber: 61, columnNumber: 13 }, this);
+            return react_1.default.createElement(footnote_1.default, { node: node });
         default:
     }
     throw Error(`Unhandled node: ${JSON.stringify(node)}`);
@@ -15791,153 +14624,317 @@ const LineComponent = (_a) => {
 LineComponent.displayName = "LineComponent";
 exports.default = (0, componentify_1.default)(LineComponent);
 
-},{"../componentify":28,"../use-waml":62,"./anchor":29,"./choice-option-line":34,"./figure-caption":38,"./figure-title":39,"./footnote":40,"./hr":41,"./inline":43,"./long-lingual-option":47,"./passage":50,"./short-lingual-option":54,"@riiid/waml":3,"react-latex-next":17,"react/jsx-dev-runtime":23}],46:[function(require,module,exports){
+},{"../componentify":25,"../use-waml":61,"./anchor":26,"./choice-option-line":31,"./figure-caption":35,"./figure-title":36,"./footnote":37,"./hr":38,"./inline":40,"./long-lingual-option":44,"./passage":49,"./short-lingual-option":53,"@riiid/waml":3,"react":20,"react-latex-next":17}],43:[function(require,module,exports){
 "use strict";
-var __rest = (this && this.__rest) || function (s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
-            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-                t[p[i]] = s[p[i]];
-        }
-    return t;
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const jsx_dev_runtime_1 = require("react/jsx-dev-runtime");
-const _jsxFileName = "C:/Users/dosel/Dev/waml-viewer/src/components/line.tsx";
 const waml_1 = require("@riiid/waml");
 const componentify_1 = __importDefault(require("../componentify"));
 const line_component_1 = __importDefault(require("./line-component"));
-const Line = (_a) => {
-    var { node, next } = _a, props = __rest(_a, ["node", "next"]);
+const react_1 = __importDefault(require("react"));
+const Line = ({ node, next, ...props }) => {
     if (node.component && (0, waml_1.hasKind)(node.component, 'Anchor')) {
         return null;
     }
     const anchored = (next === null || next === void 0 ? void 0 : next.component) && (0, waml_1.hasKind)(next.component, 'Anchor');
-    return (0, jsx_dev_runtime_1.jsxDEV)("div", Object.assign({}, props, anchored ? { 'data-anchored': true } : {}, { children: [(0, jsx_dev_runtime_1.jsxDEV)(line_component_1.default, { node: node.component }, void 0, false, { fileName: _jsxFileName, lineNumber: 13, columnNumber: 5 }, this), anchored && (0, jsx_dev_runtime_1.jsxDEV)(line_component_1.default, { node: next.component }, void 0, false, { fileName: _jsxFileName, lineNumber: 14, columnNumber: 17 }, this)] }), void 0, true, { fileName: _jsxFileName, lineNumber: 12, columnNumber: 9 }, this);
+    return react_1.default.createElement("div", { ...props, ...anchored ? { 'data-anchored': true } : {} },
+        react_1.default.createElement(line_component_1.default, { node: node.component }),
+        anchored && react_1.default.createElement(line_component_1.default, { node: next.component }));
 };
 Line.displayName = "Line";
 exports.default = (0, componentify_1.default)(Line);
 
-},{"../componentify":28,"./line-component":45,"@riiid/waml":3,"react/jsx-dev-runtime":23}],47:[function(require,module,exports){
+},{"../componentify":25,"./line-component":42,"@riiid/waml":3,"react":20}],44:[function(require,module,exports){
 "use strict";
-var __rest = (this && this.__rest) || function (s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
-            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-                t[p[i]] = s[p[i]];
-        }
-    return t;
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const jsx_dev_runtime_1 = require("react/jsx-dev-runtime");
-const _jsxFileName = "C:/Users/dosel/Dev/waml-viewer/src/components/long-lingual-option.tsx";
 const react_1 = require("react");
 const componentify_1 = __importDefault(require("../componentify"));
 const use_waml_1 = __importDefault(require("../use-waml"));
-const LongLingualOption = (_a) => {
-    var { node } = _a, props = __rest(_a, ["node"]);
+const react_2 = __importDefault(require("react"));
+const LongLingualOption = ({ node, ...props }) => {
     const { interactionToken } = (0, use_waml_1.default)(true);
     const handleChange = (0, react_1.useCallback)(e => {
         interactionToken.handleInteract(e.currentTarget.value);
     }, [interactionToken]);
-    return (0, jsx_dev_runtime_1.jsxDEV)("textarea", Object.assign({ placeholder: node.value, value: interactionToken.interactionValue, onChange: handleChange }, props), void 0, false, { fileName: _jsxFileName, lineNumber: 14, columnNumber: 9 }, this);
+    return react_2.default.createElement("textarea", { placeholder: node.value, value: interactionToken.interactionValue, onChange: handleChange, ...props });
 };
 LongLingualOption.displayName = "LongLingualOption";
 exports.default = (0, componentify_1.default)(LongLingualOption);
 
-},{"../componentify":28,"../use-waml":62,"react":22,"react/jsx-dev-runtime":23}],48:[function(require,module,exports){
+},{"../componentify":25,"../use-waml":61,"react":20}],45:[function(require,module,exports){
 "use strict";
-var __rest = (this && this.__rest) || function (s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
-            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-                t[p[i]] = s[p[i]];
-        }
-    return t;
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
 };
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const jsx_dev_runtime_1 = require("react/jsx-dev-runtime");
-const _jsxFileName = "C:/Users/dosel/Dev/waml-viewer/src/components/pairing-option-group.tsx";
+const react_1 = __importStar(require("react"));
+const waml_1 = require("@riiid/waml");
+const componentify_1 = __importDefault(require("../componentify"));
+const use_waml_1 = __importDefault(require("../use-waml"));
+const PairingLine = ({ node, from, to, onClick, style, ...props }) => {
+    const { setFlattenValue } = (0, use_waml_1.default)();
+    const fromRect = from.getBoundingClientRect();
+    const toRect = to.getBoundingClientRect();
+    const handleClick = (0, react_1.useCallback)(e => {
+        onClick === null || onClick === void 0 ? void 0 : onClick(e);
+        if (e.defaultPrevented)
+            return;
+        setFlattenValue((prev, interactions) => {
+            const next = [...prev];
+            for (const v of interactions) {
+                if (v.type !== waml_1.WAML.InteractionType.PAIRING_NET)
+                    continue;
+                if (!prev[v.index])
+                    continue;
+                next[v.index] = {
+                    type: "MULTIPLE",
+                    ordered: false,
+                    value: prev[v.index].value.filter(w => w !== node)
+                };
+            }
+            return next;
+        });
+    }, [node, onClick, setFlattenValue]);
+    return react_1.default.createElement("line", { ...props, style: { pointerEvents: "all", ...style }, onClick: handleClick, x1: fromRect.left + 0.5 * fromRect.width, y1: fromRect.top + 0.5 * fromRect.height, x2: toRect.left + 0.5 * toRect.width, y2: toRect.top + 0.5 * toRect.height });
+};
+PairingLine.displayName = "PairingLine";
+exports.default = (0, componentify_1.default)(PairingLine);
+
+},{"../componentify":25,"../use-waml":61,"@riiid/waml":3,"react":20}],46:[function(require,module,exports){
+"use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const react_1 = __importStar(require("react"));
+const react_2 = require("react");
+const use_waml_1 = __importDefault(require("../use-waml"));
+const pairing_line_1 = __importDefault(require("./pairing-line"));
+const PairingLines = () => {
+    const { pairing, renderingVariables } = (0, use_waml_1.default)();
+    const [lines, setLines] = (0, react_1.useState)([]);
+    (0, react_1.useEffect)(() => {
+        var _a, _b;
+        const $lines = [];
+        for (const k in pairing.pairedVertices) {
+            for (const w of pairing.pairedVertices[k]) {
+                // 양방향으로 있기 때문에 하나만 골라 그리면 됩니다.
+                if (!('to' in w))
+                    continue;
+                const from = k;
+                const to = w.to;
+                const $from = (_a = renderingVariables.pairingOptionDots[from]) === null || _a === void 0 ? void 0 : _a[1];
+                const $to = (_b = renderingVariables.pairingOptionDots[to]) === null || _b === void 0 ? void 0 : _b[0];
+                if (!$from || !$to)
+                    continue;
+                $lines.push(react_1.default.createElement(pairing_line_1.default, { key: $lines.length, node: `${from}→${to}`, from: $from, to: $to }));
+            }
+        }
+        setLines($lines);
+    }, [pairing.pairedVertices, renderingVariables.pairingOptionDots]);
+    return react_1.default.createElement("svg", { width: "100%", height: "100%", style: { position: "fixed", left: 0, top: 0, pointerEvents: "none" } }, lines);
+};
+exports.default = (0, react_2.memo)(PairingLines);
+
+},{"../use-waml":61,"./pairing-line":45,"react":20}],47:[function(require,module,exports){
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const react_1 = __importDefault(require("react"));
 const componentify_1 = __importDefault(require("../componentify"));
 const pairing_option_1 = __importDefault(require("./pairing-option"));
-const PairingOptionGroup = (_a) => {
-    var { node } = _a, props = __rest(_a, ["node"]);
-    return (0, jsx_dev_runtime_1.jsxDEV)("ul", Object.assign({}, props, { children: node.map(v => (0, jsx_dev_runtime_1.jsxDEV)(pairing_option_1.default, { node: v }, v.cell.value, false, { fileName: _jsxFileName, lineNumber: 6, columnNumber: 17 }, this)) }), void 0, false, { fileName: _jsxFileName, lineNumber: 5, columnNumber: 87 }, this);
-};
+const PairingOptionGroup = ({ node, ...props }) => react_1.default.createElement("ul", { ...props }, node.map(v => react_1.default.createElement(pairing_option_1.default, { key: v.cell.value, node: v })));
 PairingOptionGroup.displayName = "PairingOptionGroup";
 exports.default = (0, componentify_1.default)(PairingOptionGroup);
 
-},{"../componentify":28,"./pairing-option":49,"react/jsx-dev-runtime":23}],49:[function(require,module,exports){
+},{"../componentify":25,"./pairing-option":48,"react":20}],48:[function(require,module,exports){
 "use strict";
-var __rest = (this && this.__rest) || function (s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
-            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-                t[p[i]] = s[p[i]];
-        }
-    return t;
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
 };
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const jsx_dev_runtime_1 = require("react/jsx-dev-runtime");
-const _jsxFileName = "C:/Users/dosel/Dev/waml-viewer/src/components/pairing-option.tsx";
+const react_1 = __importStar(require("react"));
+const waml_1 = require("@riiid/waml");
 const componentify_1 = __importDefault(require("../componentify"));
+const use_waml_1 = __importDefault(require("../use-waml"));
 const inline_1 = __importDefault(require("./inline"));
-const PairingOption = (_a) => {
-    var { node } = _a, props = __rest(_a, ["node"]);
-    return (0, jsx_dev_runtime_1.jsxDEV)("li", Object.assign({}, props, { children: [node.cell.inbound.length > 0 && (0, jsx_dev_runtime_1.jsxDEV)("input", { type: "radio", readOnly: true }, void 0, false, { fileName: _jsxFileName, lineNumber: 6, columnNumber: 35 }, this), node.inlines.map((v, i) => (0, jsx_dev_runtime_1.jsxDEV)(inline_1.default, { node: v }, i, false, { fileName: _jsxFileName, lineNumber: 7, columnNumber: 30 }, this)), node.cell.outbound.length > 0 && (0, jsx_dev_runtime_1.jsxDEV)("input", { type: "radio", readOnly: true }, void 0, false, { fileName: _jsxFileName, lineNumber: 8, columnNumber: 36 }, this)] }), void 0, true, { fileName: _jsxFileName, lineNumber: 5, columnNumber: 77 }, this);
+const PairingOption = ({ node, onClick, ...props }) => {
+    var _a, _b;
+    const { draggingObject, setDraggingObject, pairing, setFlattenValue } = (0, use_waml_1.default)();
+    const { refInbound, refOutbound } = pairing.getDotRefs(node);
+    const dragging = (draggingObject === null || draggingObject === void 0 ? void 0 : draggingObject.node) === node;
+    const inboundPaired = ((_a = pairing.pairedVertices[node.cell.value]) === null || _a === void 0 ? void 0 : _a.some(v => 'from' in v)) || false;
+    const outboundPaired = ((_b = pairing.pairedVertices[node.cell.value]) === null || _b === void 0 ? void 0 : _b.some(v => 'to' in v)) || false;
+    const handleClick = (0, react_1.useCallback)(e => {
+        onClick === null || onClick === void 0 ? void 0 : onClick(e);
+        if (e.defaultPrevented)
+            return;
+        if (draggingObject) {
+            setDraggingObject(null);
+            if (!(0, waml_1.hasKind)(draggingObject.node, 'PairingOption'))
+                return;
+            const draggingNode = draggingObject.node;
+            setFlattenValue((prev, interactions) => {
+                const [netIndex, actualValue] = pairing.getNetIndexByEdge(draggingNode.cell.value, node.cell.value);
+                const net = netIndex === -1 ? undefined : interactions[netIndex];
+                if ((net === null || net === void 0 ? void 0 : net.type) !== waml_1.WAML.InteractionType.PAIRING_NET)
+                    return false;
+                const [from, to] = actualValue.split('→');
+                const fromNet = (draggingNode.cell.value === from
+                    ? draggingNode.cell
+                    : node.cell).outbound.find(v => v.name === net.name);
+                const toNet = (draggingNode.cell.value === to
+                    ? draggingNode.cell
+                    : node.cell).inbound.find(v => v.name === net.name);
+                const next = [...prev];
+                if (prev[netIndex]) {
+                    next[netIndex] = {
+                        type: "MULTIPLE",
+                        ordered: false,
+                        value: prev[netIndex].value.filter(v => {
+                            if (v.startsWith(`${from}→`) && !(fromNet === null || fromNet === void 0 ? void 0 : fromNet.multiple))
+                                return false;
+                            if (v.endsWith(`→${to}`) && !(toNet === null || toNet === void 0 ? void 0 : toNet.multiple))
+                                return false;
+                            if (v === actualValue)
+                                return false;
+                            return true;
+                        })
+                    };
+                    next[netIndex].value.push(actualValue);
+                }
+                else {
+                    next[netIndex] = { type: "MULTIPLE", ordered: false, value: [actualValue] };
+                }
+                return next;
+            });
+        }
+        else {
+            setDraggingObject({
+                $target: e.currentTarget,
+                displayName: "PairingOption",
+                node
+            });
+        }
+    }, [draggingObject, node, onClick, pairing, setDraggingObject, setFlattenValue]);
+    return react_1.default.createElement("li", { onClick: handleClick, ...props, ...dragging ? { 'data-dragging': true } : {} },
+        node.cell.inbound.length > 0 && react_1.default.createElement("input", { ref: refInbound, type: "radio", checked: inboundPaired, readOnly: true }),
+        node.inlines.map((v, i) => react_1.default.createElement(inline_1.default, { key: i, node: v })),
+        node.cell.outbound.length > 0 && react_1.default.createElement("input", { ref: refOutbound, type: "radio", checked: outboundPaired, readOnly: true }));
 };
 PairingOption.displayName = "PairingOption";
 exports.default = (0, componentify_1.default)(PairingOption);
 
-},{"../componentify":28,"./inline":43,"react/jsx-dev-runtime":23}],50:[function(require,module,exports){
+},{"../componentify":25,"../use-waml":61,"./inline":40,"@riiid/waml":3,"react":20}],49:[function(require,module,exports){
 "use strict";
-var __rest = (this && this.__rest) || function (s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
-            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-                t[p[i]] = s[p[i]];
-        }
-    return t;
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
 };
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const jsx_dev_runtime_1 = require("react/jsx-dev-runtime");
-const _jsxFileName = "C:/Users/dosel/Dev/waml-viewer/src/components/passage.tsx";
-const react_1 = require("react");
+const react_1 = __importStar(require("react"));
 const componentify_1 = __importDefault(require("../componentify"));
 const use_waml_1 = __importDefault(require("../use-waml"));
 const __1 = __importDefault(require(".."));
-const Passage = (_a) => {
-    var { node, fallback } = _a, props = __rest(_a, ["node", "fallback"]);
+const Passage = ({ node, fallback, ...props }) => {
     const { getURL } = (0, use_waml_1.default)();
     const [payload, setPayload] = (0, react_1.useState)();
     (0, react_1.useEffect)(() => {
@@ -15945,175 +14942,111 @@ const Passage = (_a) => {
     }, [getURL, node.value]);
     if (payload === undefined)
         return fallback;
-    return (0, jsx_dev_runtime_1.jsxDEV)(__1.default, Object.assign({ waml: payload, bare: true }, props), void 0, false, { fileName: _jsxFileName, lineNumber: 16, columnNumber: 9 }, this);
+    return react_1.default.createElement(__1.default, { waml: payload, bare: true, ...props });
 };
 Passage.displayName = "Passage";
 exports.default = (0, componentify_1.default)(Passage);
 
-},{"..":58,"../componentify":28,"../use-waml":62,"react":22,"react/jsx-dev-runtime":23}],51:[function(require,module,exports){
+},{"..":57,"../componentify":25,"../use-waml":61,"react":20}],50:[function(require,module,exports){
 "use strict";
-var __rest = (this && this.__rest) || function (s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
-            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-                t[p[i]] = s[p[i]];
-        }
-    return t;
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const jsx_dev_runtime_1 = require("react/jsx-dev-runtime");
-const _jsxFileName = "C:/Users/dosel/Dev/waml-viewer/src/components/prefixed-line.tsx";
+const react_1 = __importDefault(require("react"));
 const componentify_1 = __importDefault(require("../componentify"));
-const react_1 = require("../react");
+const react_2 = require("../react");
 const use_waml_1 = __importDefault(require("../use-waml"));
 const isoprefixed_line_group_renderer_1 = __importDefault(require("./isoprefixed-line-group-renderer"));
-const PrefixedLine = (_a) => {
-    var { node, type, depth, className } = _a, props = __rest(_a, ["node", "type", "depth", "className"]);
+const PrefixedLine = ({ node, type, depth, className, ...props }) => {
     const { renderingVariables } = (0, use_waml_1.default)();
-    return ((0, jsx_dev_runtime_1.jsxDEV)("div", Object.assign({ className: (0, react_1.C)(className, type, renderingVariables.pendingClasses.pop()) }, props, { children: (0, jsx_dev_runtime_1.jsxDEV)(isoprefixed_line_group_renderer_1.default, { depth: depth, lines: node }, void 0, false, { fileName: _jsxFileName, lineNumber: 12, columnNumber: 7 }, this) }), void 0, false, { fileName: _jsxFileName, lineNumber: 10, columnNumber: 11 }, this));
+    return (react_1.default.createElement("div", { className: (0, react_2.C)(className, type, renderingVariables.pendingClasses.pop()), ...props },
+        react_1.default.createElement(isoprefixed_line_group_renderer_1.default, { depth: depth, lines: node })));
 };
 PrefixedLine.displayName = "PrefixedLine";
 exports.default = (0, componentify_1.default)(PrefixedLine);
 
-},{"../componentify":28,"../react":60,"../use-waml":62,"./isoprefixed-line-group-renderer":44,"react/jsx-dev-runtime":23}],52:[function(require,module,exports){
+},{"../componentify":25,"../react":59,"../use-waml":61,"./isoprefixed-line-group-renderer":41,"react":20}],51:[function(require,module,exports){
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-const jsx_dev_runtime_1 = require("react/jsx-dev-runtime");
-const _jsxFileName = "C:/Users/dosel/Dev/waml-viewer/src/components/scoped-style.tsx";
-const react_1 = require("react");
+const react_1 = __importDefault(require("react"));
+const react_2 = require("react");
 const ScopedStyle = ({ children }) => {
     // NOTE 서버 사이드에서 바로 렌더링하는 경우 `>` 등 일부 문자에 대해 hydration 오류가 생긴다.
-    const handleRef = (0, react_1.useCallback)(($) => {
+    const handleRef = (0, react_2.useCallback)(($) => {
         if (!$)
             return;
         $.textContent = children;
     }, [children]);
-    return (0, jsx_dev_runtime_1.jsxDEV)("style", { ref: handleRef, scoped: true }, void 0, false, { fileName: _jsxFileName, lineNumber: 16, columnNumber: 9 }, this);
+    return react_1.default.createElement("style", { ref: handleRef, scoped: true });
 };
-exports.default = (0, react_1.memo)(ScopedStyle);
+exports.default = (0, react_2.memo)(ScopedStyle);
 
-},{"react":22,"react/jsx-dev-runtime":23}],53:[function(require,module,exports){
+},{"react":20}],52:[function(require,module,exports){
 "use strict";
-var __rest = (this && this.__rest) || function (s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
-            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-                t[p[i]] = s[p[i]];
-        }
-    return t;
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const jsx_dev_runtime_1 = require("react/jsx-dev-runtime");
-const _jsxFileName = "C:/Users/dosel/Dev/waml-viewer/src/components/semantic-error-handler.tsx";
 const componentify_1 = __importDefault(require("../componentify"));
-const SemanticErrorHandler = (_a) => {
-    var { node } = _a, props = __rest(_a, ["node"]);
-    return (0, jsx_dev_runtime_1.jsxDEV)("pre", Object.assign({}, props, { children: node.message }), void 0, false, { fileName: _jsxFileName, lineNumber: 4, columnNumber: 91 }, this);
-};
+const react_1 = __importDefault(require("react"));
+const SemanticErrorHandler = ({ node, ...props }) => react_1.default.createElement("pre", { ...props }, node.message);
 SemanticErrorHandler.displayName = "SemanticErrorHandler";
 exports.default = (0, componentify_1.default)(SemanticErrorHandler);
 
-},{"../componentify":28,"react/jsx-dev-runtime":23}],54:[function(require,module,exports){
+},{"../componentify":25,"react":20}],53:[function(require,module,exports){
 "use strict";
-var __rest = (this && this.__rest) || function (s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
-            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-                t[p[i]] = s[p[i]];
-        }
-    return t;
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const jsx_dev_runtime_1 = require("react/jsx-dev-runtime");
-const _jsxFileName = "C:/Users/dosel/Dev/waml-viewer/src/components/short-lingual-option.tsx";
 const react_1 = require("react");
 const componentify_1 = __importDefault(require("../componentify"));
 const use_waml_1 = __importDefault(require("../use-waml"));
-const ShortLingualOption = (_a) => {
-    var { node, inline } = _a, props = __rest(_a, ["node", "inline"]);
+const react_2 = __importDefault(require("react"));
+const ShortLingualOption = ({ node, inline, ...props }) => {
     const { interactionToken } = (0, use_waml_1.default)(true);
     const handleChange = (0, react_1.useCallback)(e => {
         interactionToken.handleInteract(e.currentTarget.value);
     }, [interactionToken]);
-    return (0, jsx_dev_runtime_1.jsxDEV)("input", Object.assign({ type: "text", value: interactionToken.interactionValue, onChange: handleChange }, inline ? { 'data-inline': true } : {}, node.defaultValue ? { defaultValue: node.value } : { placeholder: node.value }, props), void 0, false, { fileName: _jsxFileName, lineNumber: 14, columnNumber: 9 }, this);
+    return react_2.default.createElement("input", { type: "text", value: interactionToken.interactionValue, onChange: handleChange, ...inline ? { 'data-inline': true } : {}, ...node.defaultValue ? { defaultValue: node.value } : { placeholder: node.value }, ...props });
 };
 ShortLingualOption.displayName = "ShortLingualOption";
 exports.default = (0, componentify_1.default)(ShortLingualOption);
 
-},{"../componentify":28,"../use-waml":62,"react":22,"react/jsx-dev-runtime":23}],55:[function(require,module,exports){
+},{"../componentify":25,"../use-waml":61,"react":20}],54:[function(require,module,exports){
 "use strict";
-var __rest = (this && this.__rest) || function (s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
-            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-                t[p[i]] = s[p[i]];
-        }
-    return t;
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const jsx_dev_runtime_1 = require("react/jsx-dev-runtime");
-const _jsxFileName = "C:/Users/dosel/Dev/waml-viewer/src/components/syntax-error-handler.tsx";
 const componentify_1 = __importDefault(require("../componentify"));
-const SyntaxErrorHandler = (_a) => {
-    var _b;
-    var { node } = _a, props = __rest(_a, ["node"]);
-    return (0, jsx_dev_runtime_1.jsxDEV)("pre", Object.assign({}, props, { children: ((_b = node.stack) === null || _b === void 0 ? void 0 : _b.join('\n')) || node.message }), void 0, false, { fileName: _jsxFileName, lineNumber: 4, columnNumber: 87 }, this);
+const react_1 = __importDefault(require("react"));
+const SyntaxErrorHandler = ({ node, ...props }) => {
+    var _a;
+    return react_1.default.createElement("pre", { ...props }, ((_a = node.stack) === null || _a === void 0 ? void 0 : _a.join('\n')) || node.message);
 };
 SyntaxErrorHandler.displayName = "SyntaxErrorHandler";
 exports.default = (0, componentify_1.default)(SyntaxErrorHandler);
 
-},{"../componentify":28,"react/jsx-dev-runtime":23}],56:[function(require,module,exports){
+},{"../componentify":25,"react":20}],55:[function(require,module,exports){
 "use strict";
-var __rest = (this && this.__rest) || function (s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
-            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-                t[p[i]] = s[p[i]];
-        }
-    return t;
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const jsx_dev_runtime_1 = require("react/jsx-dev-runtime");
-const _jsxFileName = "C:/Users/dosel/Dev/waml-viewer/src/components/table.tsx";
 const react_1 = require("react");
 const waml_1 = require("@riiid/waml");
 const componentify_1 = __importDefault(require("../componentify"));
 const waml_error_1 = __importDefault(require("../waml-error"));
 const react_2 = require("../react");
 const document_1 = __importDefault(require("./document"));
+const react_3 = __importDefault(require("react"));
 const columnsPattern = /^\d+(:\d+)*$/;
-const Table = (_a) => {
-    var { node, style, className } = _a, props = __rest(_a, ["node", "style", "className"]);
+const Table = ({ node, style, className, ...props }) => {
     const attributes = (0, react_1.useMemo)(() => {
         const css = {};
         let actualClassName = className;
@@ -16154,87 +15087,66 @@ const Table = (_a) => {
                 if (v.alignment)
                     cellProps.style = { textAlign: v.alignment };
                 if (v.prefix === "#") {
-                    $cells.push((0, jsx_dev_runtime_1.jsxDEV)("th", Object.assign({}, cellProps, { children: (0, jsx_dev_runtime_1.jsxDEV)(document_1.default, { node: v.body }, void 0, false, { fileName: _jsxFileName, lineNumber: 57, columnNumber: 15 }, this) }), $cells.length, false, { fileName: _jsxFileName, lineNumber: 55, columnNumber: 23 }, this));
+                    $cells.push(react_3.default.createElement("th", { key: $cells.length, ...cellProps },
+                        react_3.default.createElement(document_1.default, { node: v.body })));
                 }
                 else {
-                    $cells.push((0, jsx_dev_runtime_1.jsxDEV)("td", Object.assign({}, cellProps, { children: (0, jsx_dev_runtime_1.jsxDEV)(document_1.default, { node: v.body }, void 0, false, { fileName: _jsxFileName, lineNumber: 63, columnNumber: 15 }, this) }), $cells.length, false, { fileName: _jsxFileName, lineNumber: 61, columnNumber: 23 }, this));
+                    $cells.push(react_3.default.createElement("td", { key: $cells.length, ...cellProps },
+                        react_3.default.createElement(document_1.default, { node: v.body })));
                 }
             }
             else {
-                R.push((0, jsx_dev_runtime_1.jsxDEV)("tr", { children: $cells }, R.length, false, { fileName: _jsxFileName, lineNumber: 68, columnNumber: 16 }, this));
+                R.push(react_3.default.createElement("tr", { key: R.length }, $cells));
                 $cells = [];
             }
         }
         if ($cells.length)
-            R.push((0, jsx_dev_runtime_1.jsxDEV)("tr", { children: $cells }, R.length, false, { fileName: _jsxFileName, lineNumber: 72, columnNumber: 30 }, this));
+            R.push(react_3.default.createElement("tr", { key: R.length }, $cells));
         return R;
     }, [node.content]);
-    return ((0, jsx_dev_runtime_1.jsxDEV)("table", Object.assign({ className: attributes.className, style: Object.assign(Object.assign({}, attributes.css), style) }, props, { children: [attributes.columns && ((0, jsx_dev_runtime_1.jsxDEV)("colgroup", { children: attributes.columns.map((v, i) => ((0, jsx_dev_runtime_1.jsxDEV)("col", { width: `${(v / sumOfColumns) * 100}%` }, i, false, { fileName: _jsxFileName, lineNumber: 80, columnNumber: 46 }, this))) }, void 0, false, { fileName: _jsxFileName, lineNumber: 78, columnNumber: 31 }, this)), (0, jsx_dev_runtime_1.jsxDEV)("tbody", { children: $rows }, void 0, false, { fileName: _jsxFileName, lineNumber: 85, columnNumber: 7 }, this)] }), void 0, true, { fileName: _jsxFileName, lineNumber: 76, columnNumber: 11 }, this));
+    return (react_3.default.createElement("table", { className: attributes.className, style: { ...attributes.css, ...style }, ...props },
+        attributes.columns && (react_3.default.createElement("colgroup", null, attributes.columns.map((v, i) => (react_3.default.createElement("col", { key: i, width: `${(v / sumOfColumns) * 100}%` }))))),
+        react_3.default.createElement("tbody", null, $rows)));
 };
 Table.displayName = "Table";
 exports.default = (0, componentify_1.default)(Table);
 
-},{"../componentify":28,"../react":60,"../waml-error":64,"./document":37,"@riiid/waml":3,"react":22,"react/jsx-dev-runtime":23}],57:[function(require,module,exports){
+},{"../componentify":25,"../react":59,"../waml-error":63,"./document":34,"@riiid/waml":3,"react":20}],56:[function(require,module,exports){
 "use strict";
-var __rest = (this && this.__rest) || function (s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
-            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-                t[p[i]] = s[p[i]];
-        }
-    return t;
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const jsx_dev_runtime_1 = require("react/jsx-dev-runtime");
-const _jsxFileName = "C:/Users/dosel/Dev/waml-viewer/src/components/video.tsx";
+const react_1 = __importDefault(require("react"));
 const componentify_1 = __importDefault(require("../componentify"));
 const use_waml_1 = __importDefault(require("../use-waml"));
-const Video = (_a) => {
-    var { node } = _a, props = __rest(_a, ["node"]);
+const Video = ({ node, ...props }) => {
     const { getURL } = (0, use_waml_1.default)();
-    return (0, jsx_dev_runtime_1.jsxDEV)("video", Object.assign({ title: node.value.alt, src: getURL(node.value.uri), controls: true }, props), void 0, false, { fileName: _jsxFileName, lineNumber: 8, columnNumber: 9 }, this);
+    return react_1.default.createElement("video", { title: node.value.alt, src: getURL(node.value.uri), controls: true, ...props });
 };
 Video.displayName = "Video";
 exports.default = (0, componentify_1.default)(Video);
 
-},{"../componentify":28,"../use-waml":62,"react/jsx-dev-runtime":23}],58:[function(require,module,exports){
+},{"../componentify":25,"../use-waml":61,"react":20}],57:[function(require,module,exports){
 "use strict";
-var __rest = (this && this.__rest) || function (s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
-            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-                t[p[i]] = s[p[i]];
-        }
-    return t;
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const jsx_dev_runtime_1 = require("react/jsx-dev-runtime");
-const _jsxFileName = "C:/Users/dosel/Dev/waml-viewer/src/index.tsx";
 const waml_1 = require("@riiid/waml");
 const react_1 = require("react");
 const react_dom_1 = require("react-dom");
+const react_2 = __importDefault(require("react"));
 const builtin_style_1 = __importDefault(require("./components/builtin-style"));
 const debug_console_1 = __importDefault(require("./components/debug-console"));
 const document_1 = __importDefault(require("./components/document"));
 const scoped_style_1 = __importDefault(require("./components/scoped-style"));
 const syntax_error_handler_1 = __importDefault(require("./components/syntax-error-handler"));
 const use_waml_1 = require("./use-waml");
+const pairing_lines_1 = __importDefault(require("./components/pairing-lines"));
 const defaultOptions = {};
 const defaultMiddlewares = [];
-const WAMLViewer = (_a) => {
-    var { waml, middlewares = defaultMiddlewares, options = defaultOptions, bare } = _a, props = __rest(_a, ["waml", "middlewares", "options", "bare"]);
+const WAMLViewer = ({ waml, middlewares = defaultMiddlewares, options = defaultOptions, bare, ...props }) => {
     const document = (0, react_1.useMemo)(() => {
         try {
             const R = typeof waml === "string" ? new waml_1.WAMLDocument(waml) : waml;
@@ -16257,7 +15169,7 @@ const WAMLViewer = (_a) => {
                 continue;
             if (v.tag !== "explanation")
                 continue;
-            R.push((0, jsx_dev_runtime_1.jsxDEV)(document_1.default, { node: v.content }, R.length, false, { fileName: _jsxFileName, lineNumber: 48, columnNumber: 14 }, this));
+            R.push(react_2.default.createElement(document_1.default, { key: R.length, node: v.content }));
         }
         return R;
     }, [document]);
@@ -16275,18 +15187,30 @@ const WAMLViewer = (_a) => {
         return R;
     }, [document]);
     if ('error' in document) {
-        return (0, jsx_dev_runtime_1.jsxDEV)("article", Object.assign({}, props, { children: [(0, jsx_dev_runtime_1.jsxDEV)(builtin_style_1.default, {}, void 0, false, { fileName: _jsxFileName, lineNumber: 66, columnNumber: 7 }, this), (0, jsx_dev_runtime_1.jsxDEV)(use_waml_1.WAMLProvider, { document: document, options: options, children: (0, jsx_dev_runtime_1.jsxDEV)(syntax_error_handler_1.default, { node: document }, void 0, false, { fileName: _jsxFileName, lineNumber: 68, columnNumber: 9 }, this) }, void 0, false, { fileName: _jsxFileName, lineNumber: 67, columnNumber: 7 }, this)] }), void 0, true, { fileName: _jsxFileName, lineNumber: 65, columnNumber: 11 }, this);
+        return react_2.default.createElement("article", { ...props },
+            react_2.default.createElement(builtin_style_1.default, null),
+            react_2.default.createElement(use_waml_1.WAMLProvider, { document: document, options: options },
+                react_2.default.createElement(syntax_error_handler_1.default, { node: document })));
     }
     if (bare) {
-        return (0, jsx_dev_runtime_1.jsxDEV)(jsx_dev_runtime_1.Fragment, { children: [styles.map((v, i) => ((0, jsx_dev_runtime_1.jsxDEV)(scoped_style_1.default, { children: v }, i, false, { fileName: _jsxFileName, lineNumber: 74, columnNumber: 30 }, this))), (0, jsx_dev_runtime_1.jsxDEV)(document_1.default, { node: document.raw }, void 0, false, { fileName: _jsxFileName, lineNumber: 77, columnNumber: 7 }, this)] }, void 0, true, { fileName: _jsxFileName, lineNumber: 73, columnNumber: 11 }, this);
+        return react_2.default.createElement(react_2.default.Fragment, null,
+            styles.map((v, i) => (react_2.default.createElement(scoped_style_1.default, { key: i }, v))),
+            react_2.default.createElement(document_1.default, { node: document.raw }));
     }
-    return (0, jsx_dev_runtime_1.jsxDEV)("article", Object.assign({}, props, { children: [(0, jsx_dev_runtime_1.jsxDEV)(builtin_style_1.default, {}, void 0, false, { fileName: _jsxFileName, lineNumber: 81, columnNumber: 5 }, this), (0, jsx_dev_runtime_1.jsxDEV)(use_waml_1.WAMLProvider, { document: document, options: options, children: [styles.map((v, i) => ((0, jsx_dev_runtime_1.jsxDEV)(scoped_style_1.default, { children: v }, i, false, { fileName: _jsxFileName, lineNumber: 83, columnNumber: 30 }, this))), (0, jsx_dev_runtime_1.jsxDEV)(document_1.default, { node: document.raw }, void 0, false, { fileName: _jsxFileName, lineNumber: 86, columnNumber: 7 }, this), options.explanationWrapper
-                        ? (0, react_dom_1.createPortal)($explanations, options.explanationWrapper)
-                        : $explanations, options.debug && (0, jsx_dev_runtime_1.jsxDEV)(debug_console_1.default, { document: document }, void 0, false, { fileName: _jsxFileName, lineNumber: 91, columnNumber: 24 }, this)] }, void 0, true, { fileName: _jsxFileName, lineNumber: 82, columnNumber: 5 }, this)] }), void 0, true, { fileName: _jsxFileName, lineNumber: 80, columnNumber: 9 }, this);
+    return react_2.default.createElement("article", { ...props },
+        react_2.default.createElement(builtin_style_1.default, null),
+        react_2.default.createElement(use_waml_1.WAMLProvider, { document: document, options: options },
+            styles.map((v, i) => (react_2.default.createElement(scoped_style_1.default, { key: i }, v))),
+            react_2.default.createElement(document_1.default, { node: document.raw }),
+            react_2.default.createElement(pairing_lines_1.default, null),
+            options.explanationWrapper
+                ? (0, react_dom_1.createPortal)($explanations, options.explanationWrapper)
+                : $explanations,
+            options.debug && react_2.default.createElement(debug_console_1.default, { document: document })));
 };
 exports.default = WAMLViewer;
 
-},{"./components/builtin-style":31,"./components/debug-console":36,"./components/document":37,"./components/scoped-style":52,"./components/syntax-error-handler":55,"./use-waml":62,"@riiid/waml":3,"react":22,"react-dom":16,"react/jsx-dev-runtime":23}],59:[function(require,module,exports){
+},{"./components/builtin-style":28,"./components/debug-console":33,"./components/document":34,"./components/pairing-lines":46,"./components/scoped-style":51,"./components/syntax-error-handler":54,"./use-waml":61,"@riiid/waml":3,"react":20,"react-dom":16}],58:[function(require,module,exports){
 "use strict";
 var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (receiver, state, kind, f) {
     if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
@@ -16304,18 +15228,25 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.unflattenAnswer = exports.flattenAnswer = void 0;
 /* eslint-disable @typescript-eslint/no-parameter-properties */
 const waml_1 = require("@riiid/waml");
+var InteractionAnswerType;
+(function (InteractionAnswerType) {
+    InteractionAnswerType[InteractionAnswerType["SINGLE"] = 0] = "SINGLE";
+    InteractionAnswerType[InteractionAnswerType["MULTIPLE"] = 1] = "MULTIPLE";
+})(InteractionAnswerType || (InteractionAnswerType = {}));
 class InteractionToken {
     get correct() {
         if (!this.answers.length)
             return undefined;
         switch (this.answerType) {
-            case "SINGLE":
+            case InteractionAnswerType.SINGLE:
                 return this.answers.some(v => v.value[0] === this.interactionValue);
-            case "MULTIPLE":
+            case InteractionAnswerType.MULTIPLE:
                 if (this.ordered) {
                     return this.answers.some(v => v.value[this.index] === this.interactionValue);
                 }
                 return this.answers.some(v => v.value.includes(this.interactionValue));
+            default:
+                throw Error(`Unhandled answerType: ${this.answerType}`);
         }
     }
     get interactionValue() {
@@ -16339,46 +15270,46 @@ class InteractionToken {
         switch (interaction.type) {
             case waml_1.WAML.InteractionType.CHOICE_OPTION:
                 if (interaction.multipleness) {
-                    this.answerType = "MULTIPLE";
+                    this.answerType = InteractionAnswerType.MULTIPLE;
                     this.ordered = interaction.multipleness === "ordered";
                 }
                 else {
-                    this.answerType = "SINGLE";
+                    this.answerType = InteractionAnswerType.SINGLE;
                 }
                 __classPrivateFieldSet(this, _InteractionToken_interactionValue, interaction.values[index], "f");
                 break;
             case waml_1.WAML.InteractionType.BUTTON_OPTION:
                 if (interaction.multipleness) {
-                    this.answerType = "MULTIPLE";
+                    this.answerType = InteractionAnswerType.MULTIPLE;
                     this.ordered = interaction.multipleness === "ordered";
                 }
                 else {
-                    this.answerType = "SINGLE";
+                    this.answerType = InteractionAnswerType.SINGLE;
                 }
                 break;
+            case waml_1.WAML.InteractionType.PAIRING_NET:
+                throw Error("InteractionToken does not support PAIRING_NET");
             default:
-                this.answerType = "SINGLE";
+                this.answerType = InteractionAnswerType.SINGLE;
         }
-    }
-    getAnswerText() {
-        return this.answers.map(v => v.value.join(', ')).join(', ');
     }
     handleInteract(value) {
         var _a, _b, _c;
         switch (this.answerType) {
-            case "SINGLE":
+            case InteractionAnswerType.SINGLE:
                 (_a = this.callback) === null || _a === void 0 ? void 0 : _a.call(this, { type: "SINGLE", value: [value] });
                 break;
-            case "MULTIPLE": {
-                const next = [...((_b = this.input) === null || _b === void 0 ? void 0 : _b.value) || []];
-                const index = next.indexOf(value);
-                if (index === -1)
-                    next.push(value);
-                else
-                    next.splice(index, 1);
-                (_c = this.callback) === null || _c === void 0 ? void 0 : _c.call(this, { type: "MULTIPLE", value: next, ordered: this.ordered });
+            case InteractionAnswerType.MULTIPLE:
+                {
+                    const next = [...((_b = this.input) === null || _b === void 0 ? void 0 : _b.value) || []];
+                    const index = next.indexOf(value);
+                    if (index === -1)
+                        next.push(value);
+                    else
+                        next.splice(index, 1);
+                    (_c = this.callback) === null || _c === void 0 ? void 0 : _c.call(this, { type: "MULTIPLE", value: next, ordered: this.ordered });
+                }
                 break;
-            }
             default:
                 throw Error(`Unhandled answerType: ${this.answerType}`);
         }
@@ -16408,7 +15339,7 @@ function unflattenAnswer(answer) {
 }
 exports.unflattenAnswer = unflattenAnswer;
 
-},{"@riiid/waml":3}],60:[function(require,module,exports){
+},{"@riiid/waml":3}],59:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.C = void 0;
@@ -16418,15 +15349,36 @@ function C(...args) {
 }
 exports.C = C;
 
-},{}],61:[function(require,module,exports){
+},{}],60:[function(require,module,exports){
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const jsx_dev_runtime_1 = require("react/jsx-dev-runtime");
-const _jsxFileName = "C:/Users/dosel/Dev/waml-viewer/src/test.tsx";
-const react_1 = require("react");
+const react_1 = __importStar(require("react"));
 const react_dom_1 = __importDefault(require("react-dom"));
 const _1 = __importDefault(require("."));
 const TestPage = () => {
@@ -16434,11 +15386,14 @@ const TestPage = () => {
     // eslint-disable-next-line @jjoriping/variable-name
     const [explanationWrapper, setExplanationWrapper] = (0, react_1.useState)(null);
     const handleChange = (0, react_1.useCallback)(e => setWAML(e.currentTarget.value), []);
-    return (0, jsx_dev_runtime_1.jsxDEV)(jsx_dev_runtime_1.Fragment, { children: [(0, jsx_dev_runtime_1.jsxDEV)("textarea", { value: waml, onChange: handleChange }, void 0, false, { fileName: _jsxFileName, lineNumber: 17, columnNumber: 5 }, this), explanationWrapper && (0, jsx_dev_runtime_1.jsxDEV)(_1.default, { waml: waml, options: { debug: true, explanationWrapper } }, waml, false, { fileName: _jsxFileName, lineNumber: 18, columnNumber: 27 }, this), (0, jsx_dev_runtime_1.jsxDEV)("aside", { ref: setExplanationWrapper }, void 0, false, { fileName: _jsxFileName, lineNumber: 23, columnNumber: 5 }, this)] }, void 0, true, { fileName: _jsxFileName, lineNumber: 16, columnNumber: 9 }, this);
+    return react_1.default.createElement(react_1.default.Fragment, null,
+        react_1.default.createElement("textarea", { value: waml, onChange: handleChange }),
+        explanationWrapper && react_1.default.createElement(_1.default, { key: waml, waml: waml, options: { debug: true, explanationWrapper } }),
+        react_1.default.createElement("aside", { ref: setExplanationWrapper }));
 };
-react_dom_1.default.render((0, jsx_dev_runtime_1.jsxDEV)(TestPage, {}, void 0, false, { fileName: _jsxFileName, lineNumber: 26, columnNumber: 17 }, this), document.querySelector("#stage"));
+react_dom_1.default.render(react_1.default.createElement(TestPage, null), document.querySelector("#stage"));
 
-},{".":58,"react":22,"react-dom":16,"react/jsx-dev-runtime":23}],62:[function(require,module,exports){
+},{".":57,"react":20,"react-dom":16}],61:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -16465,9 +15420,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.WAMLProvider = void 0;
-const jsx_dev_runtime_1 = require("react/jsx-dev-runtime");
-const _jsxFileName = "C:/Users/dosel/Dev/waml-viewer/src/use-waml.tsx";
-const react_1 = require("react");
+const react_1 = __importStar(require("react"));
 const waml_1 = require("@riiid/waml");
 const interaction_token_js_1 = __importStar(require("./interaction-token.js"));
 const context = (0, react_1.createContext)(null);
@@ -16484,7 +15437,9 @@ const WAMLProvider = ({ document, options, children }) => {
     const $renderingVariables = (0, react_1.useRef)({
         pendingClasses: [],
         interactionTokenIndex: {},
-        buttonOptionUsed: {}
+        buttonOptionUsed: {},
+        namedInteractionTokens: {},
+        pairingOptionDots: {}
     });
     const [value, setValue] = (0, react_1.useState)();
     const [draggingObject, setDraggingObject] = (0, react_1.useState)(null);
@@ -16516,6 +15471,8 @@ const WAMLProvider = ({ document, options, children }) => {
                     for (let j = 0; j < v.values.length; j++)
                         R.push(newToken(j));
                     break;
+                case waml_1.WAML.InteractionType.PAIRING_NET:
+                    continue;
                 default:
                     R.push(newToken());
             }
@@ -16529,6 +15486,63 @@ const WAMLProvider = ({ document, options, children }) => {
         }
         $renderingVariables.current.interactionTokenIndex = {};
         return R;
+    }, [document, flatValue]);
+    const pairing = (0, react_1.useMemo)(() => {
+        if ('error' in document)
+            return {
+                pairedVertices: {},
+                getDotRefs: () => ({ refInbound: null, refOutbound: null }),
+                getNetIndexByEdge: () => [-1, null]
+            };
+        const { metadata } = document;
+        const pairedVertices = {};
+        for (const v of metadata.answerFormat.interactions) {
+            if (v.type !== waml_1.WAML.InteractionType.PAIRING_NET)
+                continue;
+            const item = flatValue[v.index];
+            if (!item)
+                continue;
+            for (const w of item.value) {
+                const [from, to] = w.split('→');
+                pairedVertices[from] || (pairedVertices[from] = []);
+                pairedVertices[to] || (pairedVertices[to] = []);
+                pairedVertices[from].push({ netIndex: v.index, to });
+                pairedVertices[to].push({ netIndex: v.index, from });
+            }
+        }
+        return {
+            pairedVertices,
+            getDotRefs: node => {
+                var _a;
+                var _b, _c;
+                (_a = (_b = $renderingVariables.current.pairingOptionDots)[_c = node.cell.value]) !== null && _a !== void 0 ? _a : (_b[_c] = [null, null]);
+                return {
+                    refInbound: $ => {
+                        $renderingVariables.current.pairingOptionDots[node.cell.value][0] = $;
+                    },
+                    refOutbound: $ => {
+                        $renderingVariables.current.pairingOptionDots[node.cell.value][1] = $;
+                    }
+                };
+            },
+            getNetIndexByEdge: (from, to) => {
+                let reversed = false;
+                const index = metadata.answerFormat.interactions.findIndex(v => {
+                    if (v.type !== waml_1.WAML.InteractionType.PAIRING_NET)
+                        return false;
+                    if (v.fromValues.includes(from)) {
+                        reversed = false;
+                        return v.toValues.includes(to);
+                    }
+                    if (v.toValues.includes(from)) {
+                        reversed = true;
+                        return v.fromValues.includes(to);
+                    }
+                    return false;
+                });
+                return [index, reversed ? `${to}→${from}` : `${from}→${to}`];
+            }
+        };
     }, [document, flatValue]);
     const R = (0, react_1.useMemo)(() => ({
         checkButtonOptionUsed: node => {
@@ -16560,15 +15574,22 @@ const WAMLProvider = ({ document, options, children }) => {
             return r;
         },
         metadata: 'error' in document ? null : document.metadata,
+        pairing,
         renderingVariables: $renderingVariables.current,
         setDraggingObject,
+        setFlattenValue: runner => {
+            const r = runner(flatValue, 'error' in document ? null : document.metadata.answerFormat.interactions);
+            if (r === false)
+                return;
+            setValue((0, interaction_token_js_1.unflattenAnswer)(r));
+        },
         value
-    }), [buttonOptionState, document, draggingObject, interactionTokens, options, value]);
-    return (0, jsx_dev_runtime_1.jsxDEV)(context.Provider, { value: R, children: children }, void 0, false, { fileName: _jsxFileName, lineNumber: 147, columnNumber: 9 }, this);
+    }), [buttonOptionState, document, draggingObject, flatValue, interactionTokens, options, pairing, value]);
+    return react_1.default.createElement(context.Provider, { value: R }, children);
 };
 exports.WAMLProvider = WAMLProvider;
 
-},{"./interaction-token.js":59,"@riiid/waml":3,"react":22,"react/jsx-dev-runtime":23}],63:[function(require,module,exports){
+},{"./interaction-token.js":58,"@riiid/waml":3,"react":20}],62:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getIntersection = void 0;
@@ -16581,7 +15602,7 @@ function getIntersection(a, b) {
 }
 exports.getIntersection = getIntersection;
 
-},{}],64:[function(require,module,exports){
+},{}],63:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.NOT_YET_IMPLEMENTED = void 0;
@@ -16594,4 +15615,4 @@ class WAMLError extends Error {
 exports.default = WAMLError;
 exports.NOT_YET_IMPLEMENTED = new WAMLError("Not yet implemented");
 
-},{}]},{},[61]);
+},{}]},{},[60]);

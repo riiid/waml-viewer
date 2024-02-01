@@ -18,11 +18,11 @@
   "scripts": {
     "watch": "tsc -w",
     "build": "tsc",
-    "build:test": "tsc --jsx react-jsxdev --outDir test/dist && browserify test/dist/test.js -p esmify -o test/index.js"
+    "build:test": "tsc --jsx react --rootDir src --outDir test/dist && browserify test/dist/test.js -p esmify -o test/index.js"
   },
   "dependencies": {
     "react": "^18.2.0",
-    "@riiid/waml": "github:riiid/waml#ab2fe39786d8b69dad20ddb3fc5bff5f580f5555",
+    "@riiid/waml": "github:riiid/waml#f48df9a6226a0de4cd395ac4225fcc50a7041aea",
     "react-latex-next": "^2.2.0"
   }
 }

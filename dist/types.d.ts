@@ -21,6 +21,7 @@ type WAMLComponentMap = {
     'Line': WAML.Line;
     'LineComponent': WAML.LineComponent;
     'LongLingualOption': WAML.MooToken<'longLingualOption'>;
+    'PairingLine': string;
     'PairingOption': WAML.PairingOption;
     'PairingOptionGroup': WAML.PairingOption[];
     'Passage': WAML.Directive & {
@@ -40,6 +41,10 @@ type WAMLComponentAdditionalPropsMap = {
 } & {
     'Line': {
         next?: WAML.Line;
+    };
+    'PairingLine': {
+        'from': HTMLElement;
+        'to': HTMLElement;
     };
     'Passage': {
         fallback?: ReactNode;

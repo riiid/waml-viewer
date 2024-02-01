@@ -30,22 +30,26 @@ const react_1 = __importStar(require("react"));
 const componentify_1 = __importDefault(require("../componentify"));
 const use_waml_1 = __importDefault(require("../use-waml"));
 const utility_1 = require("../utility");
+const waml_1 = require("@riiid/waml");
 const ButtonBlank = ({ node, onPointerEnter, onPointerLeave, onPointerUp, ...props }) => {
+    var _a, _b;
     const { draggingObject, interactionToken } = (0, use_waml_1.default)(true);
     const [preview, setPreview] = (0, react_1.useState)();
-    const multiple = interactionToken.input?.type === "MULTIPLE";
+    const multiple = ((_a = interactionToken.input) === null || _a === void 0 ? void 0 : _a.type) === "MULTIPLE";
     const handlePointerEnter = (0, react_1.useCallback)(e => {
-        onPointerEnter?.(e);
+        onPointerEnter === null || onPointerEnter === void 0 ? void 0 : onPointerEnter(e);
         if (e.defaultPrevented)
             return;
         if (!draggingObject)
+            return;
+        if (!(0, waml_1.hasKind)(draggingObject.node, "ButtonOption"))
             return;
         if (!(0, utility_1.getIntersection)(draggingObject.node.group, node.value).length)
             return;
         setPreview(draggingObject.node.value);
     }, [draggingObject, node.value, onPointerEnter]);
     const handlePointerLeave = (0, react_1.useCallback)(e => {
-        onPointerLeave?.(e);
+        onPointerLeave === null || onPointerLeave === void 0 ? void 0 : onPointerLeave(e);
         if (e.defaultPrevented)
             return;
         if (!draggingObject)
@@ -53,10 +57,12 @@ const ButtonBlank = ({ node, onPointerEnter, onPointerLeave, onPointerUp, ...pro
         setPreview(undefined);
     }, [draggingObject, onPointerLeave]);
     const handlePointerUp = (0, react_1.useCallback)(e => {
-        onPointerUp?.(e);
+        onPointerUp === null || onPointerUp === void 0 ? void 0 : onPointerUp(e);
         if (e.defaultPrevented)
             return;
         if (!draggingObject)
+            return;
+        if (!(0, waml_1.hasKind)(draggingObject.node, "ButtonOption"))
             return;
         if (!(0, utility_1.getIntersection)(draggingObject.node.group, node.value).length)
             return;
@@ -72,7 +78,7 @@ const ButtonBlank = ({ node, onPointerEnter, onPointerLeave, onPointerUp, ...pro
         }
     }, [interactionToken, multiple]);
     return react_1.default.createElement("span", { onPointerEnter: handlePointerEnter, onPointerLeave: handlePointerLeave, onPointerUp: handlePointerUp, ...props, ...preview ? { 'data-preview': true } : {} },
-        (multiple || !preview) && interactionToken.input?.value.map((v, i) => (react_1.default.createElement("span", { key: i, onClick: handleClick }, v))),
+        (multiple || !preview) && ((_b = interactionToken.input) === null || _b === void 0 ? void 0 : _b.value.map((v, i) => (react_1.default.createElement("span", { key: i, onClick: handleClick }, v)))),
         Boolean(preview) && react_1.default.createElement("span", null, preview));
 };
 ButtonBlank.displayName = "ButtonBlank";

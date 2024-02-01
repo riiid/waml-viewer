@@ -116,6 +116,19 @@
   height: 100px;
 }
 
+.PairingLine {
+  stroke: #E22;
+  stroke-width: 3;
+}
+
+.PairingOption {
+  cursor: pointer;
+
+  &[data-dragging] {
+    font-weight: bold;
+  }
+}
+
 .Question {
   padding: 4px;
   font-weight: bold;

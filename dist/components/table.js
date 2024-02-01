@@ -39,7 +39,7 @@ const Table = ({ node, style, className, ...props }) => {
         }
         return { css, className: actualClassName, columns };
     }, [className, node]);
-    const sumOfColumns = (0, react_1.useMemo)(() => attributes.columns?.reduce((pv, v) => pv + v, 0), [attributes.columns]);
+    const sumOfColumns = (0, react_1.useMemo)(() => { var _a; return (_a = attributes.columns) === null || _a === void 0 ? void 0 : _a.reduce((pv, v) => pv + v, 0); }, [attributes.columns]);
     const $rows = (0, react_1.useMemo)(() => {
         const R = [];
         let $cells = [];

@@ -11,6 +11,7 @@ import ScopedStyle from "./components/scoped-style";
 import SyntaxErrorHandler from "./components/syntax-error-handler";
 import type { ASTMiddleware, WAMLViewerOptions } from "./types";
 import { WAMLProvider } from "./use-waml";
+import PairingLines from "./components/pairing-lines";
 
 const defaultOptions:WAMLViewerOptions = {};
 const defaultMiddlewares:ASTMiddleware[] = [];
@@ -85,6 +86,7 @@ const WAMLViewer:FC<WAMLViewerProps> = ({
         <ScopedStyle key={i}>{v}</ScopedStyle>
       ))}
       <Document node={document.raw} />
+      <PairingLines />
       {options.explanationWrapper
         ? createPortal($explanations, options.explanationWrapper)
         : $explanations

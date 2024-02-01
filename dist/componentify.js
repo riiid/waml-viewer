@@ -40,7 +40,7 @@ function componentify(Component) {
             const children = Component({ node, ...props });
             return componentOptions({
                 node,
-                children: typeof children === "object" ? children?.props['children'] : null
+                children: typeof children === "object" ? children === null || children === void 0 ? void 0 : children.props['children'] : null
             });
         }
         return react_1.default.createElement(Component, { node: node, ...props, ...componentOptions });

@@ -41,20 +41,23 @@ const WAMLProvider = ({ document, options, children }) => {
     const $renderingVariables = (0, react_1.useRef)({
         pendingClasses: [],
         interactionTokenIndex: {},
-        buttonOptionUsed: {}
+        buttonOptionUsed: {},
+        namedInteractionTokens: {},
+        pairingOptionDots: {}
     });
     const [value, setValue] = (0, react_1.useState)();
     const [draggingObject, setDraggingObject] = (0, react_1.useState)(null);
     const flatValue = (0, react_1.useMemo)(() => value ? (0, interaction_token_js_1.flattenAnswer)(value) : [], [value]);
     const buttonOptionState = (0, react_1.useMemo)(() => {
+        var _a, _b;
         if ('error' in document)
             return {};
         const R = {};
         for (const v of document.metadata.answerFormat.interactions) {
             if (v.type !== waml_1.WAML.InteractionType.BUTTON_OPTION)
                 continue;
-            for (const w of flatValue[v.index]?.value || []) {
-                R[w] ??= [];
+            for (const w of ((_a = flatValue[v.index]) === null || _a === void 0 ? void 0 : _a.value) || []) {
+                (_b = R[w]) !== null && _b !== void 0 ? _b : (R[w] = []);
                 R[w].push(v.index);
             }
         }
@@ -65,13 +68,15 @@ const WAMLProvider = ({ document, options, children }) => {
             return [];
         const { metadata } = document;
         const R = [];
-        const flatAnswers = metadata?.answers.map(interaction_token_js_1.flattenAnswer);
+        const flatAnswers = metadata === null || metadata === void 0 ? void 0 : metadata.answers.map(interaction_token_js_1.flattenAnswer);
         for (const v of metadata.answerFormat.interactions) {
             switch (v.type) {
                 case waml_1.WAML.InteractionType.CHOICE_OPTION:
                     for (let j = 0; j < v.values.length; j++)
                         R.push(newToken(j));
                     break;
+                case waml_1.WAML.InteractionType.PAIRING_NET:
+                    continue;
                 default:
                     R.push(newToken());
             }
@@ -86,10 +91,68 @@ const WAMLProvider = ({ document, options, children }) => {
         $renderingVariables.current.interactionTokenIndex = {};
         return R;
     }, [document, flatValue]);
+    const pairing = (0, react_1.useMemo)(() => {
+        if ('error' in document)
+            return {
+                pairedVertices: {},
+                getDotRefs: () => ({ refInbound: null, refOutbound: null }),
+                getNetIndexByEdge: () => [-1, null]
+            };
+        const { metadata } = document;
+        const pairedVertices = {};
+        for (const v of metadata.answerFormat.interactions) {
+            if (v.type !== waml_1.WAML.InteractionType.PAIRING_NET)
+                continue;
+            const item = flatValue[v.index];
+            if (!item)
+                continue;
+            for (const w of item.value) {
+                const [from, to] = w.split('→');
+                pairedVertices[from] || (pairedVertices[from] = []);
+                pairedVertices[to] || (pairedVertices[to] = []);
+                pairedVertices[from].push({ netIndex: v.index, to });
+                pairedVertices[to].push({ netIndex: v.index, from });
+            }
+        }
+        return {
+            pairedVertices,
+            getDotRefs: node => {
+                var _a;
+                var _b, _c;
+                (_a = (_b = $renderingVariables.current.pairingOptionDots)[_c = node.cell.value]) !== null && _a !== void 0 ? _a : (_b[_c] = [null, null]);
+                return {
+                    refInbound: $ => {
+                        $renderingVariables.current.pairingOptionDots[node.cell.value][0] = $;
+                    },
+                    refOutbound: $ => {
+                        $renderingVariables.current.pairingOptionDots[node.cell.value][1] = $;
+                    }
+                };
+            },
+            getNetIndexByEdge: (from, to) => {
+                let reversed = false;
+                const index = metadata.answerFormat.interactions.findIndex(v => {
+                    if (v.type !== waml_1.WAML.InteractionType.PAIRING_NET)
+                        return false;
+                    if (v.fromValues.includes(from)) {
+                        reversed = false;
+                        return v.toValues.includes(to);
+                    }
+                    if (v.toValues.includes(from)) {
+                        reversed = true;
+                        return v.fromValues.includes(to);
+                    }
+                    return false;
+                });
+                return [index, reversed ? `${to}→${from}` : `${from}→${to}`];
+            }
+        };
+    }, [document, flatValue]);
     const R = (0, react_1.useMemo)(() => ({
         checkButtonOptionUsed: node => {
+            var _a, _b;
             // 같은 value의 두 노드 중 한 노드만 답안으로 선택된 경우 먼저 등장한 노드부터 사용된 것으로 처리한다.
-            const usedNodes = $renderingVariables.current.buttonOptionUsed[node.value] ||= [];
+            const usedNodes = (_a = $renderingVariables.current.buttonOptionUsed)[_b = node.value] || (_a[_b] = []);
             let sequence = usedNodes.indexOf(node.id);
             if (sequence === -1)
                 sequence = usedNodes.push(node.id) - 1;
@@ -115,10 +178,17 @@ const WAMLProvider = ({ document, options, children }) => {
             return r;
         },
         metadata: 'error' in document ? null : document.metadata,
+        pairing,
         renderingVariables: $renderingVariables.current,
         setDraggingObject,
+        setFlattenValue: runner => {
+            const r = runner(flatValue, 'error' in document ? null : document.metadata.answerFormat.interactions);
+            if (r === false)
+                return;
+            setValue((0, interaction_token_js_1.unflattenAnswer)(r));
+        },
         value
-    }), [buttonOptionState, document, draggingObject, interactionTokens, options, value]);
+    }), [buttonOptionState, document, draggingObject, flatValue, interactionTokens, options, pairing, value]);
     return react_1.default.createElement(context.Provider, { value: R }, children);
 };
 exports.WAMLProvider = WAMLProvider;

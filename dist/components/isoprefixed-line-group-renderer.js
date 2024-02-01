@@ -27,11 +27,12 @@ const IsoprefixedLineGroupRenderer = ({ depth = 0, lines }) => {
 };
 exports.default = IsoprefixedLineGroupRenderer;
 function getIsoprefixedLineGroups(lines, depth = 0) {
+    var _a;
     const R = [];
     let currentLines = [];
     let pivotPrefix;
     for (let i = 0; i < lines.length; i++) {
-        const prefix = lines[i].prefixes[depth]?.value || "";
+        const prefix = ((_a = lines[i].prefixes[depth]) === null || _a === void 0 ? void 0 : _a.value) || "";
         if (pivotPrefix === undefined) {
             currentLines.push(lines[i]);
             pivotPrefix = prefix;

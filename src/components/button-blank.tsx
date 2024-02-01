@@ -4,6 +4,7 @@ import componentify from "../componentify";
 import type { WAMLComponent } from "../types";
 import useWAML from "../use-waml";
 import { getIntersection } from "../utility";
+import { hasKind } from "@riiid/waml";
 
 const ButtonBlank:WAMLComponent<'ButtonBlank'> = ({ node, onPointerEnter, onPointerLeave, onPointerUp, ...props }) => {
   const { draggingObject, interactionToken } = useWAML(true);
@@ -15,6 +16,7 @@ const ButtonBlank:WAMLComponent<'ButtonBlank'> = ({ node, onPointerEnter, onPoin
     onPointerEnter?.(e);
     if(e.defaultPrevented) return;
     if(!draggingObject) return;
+    if(!hasKind(draggingObject.node, "ButtonOption")) return;
     if(!getIntersection(draggingObject.node.group, node.value).length) return;
     setPreview(draggingObject.node.value);
   }, [ draggingObject, node.value, onPointerEnter ]);
@@ -28,6 +30,7 @@ const ButtonBlank:WAMLComponent<'ButtonBlank'> = ({ node, onPointerEnter, onPoin
     onPointerUp?.(e);
     if(e.defaultPrevented) return;
     if(!draggingObject) return;
+    if(!hasKind(draggingObject.node, "ButtonOption")) return;
     if(!getIntersection(draggingObject.node.group, node.value).length) return;
     interactionToken.handleInteract(draggingObject.node.value);
     setPreview(undefined);

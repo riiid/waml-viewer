@@ -1,12 +1,12 @@
 import type { WAMLDocument } from "@riiid/waml";
 import { WAML } from "@riiid/waml";
 import type { FCWithChildren, WAMLComponentType, WAMLViewerOptions } from "./types.js";
-import InteractionToken from "./interaction-token.js";
+import InteractionToken, { flattenAnswer } from "./interaction-token.js";
 type SplittedFormOf<T extends string> = T extends `${infer A}${infer B}` ? B extends "" ? [A] : [A, ...SplittedFormOf<B>] : [];
 type FirstLetterOf<T extends string> = SplittedFormOf<T>[0];
 type DraggingObject = {
     'displayName': WAMLComponentType;
-    'node': WAML.ButtonOption;
+    'node': WAML.ButtonOption | WAML.PairingOption;
     '$target': HTMLElement;
 };
 type Context = {
@@ -16,10 +16,26 @@ type Context = {
     'draggingObject': DraggingObject | null;
     'interactionToken': InteractionToken;
     'metadata': WAML.Metadata;
+    'pairing': {
+        'pairedVertices': Record<string, Array<{
+            netIndex: number;
+        } & ({
+            from: string;
+        } | {
+            to: string;
+        })>>;
+        'getDotRefs': (node: WAML.PairingOption) => {
+            'refInbound': ($: HTMLElement | null) => void;
+            'refOutbound': ($: HTMLElement | null) => void;
+        };
+        'getNetIndexByEdge': (from: string, to: string) => [number, string];
+    };
     'renderingVariables': {
         'pendingClasses': string[];
         'interactionTokenIndex': Record<string, number>;
         'buttonOptionUsed': Record<string, number[]>;
+        'namedInteractionTokens': Record<string, InteractionToken>;
+        'pairingOptionDots': Record<string, [inbound: HTMLElement | null, outbound: HTMLElement | null]>;
     };
     'value': WAML.Answer | undefined;
     'checkButtonOptionUsed': (node: WAML.ButtonOption) => boolean;
@@ -27,6 +43,7 @@ type Context = {
     'getURL': (uri: string) => string;
     'invokeInteractionToken': (id: string) => InteractionToken;
     'setDraggingObject': (value: DraggingObject | null) => void;
+    'setFlattenValue': (runner: (prev: ReturnType<typeof flattenAnswer>, interactions: WAML.Interaction[]) => false | typeof prev) => void;
 };
 type Props = {
     'document': WAMLDocument | WAML.ParserError;

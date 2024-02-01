@@ -11,7 +11,6 @@ export default class InteractionToken {
     get interactionValue(): string;
     get selected(): boolean;
     constructor(interaction: WAML.Interaction, answers: ReturnType<typeof flattenAnswer>, index: number, input?: ReturnType<typeof flattenAnswer>[number], callback?: (next: Exclude<typeof input, undefined>) => void);
-    getAnswerText(): string;
     handleInteract(value: string): void;
     unsetInteract(): void;
 }

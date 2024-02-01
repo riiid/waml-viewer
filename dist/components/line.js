@@ -11,7 +11,7 @@ const Line = ({ node, next, ...props }) => {
     if (node.component && (0, waml_1.hasKind)(node.component, 'Anchor')) {
         return null;
     }
-    const anchored = next?.component && (0, waml_1.hasKind)(next.component, 'Anchor');
+    const anchored = (next === null || next === void 0 ? void 0 : next.component) && (0, waml_1.hasKind)(next.component, 'Anchor');
     return react_1.default.createElement("div", { ...props, ...anchored ? { 'data-anchored': true } : {} },
         react_1.default.createElement(line_component_1.default, { node: node.component }),
         anchored && react_1.default.createElement(line_component_1.default, { node: next.component }));

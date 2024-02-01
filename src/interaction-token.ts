@@ -1,25 +1,32 @@
 /* eslint-disable @typescript-eslint/no-parameter-properties */
 import { WAML } from "@riiid/waml";
 
+const enum InteractionAnswerType{
+  SINGLE,
+  MULTIPLE
+}
+
 export default class InteractionToken{
   public readonly input?:ReturnType<typeof flattenAnswer>[number];
   private readonly answers:ReturnType<typeof flattenAnswer>;
   private readonly callback?:(next:ReturnType<typeof flattenAnswer>[number]) => void;
   private readonly index:number;
   #interactionValue?:string;
-  private answerType:Exclude<WAML.Answer['type'], 'COMBINED'>;
+  private answerType:InteractionAnswerType;
   private ordered?:boolean;
 
   public get correct():boolean|undefined{
     if(!this.answers.length) return undefined;
     switch(this.answerType){
-      case "SINGLE":
+      case InteractionAnswerType.SINGLE:
         return this.answers.some(v => v.value[0] === this.interactionValue);
-      case "MULTIPLE":
+      case InteractionAnswerType.MULTIPLE:
         if(this.ordered){
           return this.answers.some(v => v.value[this.index] === this.interactionValue);
         }
         return this.answers.some(v => v.value.includes(this.interactionValue));
+      default:
+        throw Error(`Unhandled answerType: ${this.answerType}`);
     }
   }
   public get interactionValue():string{
@@ -47,43 +54,41 @@ export default class InteractionToken{
     switch(interaction.type){
       case WAML.InteractionType.CHOICE_OPTION:
         if(interaction.multipleness){
-          this.answerType = "MULTIPLE";
+          this.answerType = InteractionAnswerType.MULTIPLE;
           this.ordered = interaction.multipleness === "ordered";
         }else{
-          this.answerType = "SINGLE";
+          this.answerType = InteractionAnswerType.SINGLE;
         }
         this.#interactionValue = interaction.values[index];
         break;
       case WAML.InteractionType.BUTTON_OPTION:
         if(interaction.multipleness){
-          this.answerType = "MULTIPLE";
+          this.answerType = InteractionAnswerType.MULTIPLE;
           this.ordered = interaction.multipleness === "ordered";
         }else{
-          this.answerType = "SINGLE";
+          this.answerType = InteractionAnswerType.SINGLE;
         }
         break;
+      case WAML.InteractionType.PAIRING_NET:
+        throw Error("InteractionToken does not support PAIRING_NET");
       default:
-        this.answerType = "SINGLE";
+        this.answerType = InteractionAnswerType.SINGLE;
     }
   }
 
-  public getAnswerText():string{
-    return this.answers.map(v => v.value.join(', ')).join(', ');
-  }
   public handleInteract(value:string):void{
     switch(this.answerType){
-      case "SINGLE":
+      case InteractionAnswerType.SINGLE:
         this.callback?.({ type: "SINGLE", value: [ value ] });
         break;
-      case "MULTIPLE": {
+      case InteractionAnswerType.MULTIPLE: {
         const next = [ ...this.input?.value || [] ];
         const index = next.indexOf(value);
 
         if(index === -1) next.push(value);
         else next.splice(index, 1);
         this.callback?.({ type: "MULTIPLE", value: next, ordered: this.ordered! });
-        break;
-      }
+      } break;
       default:
         throw Error(`Unhandled answerType: ${this.answerType}`);
     }
