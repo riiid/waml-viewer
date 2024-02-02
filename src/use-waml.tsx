@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useId, useMemo, useRef, useState } from "react";
+import React, { createContext, useContext, useEffect, useId, useMemo, useRef, useState } from "react";
 import type { WAMLDocument } from "@riiid/waml";
 import { WAML } from "@riiid/waml";
 import type { FCWithChildren, WAMLComponentType, WAMLViewerOptions } from "./types.js";
@@ -50,7 +50,10 @@ type Context = {
 };
 type Props = {
   'document': WAMLDocument|WAML.ParserError,
-  'options': WAMLViewerOptions
+  'options': WAMLViewerOptions,
+  'defaultValue'?: WAML.Answer,
+  'value'?: WAML.Answer,
+  'onChange'?: (value:WAML.Answer) => void
 };
 
 const context = createContext<Context>(null!);
@@ -65,7 +68,7 @@ const useWAML = (invokingInteractionToken?:boolean) => {
 };
 
 export default useWAML;
-export const WAMLProvider:FCWithChildren<Props> = ({ document, options, children }) => {
+export const WAMLProvider:FCWithChildren<Props> = ({ document, options, defaultValue, value, onChange, children }) => {
   const $renderingVariables = useRef<Context['renderingVariables']>({
     pendingClasses: [],
     interactionTokenIndex: {},
@@ -73,10 +76,10 @@ export const WAMLProvider:FCWithChildren<Props> = ({ document, options, children
     namedInteractionTokens: {},
     pairingOptionDots: {}
   });
-  const [ value, setValue ] = useState<WAML.Answer>();
+  const [ uncontrolledValue, setUncontrolledValue ] = useState(defaultValue);
   const [ draggingObject, setDraggingObject ] = useState<DraggingObject|null>(null);
 
-  const flatValue = useMemo(() => value ? flattenAnswer(value) : [], [ value ]);
+  const flatValue = useMemo(() => uncontrolledValue ? flattenAnswer(uncontrolledValue) : [], [ uncontrolledValue ]);
   const buttonOptionState = useMemo(() => {
     if('error' in document) return {};
     const R:Record<string, number[]> = {};
@@ -114,14 +117,16 @@ export const WAMLProvider:FCWithChildren<Props> = ({ document, options, children
           next => {
             const nextInput = [ ...flatValue ];
             nextInput[v.index] = next;
-            setValue(unflattenAnswer(nextInput));
+            const nextAnswer = unflattenAnswer(nextInput);
+            setUncontrolledValue(nextAnswer);
+            onChange?.(nextAnswer);
           }
         );
       }
     }
     $renderingVariables.current.interactionTokenIndex = {};
     return R;
-  }, [ document, flatValue ]);
+  }, [ document, flatValue, onChange ]);
   const pairing = useMemo<Context['pairing']>(() => {
     if('error' in document) return {
       pairedVertices: {},
@@ -176,6 +181,11 @@ export const WAMLProvider:FCWithChildren<Props> = ({ document, options, children
     };
   }, [ document, flatValue ]);
 
+  useEffect(() => {
+    if(!value) return;
+    setUncontrolledValue(value);
+  }, [ value ]);
+
   const R = useMemo<Context>(() => ({
     checkButtonOptionUsed: node => {
       // 같은 value의 두 노드 중 한 노드만 답안으로 선택된 경우 먼저 등장한 노드부터 사용된 것으로 처리한다.
@@ -214,10 +224,12 @@ export const WAMLProvider:FCWithChildren<Props> = ({ document, options, children
         'error' in document ? null! : document.metadata.answerFormat.interactions
       );
       if(r === false) return;
-      setValue(unflattenAnswer(r));
+      const nextAnswer = unflattenAnswer(r);
+      setUncontrolledValue(nextAnswer);
+      onChange?.(nextAnswer);
     },
-    value
-  }), [ buttonOptionState, document, draggingObject, flatValue, interactionTokens, options, pairing, value ]);
+    value: uncontrolledValue
+  }), [ buttonOptionState, document, draggingObject, flatValue, interactionTokens, onChange, options, pairing, uncontrolledValue ]);
 
   return <context.Provider value={R}>
     {children}

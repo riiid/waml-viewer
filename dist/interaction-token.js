@@ -119,6 +119,11 @@ function flattenAnswer(answer) {
 }
 exports.flattenAnswer = flattenAnswer;
 function unflattenAnswer(answer) {
+    for (const v of answer) {
+        if (v.type === "MULTIPLE" && !v.ordered) {
+            v.value.sort((a, b) => a.localeCompare(b));
+        }
+    }
     if (answer.length > 1) {
         return { type: "COMBINED", children: answer };
     }

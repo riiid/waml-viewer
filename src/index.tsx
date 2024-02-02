@@ -16,17 +16,23 @@ import PairingLines from "./components/pairing-lines";
 const defaultOptions:WAMLViewerOptions = {};
 const defaultMiddlewares:ASTMiddleware[] = [];
 
-export interface WAMLViewerProps extends Omit<HTMLAttributes<HTMLElement>, 'children'>{
+export interface WAMLViewerProps extends Omit<HTMLAttributes<HTMLElement>, 'defaultValue'|'onChange'|'children'>{
   waml:string|WAMLDocument;
   middlewares?:ASTMiddleware[];
   options?:WAMLViewerOptions;
   bare?:boolean;
+  defaultValue?:WAML.Answer;
+  value?:WAML.Answer;
+  onChange?(value:WAML.Answer):void;
 }
 const WAMLViewer:FC<WAMLViewerProps> = ({
   waml,
   middlewares = defaultMiddlewares,
   options = defaultOptions,
   bare,
+  defaultValue,
+  value,
+  onChange,
   ...props
 }) => {
   const document = useMemo(() => {
@@ -66,7 +72,7 @@ const WAMLViewer:FC<WAMLViewerProps> = ({
   if('error' in document){
     return <article {...props}>
       <BuiltinStyle />
-      <WAMLProvider document={document} options={options}>
+      <WAMLProvider document={document} options={options} value={value} defaultValue={defaultValue} onChange={onChange}>
         <SyntaxErrorHandler node={document} />
       </WAMLProvider>
     </article>;
@@ -81,7 +87,7 @@ const WAMLViewer:FC<WAMLViewerProps> = ({
   }
   return <article {...props}>
     <BuiltinStyle />
-    <WAMLProvider document={document} options={options}>
+    <WAMLProvider document={document} options={options} value={value} defaultValue={defaultValue} onChange={onChange}>
       {styles.map((v, i) => (
         <ScopedStyle key={i}>{v}</ScopedStyle>
       ))}

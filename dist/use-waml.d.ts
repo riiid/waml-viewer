@@ -48,6 +48,9 @@ type Context = {
 type Props = {
     'document': WAMLDocument | WAML.ParserError;
     'options': WAMLViewerOptions;
+    'defaultValue'?: WAML.Answer;
+    'value'?: WAML.Answer;
+    'onChange'?: (value: WAML.Answer) => void;
 };
 declare const useWAML: (invokingInteractionToken?: boolean) => Context;
 export default useWAML;

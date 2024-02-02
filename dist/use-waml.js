@@ -37,7 +37,7 @@ const useWAML = (invokingInteractionToken) => {
     return R;
 };
 exports.default = useWAML;
-const WAMLProvider = ({ document, options, children }) => {
+const WAMLProvider = ({ document, options, defaultValue, value, onChange, children }) => {
     const $renderingVariables = (0, react_1.useRef)({
         pendingClasses: [],
         interactionTokenIndex: {},
@@ -45,9 +45,9 @@ const WAMLProvider = ({ document, options, children }) => {
         namedInteractionTokens: {},
         pairingOptionDots: {}
     });
-    const [value, setValue] = (0, react_1.useState)();
+    const [uncontrolledValue, setUncontrolledValue] = (0, react_1.useState)(defaultValue);
     const [draggingObject, setDraggingObject] = (0, react_1.useState)(null);
-    const flatValue = (0, react_1.useMemo)(() => value ? (0, interaction_token_js_1.flattenAnswer)(value) : [], [value]);
+    const flatValue = (0, react_1.useMemo)(() => uncontrolledValue ? (0, interaction_token_js_1.flattenAnswer)(uncontrolledValue) : [], [uncontrolledValue]);
     const buttonOptionState = (0, react_1.useMemo)(() => {
         var _a, _b;
         if ('error' in document)
@@ -84,13 +84,15 @@ const WAMLProvider = ({ document, options, children }) => {
                 return new interaction_token_js_1.default(v, flatAnswers.map(w => w[v.index]), index, flatValue[v.index], next => {
                     const nextInput = [...flatValue];
                     nextInput[v.index] = next;
-                    setValue((0, interaction_token_js_1.unflattenAnswer)(nextInput));
+                    const nextAnswer = (0, interaction_token_js_1.unflattenAnswer)(nextInput);
+                    setUncontrolledValue(nextAnswer);
+                    onChange === null || onChange === void 0 ? void 0 : onChange(nextAnswer);
                 });
             }
         }
         $renderingVariables.current.interactionTokenIndex = {};
         return R;
-    }, [document, flatValue]);
+    }, [document, flatValue, onChange]);
     const pairing = (0, react_1.useMemo)(() => {
         if ('error' in document)
             return {
@@ -148,6 +150,11 @@ const WAMLProvider = ({ document, options, children }) => {
             }
         };
     }, [document, flatValue]);
+    (0, react_1.useEffect)(() => {
+        if (!value)
+            return;
+        setUncontrolledValue(value);
+    }, [value]);
     const R = (0, react_1.useMemo)(() => ({
         checkButtonOptionUsed: node => {
             var _a, _b;
@@ -185,10 +192,12 @@ const WAMLProvider = ({ document, options, children }) => {
             const r = runner(flatValue, 'error' in document ? null : document.metadata.answerFormat.interactions);
             if (r === false)
                 return;
-            setValue((0, interaction_token_js_1.unflattenAnswer)(r));
+            const nextAnswer = (0, interaction_token_js_1.unflattenAnswer)(r);
+            setUncontrolledValue(nextAnswer);
+            onChange === null || onChange === void 0 ? void 0 : onChange(nextAnswer);
         },
-        value
-    }), [buttonOptionState, document, draggingObject, flatValue, interactionTokens, options, pairing, value]);
+        value: uncontrolledValue
+    }), [buttonOptionState, document, draggingObject, flatValue, interactionTokens, onChange, options, pairing, uncontrolledValue]);
     return react_1.default.createElement(context.Provider, { value: R }, children);
 };
 exports.WAMLProvider = WAMLProvider;

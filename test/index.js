@@ -149,7 +149,7 @@ function findAnswers(document) {
             value: option.list.map(({
               from,
               to
-            }) => `${from}→${to}`)
+            }) => `${from}→${to}`).sort((a, b) => a.localeCompare(b))
           };
         case "ShortLingualOption":
           return {
@@ -165,7 +165,7 @@ function findAnswers(document) {
             };
           }
           // NOTE `@answer {2,1}`이라 적었을 때 학생이 1 -> 2 순으로 답을 내는 경우에도 정답 처리하기 위함
-          if (!option.ordered) option.value.sort();
+          if (!option.ordered) option.value.sort((a, b) => a.localeCompare(b));
           return {
             type: "MULTIPLE",
             value: option.value,
@@ -14934,7 +14934,7 @@ const react_1 = __importStar(require("react"));
 const componentify_1 = __importDefault(require("../componentify"));
 const use_waml_1 = __importDefault(require("../use-waml"));
 const __1 = __importDefault(require(".."));
-const Passage = ({ node, fallback, ...props }) => {
+const Passage = ({ node, fallback, defaultValue, onChange, ...props }) => {
     const { getURL } = (0, use_waml_1.default)();
     const [payload, setPayload] = (0, react_1.useState)();
     (0, react_1.useEffect)(() => {
@@ -15146,7 +15146,7 @@ const use_waml_1 = require("./use-waml");
 const pairing_lines_1 = __importDefault(require("./components/pairing-lines"));
 const defaultOptions = {};
 const defaultMiddlewares = [];
-const WAMLViewer = ({ waml, middlewares = defaultMiddlewares, options = defaultOptions, bare, ...props }) => {
+const WAMLViewer = ({ waml, middlewares = defaultMiddlewares, options = defaultOptions, bare, defaultValue, value, onChange, ...props }) => {
     const document = (0, react_1.useMemo)(() => {
         try {
             const R = typeof waml === "string" ? new waml_1.WAMLDocument(waml) : waml;
@@ -15189,7 +15189,7 @@ const WAMLViewer = ({ waml, middlewares = defaultMiddlewares, options = defaultO
     if ('error' in document) {
         return react_2.default.createElement("article", { ...props },
             react_2.default.createElement(builtin_style_1.default, null),
-            react_2.default.createElement(use_waml_1.WAMLProvider, { document: document, options: options },
+            react_2.default.createElement(use_waml_1.WAMLProvider, { document: document, options: options, value: value, defaultValue: defaultValue, onChange: onChange },
                 react_2.default.createElement(syntax_error_handler_1.default, { node: document })));
     }
     if (bare) {
@@ -15199,7 +15199,7 @@ const WAMLViewer = ({ waml, middlewares = defaultMiddlewares, options = defaultO
     }
     return react_2.default.createElement("article", { ...props },
         react_2.default.createElement(builtin_style_1.default, null),
-        react_2.default.createElement(use_waml_1.WAMLProvider, { document: document, options: options },
+        react_2.default.createElement(use_waml_1.WAMLProvider, { document: document, options: options, value: value, defaultValue: defaultValue, onChange: onChange },
             styles.map((v, i) => (react_2.default.createElement(scoped_style_1.default, { key: i }, v))),
             react_2.default.createElement(document_1.default, { node: document.raw }),
             react_2.default.createElement(pairing_lines_1.default, null),
@@ -15332,6 +15332,11 @@ function flattenAnswer(answer) {
 }
 exports.flattenAnswer = flattenAnswer;
 function unflattenAnswer(answer) {
+    for (const v of answer) {
+        if (v.type === "MULTIPLE" && !v.ordered) {
+            v.value.sort((a, b) => a.localeCompare(b));
+        }
+    }
     if (answer.length > 1) {
         return { type: "COMBINED", children: answer };
     }
@@ -15385,10 +15390,11 @@ const TestPage = () => {
     const [waml, setWAML] = (0, react_1.useState)("Hello, World!");
     // eslint-disable-next-line @jjoriping/variable-name
     const [explanationWrapper, setExplanationWrapper] = (0, react_1.useState)(null);
+    const [x, setX] = (0, react_1.useState)();
     const handleChange = (0, react_1.useCallback)(e => setWAML(e.currentTarget.value), []);
     return react_1.default.createElement(react_1.default.Fragment, null,
         react_1.default.createElement("textarea", { value: waml, onChange: handleChange }),
-        explanationWrapper && react_1.default.createElement(_1.default, { key: waml, waml: waml, options: { debug: true, explanationWrapper } }),
+        explanationWrapper && react_1.default.createElement(_1.default, { key: waml, waml: waml, options: { debug: true, explanationWrapper }, value: x, onChange: value => setX(value) }),
         react_1.default.createElement("aside", { ref: setExplanationWrapper }));
 };
 react_dom_1.default.render(react_1.default.createElement(TestPage, null), document.querySelector("#stage"));
@@ -15433,7 +15439,7 @@ const useWAML = (invokingInteractionToken) => {
     return R;
 };
 exports.default = useWAML;
-const WAMLProvider = ({ document, options, children }) => {
+const WAMLProvider = ({ document, options, defaultValue, value, onChange, children }) => {
     const $renderingVariables = (0, react_1.useRef)({
         pendingClasses: [],
         interactionTokenIndex: {},
@@ -15441,9 +15447,9 @@ const WAMLProvider = ({ document, options, children }) => {
         namedInteractionTokens: {},
         pairingOptionDots: {}
     });
-    const [value, setValue] = (0, react_1.useState)();
+    const [uncontrolledValue, setUncontrolledValue] = (0, react_1.useState)(defaultValue);
     const [draggingObject, setDraggingObject] = (0, react_1.useState)(null);
-    const flatValue = (0, react_1.useMemo)(() => value ? (0, interaction_token_js_1.flattenAnswer)(value) : [], [value]);
+    const flatValue = (0, react_1.useMemo)(() => uncontrolledValue ? (0, interaction_token_js_1.flattenAnswer)(uncontrolledValue) : [], [uncontrolledValue]);
     const buttonOptionState = (0, react_1.useMemo)(() => {
         var _a, _b;
         if ('error' in document)
@@ -15480,13 +15486,15 @@ const WAMLProvider = ({ document, options, children }) => {
                 return new interaction_token_js_1.default(v, flatAnswers.map(w => w[v.index]), index, flatValue[v.index], next => {
                     const nextInput = [...flatValue];
                     nextInput[v.index] = next;
-                    setValue((0, interaction_token_js_1.unflattenAnswer)(nextInput));
+                    const nextAnswer = (0, interaction_token_js_1.unflattenAnswer)(nextInput);
+                    setUncontrolledValue(nextAnswer);
+                    onChange === null || onChange === void 0 ? void 0 : onChange(nextAnswer);
                 });
             }
         }
         $renderingVariables.current.interactionTokenIndex = {};
         return R;
-    }, [document, flatValue]);
+    }, [document, flatValue, onChange]);
     const pairing = (0, react_1.useMemo)(() => {
         if ('error' in document)
             return {
@@ -15544,6 +15552,11 @@ const WAMLProvider = ({ document, options, children }) => {
             }
         };
     }, [document, flatValue]);
+    (0, react_1.useEffect)(() => {
+        if (!value)
+            return;
+        setUncontrolledValue(value);
+    }, [value]);
     const R = (0, react_1.useMemo)(() => ({
         checkButtonOptionUsed: node => {
             var _a, _b;
@@ -15581,10 +15594,12 @@ const WAMLProvider = ({ document, options, children }) => {
             const r = runner(flatValue, 'error' in document ? null : document.metadata.answerFormat.interactions);
             if (r === false)
                 return;
-            setValue((0, interaction_token_js_1.unflattenAnswer)(r));
+            const nextAnswer = (0, interaction_token_js_1.unflattenAnswer)(r);
+            setUncontrolledValue(nextAnswer);
+            onChange === null || onChange === void 0 ? void 0 : onChange(nextAnswer);
         },
-        value
-    }), [buttonOptionState, document, draggingObject, flatValue, interactionTokens, options, pairing, value]);
+        value: uncontrolledValue
+    }), [buttonOptionState, document, draggingObject, flatValue, interactionTokens, onChange, options, pairing, uncontrolledValue]);
     return react_1.default.createElement(context.Provider, { value: R }, children);
 };
 exports.WAMLProvider = WAMLProvider;

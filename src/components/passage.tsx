@@ -4,7 +4,7 @@ import type { WAMLComponent } from "../types";
 import useWAML from "../use-waml";
 import WAMLViewer from "..";
 
-const Passage:WAMLComponent<'Passage'> = ({ node, fallback, ...props }) => {
+const Passage:WAMLComponent<'Passage'> = ({ node, fallback, defaultValue, onChange, ...props }) => {
   const { getURL } = useWAML();
   const [ payload, setPayload ] = useState<string>();
 

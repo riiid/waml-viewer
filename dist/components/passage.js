@@ -30,7 +30,7 @@ const react_1 = __importStar(require("react"));
 const componentify_1 = __importDefault(require("../componentify"));
 const use_waml_1 = __importDefault(require("../use-waml"));
 const __1 = __importDefault(require(".."));
-const Passage = ({ node, fallback, ...props }) => {
+const Passage = ({ node, fallback, defaultValue, onChange, ...props }) => {
     const { getURL } = (0, use_waml_1.default)();
     const [payload, setPayload] = (0, react_1.useState)();
     (0, react_1.useEffect)(() => {

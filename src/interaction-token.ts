@@ -107,6 +107,11 @@ export function flattenAnswer(answer:WAML.Answer){
   }
 }
 export function unflattenAnswer(answer:ReturnType<typeof flattenAnswer>):WAML.Answer{
+  for(const v of answer){
+    if(v.type === "MULTIPLE" && !v.ordered){
+      v.value.sort((a, b) => a.localeCompare(b));
+    }
+  }
   if(answer.length > 1){
     return { type: "COMBINED", children: answer };
   }
