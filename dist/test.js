@@ -37,7 +37,7 @@ const TestPage = () => {
     const handleChange = (0, react_1.useCallback)(e => setWAML(e.currentTarget.value), []);
     return react_1.default.createElement(react_1.default.Fragment, null,
         react_1.default.createElement("textarea", { value: waml, onChange: handleChange }),
-        explanationWrapper && react_1.default.createElement(_1.default, { key: waml, waml: waml, options: { debug: true, explanationWrapper }, value: x, onChange: value => setX(value) }),
+        explanationWrapper && react_1.default.createElement(_1.default, { key: waml, waml: waml, options: { debug: true, explanationWrapper, prefixedLineClassMap: { "Test": "Good" } }, value: x, onChange: value => setX(value) }),
         react_1.default.createElement("aside", { ref: setExplanationWrapper }));
 };
 react_dom_1.default.render(react_1.default.createElement(TestPage, null), document.querySelector("#stage"));

@@ -169,9 +169,7 @@ const WAMLProvider = ({ document, options, defaultValue, value, onChange, childr
                 sequence = usedNodes.push(node.id) - 1;
             return node.value in buttonOptionState && buttonOptionState[node.value].length > sequence;
         },
-        commonOptions: {
-            noDefaultClassName: options.noDefaultClassName || false
-        },
+        commonOptions: options,
         draggingObject,
         // eslint-disable-next-line @typescript-eslint/no-shadow
         getButtonOptionByValue: value => {

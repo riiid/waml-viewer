@@ -14026,8 +14026,11 @@ Object.defineProperty(exports, "__esModule", {
 });
 const react_1 = __importStar(require("react"));
 const scoped_style_1 = __importDefault(require("./scoped-style"));
-const BuiltinStyle = () => react_1.default.createElement(scoped_style_1.default, null, `
+const BuiltinStyle = ({
+  children
+}) => react_1.default.createElement(scoped_style_1.default, null, `
   @import "https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.css";
+  ${children}
 `);
 exports.default = (0, react_1.memo)(BuiltinStyle);
 
@@ -14986,18 +14989,49 @@ exports.default = (0, componentify_1.default)(Passage);
 
 },{"..":57,"../componentify":25,"../use-waml":61,"react":20}],50:[function(require,module,exports){
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const react_1 = __importDefault(require("react"));
+const react_1 = __importStar(require("react"));
 const componentify_1 = __importDefault(require("../componentify"));
 const react_2 = require("../react");
 const use_waml_1 = __importDefault(require("../use-waml"));
 const isoprefixed_line_group_renderer_1 = __importDefault(require("./isoprefixed-line-group-renderer"));
 const PrefixedLine = ({ node, type, depth, className, ...props }) => {
-    const { renderingVariables } = (0, use_waml_1.default)();
-    return (react_1.default.createElement("div", { className: (0, react_2.C)(className, type, renderingVariables.pendingClasses.pop()), ...props },
+    const { renderingVariables, commonOptions } = (0, use_waml_1.default)();
+    const pendingClassName = (0, react_1.useMemo)(() => {
+        var _a;
+        const R = renderingVariables.pendingClasses.pop();
+        if (R && ((_a = commonOptions.prefixedLineClassMap) === null || _a === void 0 ? void 0 : _a[R])) {
+            return commonOptions.prefixedLineClassMap[R];
+        }
+        return R;
+    }, [commonOptions.prefixedLineClassMap, renderingVariables.pendingClasses]);
+    return (react_1.default.createElement("div", { className: (0, react_2.C)(className, type, pendingClassName), ...props },
         react_1.default.createElement(isoprefixed_line_group_renderer_1.default, { depth: depth, lines: node })));
 };
 PrefixedLine.displayName = "PrefixedLine";
@@ -15225,7 +15259,7 @@ const WAMLViewer = ({ waml, middlewares = defaultMiddlewares, options = defaultO
     }, [document]);
     if ('error' in document) {
         return react_2.default.createElement("article", { ...props },
-            react_2.default.createElement(builtin_style_1.default, null),
+            react_2.default.createElement(builtin_style_1.default, null, options.builtinCSS),
             react_2.default.createElement(use_waml_1.WAMLProvider, { document: document, options: options, value: value, defaultValue: defaultValue, onChange: onChange },
                 react_2.default.createElement(syntax_error_handler_1.default, { node: document })));
     }
@@ -15235,7 +15269,7 @@ const WAMLViewer = ({ waml, middlewares = defaultMiddlewares, options = defaultO
             react_2.default.createElement(document_1.default, { node: document.raw }));
     }
     return react_2.default.createElement("article", { ...props },
-        react_2.default.createElement(builtin_style_1.default, null),
+        react_2.default.createElement(builtin_style_1.default, null, options.builtinCSS),
         react_2.default.createElement(use_waml_1.WAMLProvider, { document: document, options: options, value: value, defaultValue: defaultValue, onChange: onChange },
             styles.map((v, i) => (react_2.default.createElement(scoped_style_1.default, { key: i }, v))),
             react_2.default.createElement(document_1.default, { node: document.raw }),
@@ -15295,7 +15329,8 @@ class InteractionToken {
         return __classPrivateFieldGet(this, _InteractionToken_interactionValue, "f");
     }
     get selected() {
-        return this.includes(this.interactionValue);
+        var _a;
+        return ((_a = this.input) === null || _a === void 0 ? void 0 : _a.value.includes(this.interactionValue)) || false;
     }
     constructor(interaction, answers, index, input, callback) {
         _InteractionToken_interactionValue.set(this, void 0);
@@ -15354,10 +15389,6 @@ class InteractionToken {
             default:
                 throw Error(`Unhandled answerType: ${this.answerType}`);
         }
-    }
-    includes(value) {
-        var _a;
-        return ((_a = this.input) === null || _a === void 0 ? void 0 : _a.value.includes(value)) || false;
     }
     unsetInteract() {
         var _a;
@@ -15439,7 +15470,7 @@ const TestPage = () => {
     const handleChange = (0, react_1.useCallback)(e => setWAML(e.currentTarget.value), []);
     return react_1.default.createElement(react_1.default.Fragment, null,
         react_1.default.createElement("textarea", { value: waml, onChange: handleChange }),
-        explanationWrapper && react_1.default.createElement(_1.default, { key: waml, waml: waml, options: { debug: true, explanationWrapper }, value: x, onChange: value => setX(value) }),
+        explanationWrapper && react_1.default.createElement(_1.default, { key: waml, waml: waml, options: { debug: true, explanationWrapper, prefixedLineClassMap: { "Test": "Good" } }, value: x, onChange: value => setX(value) }),
         react_1.default.createElement("aside", { ref: setExplanationWrapper }));
 };
 react_dom_1.default.render(react_1.default.createElement(TestPage, null), document.querySelector("#stage"));
@@ -15616,9 +15647,7 @@ const WAMLProvider = ({ document, options, defaultValue, value, onChange, childr
                 sequence = usedNodes.push(node.id) - 1;
             return node.value in buttonOptionState && buttonOptionState[node.value].length > sequence;
         },
-        commonOptions: {
-            noDefaultClassName: options.noDefaultClassName || false
-        },
+        commonOptions: options,
         draggingObject,
         // eslint-disable-next-line @typescript-eslint/no-shadow
         getButtonOptionByValue: value => {

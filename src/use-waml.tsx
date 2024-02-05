@@ -204,9 +204,7 @@ export const WAMLProvider:FCWithChildren<Props> = ({ document, options, defaultV
 
       return node.value in buttonOptionState && buttonOptionState[node.value].length > sequence;
     },
-    commonOptions: {
-      noDefaultClassName: options.noDefaultClassName || false
-    },
+    commonOptions: options,
     draggingObject,
     // eslint-disable-next-line @typescript-eslint/no-shadow
     getButtonOptionByValue: value => {

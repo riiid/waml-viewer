@@ -54,6 +54,7 @@ export type WAMLViewerOptions = {
   'noDefaultClassName'?: boolean,
   'explanationWrapper'?: Element,
   'builtinCSS'?: string,
+  'prefixedLineClassMap'?: Record<string, string>,
   'debug'?: boolean
 }&{
   [key in WAMLComponentType]?: WAMLComponentPropsBase
