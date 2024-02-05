@@ -58,7 +58,7 @@ const WAMLViewer = ({ waml, middlewares = defaultMiddlewares, options = defaultO
     }, [document]);
     if ('error' in document) {
         return react_2.default.createElement("article", { ...props },
-            react_2.default.createElement(builtin_style_1.default, null),
+            react_2.default.createElement(builtin_style_1.default, null, options.builtinCSS),
             react_2.default.createElement(use_waml_1.WAMLProvider, { document: document, options: options, value: value, defaultValue: defaultValue, onChange: onChange },
                 react_2.default.createElement(syntax_error_handler_1.default, { node: document })));
     }
@@ -68,7 +68,7 @@ const WAMLViewer = ({ waml, middlewares = defaultMiddlewares, options = defaultO
             react_2.default.createElement(document_1.default, { node: document.raw }));
     }
     return react_2.default.createElement("article", { ...props },
-        react_2.default.createElement(builtin_style_1.default, null),
+        react_2.default.createElement(builtin_style_1.default, null, options.builtinCSS),
         react_2.default.createElement(use_waml_1.WAMLProvider, { document: document, options: options, value: value, defaultValue: defaultValue, onChange: onChange },
             styles.map((v, i) => (react_2.default.createElement(scoped_style_1.default, { key: i }, v))),
             react_2.default.createElement(document_1.default, { node: document.raw }),

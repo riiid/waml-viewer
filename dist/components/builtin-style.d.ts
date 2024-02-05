@@ -1,3 +1,6 @@
 import React from "react";
-declare const _default: React.NamedExoticComponent<{}>;
+type Props = {
+    'children'?: string;
+};
+declare const _default: React.NamedExoticComponent<Props>;
 export default _default;

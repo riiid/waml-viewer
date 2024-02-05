@@ -71,7 +71,7 @@ const WAMLViewer:FC<WAMLViewerProps> = ({
 
   if('error' in document){
     return <article {...props}>
-      <BuiltinStyle />
+      <BuiltinStyle>{options.builtinCSS}</BuiltinStyle>
       <WAMLProvider document={document} options={options} value={value} defaultValue={defaultValue} onChange={onChange}>
         <SyntaxErrorHandler node={document} />
       </WAMLProvider>
@@ -86,7 +86,7 @@ const WAMLViewer:FC<WAMLViewerProps> = ({
     </>;
   }
   return <article {...props}>
-    <BuiltinStyle />
+    <BuiltinStyle>{options.builtinCSS}</BuiltinStyle>
     <WAMLProvider document={document} options={options} value={value} defaultValue={defaultValue} onChange={onChange}>
       {styles.map((v, i) => (
         <ScopedStyle key={i}>{v}</ScopedStyle>

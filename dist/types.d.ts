@@ -66,6 +66,7 @@ export type WAMLViewerOptions = {
     'uriResolver'?: (uri: string) => string;
     'noDefaultClassName'?: boolean;
     'explanationWrapper'?: Element;
+    'builtinCSS'?: string;
     'debug'?: boolean;
 } & {
     [key in WAMLComponentType]?: WAMLComponentPropsBase | FCWithChildren<{
