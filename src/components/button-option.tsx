@@ -1,11 +1,12 @@
 import type { PointerEventHandler } from "react";
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 import componentify from "../componentify";
 import type { WAMLComponent } from "../types";
 import useWAML from "../use-waml";
 
 const ButtonOption:WAMLComponent<'ButtonOption'> = ({ node, onPointerDown, ...props }) => {
-  const { draggingObject, setDraggingObject, checkButtonOptionUsed } = useWAML();
+  const $ = useRef<HTMLButtonElement>(null);
+  const { draggingObject, setDraggingObject, checkButtonOptionUsed, renderingVariables } = useWAML();
 
   const used = checkButtonOptionUsed(node);
   const dragging = draggingObject?.node === node;
@@ -13,16 +14,19 @@ const ButtonOption:WAMLComponent<'ButtonOption'> = ({ node, onPointerDown, ...pr
   const handlePointerDown = useCallback<PointerEventHandler<HTMLButtonElement>>(e => {
     onPointerDown?.(e);
     if(e.defaultPrevented) return;
-    const $target = e.currentTarget;
-    const startX = e.clientX;
-    const startY = e.clientY;
-    const { top, left } = $target.getBoundingClientRect();
-    const onPointerMove = (f:PointerEvent) => {
-      const deltaX = f.clientX - startX;
-      const deltaY = f.clientY - startY;
+    setDraggingObject({ displayName: "ButtonOption", node, e: e.nativeEvent });
+  }, [ node, onPointerDown, setDraggingObject ]);
 
-      $target.style.top = `${top + deltaY}px`;
-      $target.style.left = `${left + deltaX}px`;
+  renderingVariables.buttonOptions[node.id] = node;
+  useEffect(() => {
+    if(draggingObject?.node !== node) return;
+    if(!$.current) return;
+    const $target = $.current;
+    const { e } = draggingObject;
+    const onPointerMove = (f:PointerEvent) => {
+      f.preventDefault();
+      $target.style.top = `${f.clientY}px`;
+      $target.style.left = `${f.clientX}px`;
     };
     const onPointerUp = () => {
       $target.style.top = "";
@@ -31,12 +35,18 @@ const ButtonOption:WAMLComponent<'ButtonOption'> = ({ node, onPointerDown, ...pr
       window.removeEventListener('pointerup', onPointerUp);
       setDraggingObject(null);
     };
+    $target.style.top = `${e.clientY}px`;
+    $target.style.left = `${e.clientX}px`;
     window.addEventListener('pointermove', onPointerMove);
     window.addEventListener('pointerup', onPointerUp);
-    setDraggingObject({ displayName: "ButtonOption", node, $target });
-  }, [ node, onPointerDown, setDraggingObject ]);
+    return () => {
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', onPointerUp);
+    };
+  }, [ draggingObject, node, setDraggingObject ]);
 
   return <button
+    ref={$}
     disabled={used}
     onPointerDown={handlePointerDown}
     {...props}

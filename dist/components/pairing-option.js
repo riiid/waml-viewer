@@ -84,9 +84,9 @@ const PairingOption = ({ node, onClick, ...props }) => {
         }
         else {
             setDraggingObject({
-                $target: e.currentTarget,
                 displayName: "PairingOption",
-                node
+                node,
+                e: e.nativeEvent
             });
         }
     }, [draggingObject, node, onClick, pairing, setDraggingObject, setFlattenValue]);

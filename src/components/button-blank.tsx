@@ -1,13 +1,14 @@
 import type { PointerEventHandler, MouseEventHandler } from "react";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
+import { hasKind } from "@riiid/waml";
 import componentify from "../componentify";
 import type { WAMLComponent } from "../types";
 import useWAML from "../use-waml";
 import { getIntersection } from "../utility";
-import { hasKind } from "@riiid/waml";
 
 const ButtonBlank:WAMLComponent<'ButtonBlank'> = ({ node, onPointerEnter, onPointerLeave, onPointerUp, ...props }) => {
-  const { draggingObject, interactionToken } = useWAML(true);
+  const $self = useRef(false);
+  const { getButtonOptionByValue, draggingObject, setDraggingObject, interactionToken } = useWAML(true);
 
   const [ preview, setPreview ] = useState<string>();
   const multiple = interactionToken.input?.type === "MULTIPLE";
@@ -16,8 +17,9 @@ const ButtonBlank:WAMLComponent<'ButtonBlank'> = ({ node, onPointerEnter, onPoin
     onPointerEnter?.(e);
     if(e.defaultPrevented) return;
     if(!draggingObject) return;
-    if(!hasKind(draggingObject.node, "ButtonOption")) return;
+    if(!hasKind(draggingObject.node, 'ButtonOption')) return;
     if(!getIntersection(draggingObject.node.group, node.value).length) return;
+    $self.current = false;
     setPreview(draggingObject.node.value);
   }, [ draggingObject, node.value, onPointerEnter ]);
   const handlePointerLeave = useCallback<PointerEventHandler<HTMLSpanElement>>(e => {
@@ -30,11 +32,32 @@ const ButtonBlank:WAMLComponent<'ButtonBlank'> = ({ node, onPointerEnter, onPoin
     onPointerUp?.(e);
     if(e.defaultPrevented) return;
     if(!draggingObject) return;
-    if(!hasKind(draggingObject.node, "ButtonOption")) return;
+    if(!hasKind(draggingObject.node, 'ButtonOption')) return;
     if(!getIntersection(draggingObject.node.group, node.value).length) return;
-    interactionToken.handleInteract(draggingObject.node.value);
+    if($self.current) return;
+    draggingObject.callback?.();
+    interactionToken.handleInteract(draggingObject.node.value, true);
     setPreview(undefined);
-  }, [ draggingObject, interactionToken, node.value, onPointerUp ]);
+  }, [ draggingObject, interactionToken, node, onPointerUp ]);
+
+  const handlePointerDown = useCallback<MouseEventHandler<HTMLSpanElement>>(e => {
+    const $target = e.currentTarget;
+    const targetNode = getButtonOptionByValue($target.textContent!);
+    if(!targetNode) throw Error(`Unexpected ButtonBlank value: ${$target.textContent}`);
+    $self.current = true;
+    setDraggingObject({
+      displayName: "ButtonBlank",
+      node: targetNode,
+      e: e.nativeEvent,
+      callback: () => {
+        if(multiple){
+          interactionToken.handleInteract($target.textContent!);
+        }else{
+          interactionToken.unsetInteract();
+        }
+      }
+    });
+  }, [ getButtonOptionByValue, interactionToken, multiple, setDraggingObject ]);
   const handleClick = useCallback<MouseEventHandler<HTMLSpanElement>>(e => {
     if(multiple){
       interactionToken.handleInteract(e.currentTarget.textContent!);
@@ -51,7 +74,12 @@ const ButtonBlank:WAMLComponent<'ButtonBlank'> = ({ node, onPointerEnter, onPoin
     {...preview ? { 'data-preview': true } : {}}
   >
     {(multiple || !preview) && interactionToken.input?.value.map((v, i) => (
-      <span key={i} onClick={handleClick}>{v}</span>
+      <span
+        key={i}
+        onPointerDown={handlePointerDown}
+        onClick={handleClick}
+        {...draggingObject?.node.kind === "ButtonOption" && draggingObject.node.value === v ? { 'data-dragging': true } : {}}
+      >{v}</span>
     ))}
     {Boolean(preview) && <span>{preview}</span>}
   </span>;

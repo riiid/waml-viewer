@@ -7,7 +7,8 @@ type FirstLetterOf<T extends string> = SplittedFormOf<T>[0];
 type DraggingObject = {
     'displayName': WAMLComponentType;
     'node': WAML.ButtonOption | WAML.PairingOption;
-    '$target': HTMLElement;
+    'e': PointerEvent | MouseEvent;
+    'callback'?: () => void;
 };
 type Context = {
     'commonOptions': {
@@ -31,14 +32,17 @@ type Context = {
         'getNetIndexByEdge': (from: string, to: string) => [number, string];
     };
     'renderingVariables': {
+        'pendingAnswer': ReturnType<typeof flattenAnswer> | null;
         'pendingClasses': string[];
         'interactionTokenIndex': Record<string, number>;
         'buttonOptionUsed': Record<string, number[]>;
+        'buttonOptions': Record<number, WAML.ButtonOption>;
         'namedInteractionTokens': Record<string, InteractionToken>;
         'pairingOptionDots': Record<string, [inbound: HTMLElement | null, outbound: HTMLElement | null]>;
     };
     'value': WAML.Answer | undefined;
     'checkButtonOptionUsed': (node: WAML.ButtonOption) => boolean;
+    'getButtonOptionByValue': (value: string) => WAML.ButtonOption | null;
     'getComponentOptions': <T extends WAMLComponentType>(type: T) => WAMLViewerOptions[T];
     'getURL': (uri: string) => string;
     'invokeInteractionToken': (id: string) => InteractionToken;

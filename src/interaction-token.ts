@@ -76,17 +76,21 @@ export default class InteractionToken{
     }
   }
 
-  public handleInteract(value:string):void{
+  public handleInteract(value:string, appendOnly?:boolean):void{
     switch(this.answerType){
       case InteractionAnswerType.SINGLE:
         this.callback?.({ type: "SINGLE", value: [ value ] });
         break;
       case InteractionAnswerType.MULTIPLE: {
         const next = [ ...this.input?.value || [] ];
-        const index = next.indexOf(value);
+        if(appendOnly){
+          next.push(value);
+        }else{
+          const index = next.indexOf(value);
 
-        if(index === -1) next.push(value);
-        else next.splice(index, 1);
+          if(index === -1) next.push(value);
+          else next.splice(index, 1);
+        }
         this.callback?.({ type: "MULTIPLE", value: next, ordered: this.ordered! });
       } break;
       default:
@@ -108,7 +112,7 @@ export function flattenAnswer(answer:WAML.Answer){
 }
 export function unflattenAnswer(answer:ReturnType<typeof flattenAnswer>):WAML.Answer{
   for(const v of answer){
-    if(v.type === "MULTIPLE" && !v.ordered){
+    if(v?.type === "MULTIPLE" && !v.ordered){
       v.value.sort((a, b) => a.localeCompare(b));
     }
   }

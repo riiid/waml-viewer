@@ -14061,13 +14061,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const react_1 = __importStar(require("react"));
+const waml_1 = require("@riiid/waml");
 const componentify_1 = __importDefault(require("../componentify"));
 const use_waml_1 = __importDefault(require("../use-waml"));
 const utility_1 = require("../utility");
-const waml_1 = require("@riiid/waml");
 const ButtonBlank = ({ node, onPointerEnter, onPointerLeave, onPointerUp, ...props }) => {
     var _a, _b;
-    const { draggingObject, interactionToken } = (0, use_waml_1.default)(true);
+    const $self = (0, react_1.useRef)(false);
+    const { getButtonOptionByValue, draggingObject, setDraggingObject, interactionToken } = (0, use_waml_1.default)(true);
     const [preview, setPreview] = (0, react_1.useState)();
     const multiple = ((_a = interactionToken.input) === null || _a === void 0 ? void 0 : _a.type) === "MULTIPLE";
     const handlePointerEnter = (0, react_1.useCallback)(e => {
@@ -14076,10 +14077,11 @@ const ButtonBlank = ({ node, onPointerEnter, onPointerLeave, onPointerUp, ...pro
             return;
         if (!draggingObject)
             return;
-        if (!(0, waml_1.hasKind)(draggingObject.node, "ButtonOption"))
+        if (!(0, waml_1.hasKind)(draggingObject.node, 'ButtonOption'))
             return;
         if (!(0, utility_1.getIntersection)(draggingObject.node.group, node.value).length)
             return;
+        $self.current = false;
         setPreview(draggingObject.node.value);
     }, [draggingObject, node.value, onPointerEnter]);
     const handlePointerLeave = (0, react_1.useCallback)(e => {
@@ -14091,18 +14093,42 @@ const ButtonBlank = ({ node, onPointerEnter, onPointerLeave, onPointerUp, ...pro
         setPreview(undefined);
     }, [draggingObject, onPointerLeave]);
     const handlePointerUp = (0, react_1.useCallback)(e => {
+        var _a;
         onPointerUp === null || onPointerUp === void 0 ? void 0 : onPointerUp(e);
         if (e.defaultPrevented)
             return;
         if (!draggingObject)
             return;
-        if (!(0, waml_1.hasKind)(draggingObject.node, "ButtonOption"))
+        if (!(0, waml_1.hasKind)(draggingObject.node, 'ButtonOption'))
             return;
         if (!(0, utility_1.getIntersection)(draggingObject.node.group, node.value).length)
             return;
-        interactionToken.handleInteract(draggingObject.node.value);
+        if ($self.current)
+            return;
+        (_a = draggingObject.callback) === null || _a === void 0 ? void 0 : _a.call(draggingObject);
+        interactionToken.handleInteract(draggingObject.node.value, true);
         setPreview(undefined);
-    }, [draggingObject, interactionToken, node.value, onPointerUp]);
+    }, [draggingObject, interactionToken, node, onPointerUp]);
+    const handlePointerDown = (0, react_1.useCallback)(e => {
+        const $target = e.currentTarget;
+        const targetNode = getButtonOptionByValue($target.textContent);
+        if (!targetNode)
+            throw Error(`Unexpected ButtonBlank value: ${$target.textContent}`);
+        $self.current = true;
+        setDraggingObject({
+            displayName: "ButtonBlank",
+            node: targetNode,
+            e: e.nativeEvent,
+            callback: () => {
+                if (multiple) {
+                    interactionToken.handleInteract($target.textContent);
+                }
+                else {
+                    interactionToken.unsetInteract();
+                }
+            }
+        });
+    }, [getButtonOptionByValue, interactionToken, multiple, setDraggingObject]);
     const handleClick = (0, react_1.useCallback)(e => {
         if (multiple) {
             interactionToken.handleInteract(e.currentTarget.textContent);
@@ -14112,7 +14138,7 @@ const ButtonBlank = ({ node, onPointerEnter, onPointerLeave, onPointerUp, ...pro
         }
     }, [interactionToken, multiple]);
     return react_1.default.createElement("span", { onPointerEnter: handlePointerEnter, onPointerLeave: handlePointerLeave, onPointerUp: handlePointerUp, ...props, ...preview ? { 'data-preview': true } : {} },
-        (multiple || !preview) && ((_b = interactionToken.input) === null || _b === void 0 ? void 0 : _b.value.map((v, i) => (react_1.default.createElement("span", { key: i, onClick: handleClick }, v)))),
+        (multiple || !preview) && ((_b = interactionToken.input) === null || _b === void 0 ? void 0 : _b.value.map((v, i) => (react_1.default.createElement("span", { key: i, onPointerDown: handlePointerDown, onClick: handleClick, ...(draggingObject === null || draggingObject === void 0 ? void 0 : draggingObject.node.kind) === "ButtonOption" && draggingObject.node.value === v ? { 'data-dragging': true } : {} }, v)))),
         Boolean(preview) && react_1.default.createElement("span", null, preview));
 };
 ButtonBlank.displayName = "ButtonBlank";
@@ -14151,22 +14177,28 @@ const react_1 = __importStar(require("react"));
 const componentify_1 = __importDefault(require("../componentify"));
 const use_waml_1 = __importDefault(require("../use-waml"));
 const ButtonOption = ({ node, onPointerDown, ...props }) => {
-    const { draggingObject, setDraggingObject, checkButtonOptionUsed } = (0, use_waml_1.default)();
+    const $ = (0, react_1.useRef)(null);
+    const { draggingObject, setDraggingObject, checkButtonOptionUsed, renderingVariables } = (0, use_waml_1.default)();
     const used = checkButtonOptionUsed(node);
     const dragging = (draggingObject === null || draggingObject === void 0 ? void 0 : draggingObject.node) === node;
     const handlePointerDown = (0, react_1.useCallback)(e => {
         onPointerDown === null || onPointerDown === void 0 ? void 0 : onPointerDown(e);
         if (e.defaultPrevented)
             return;
-        const $target = e.currentTarget;
-        const startX = e.clientX;
-        const startY = e.clientY;
-        const { top, left } = $target.getBoundingClientRect();
+        setDraggingObject({ displayName: "ButtonOption", node, e: e.nativeEvent });
+    }, [node, onPointerDown, setDraggingObject]);
+    renderingVariables.buttonOptions[node.id] = node;
+    (0, react_1.useEffect)(() => {
+        if ((draggingObject === null || draggingObject === void 0 ? void 0 : draggingObject.node) !== node)
+            return;
+        if (!$.current)
+            return;
+        const $target = $.current;
+        const { e } = draggingObject;
         const onPointerMove = (f) => {
-            const deltaX = f.clientX - startX;
-            const deltaY = f.clientY - startY;
-            $target.style.top = `${top + deltaY}px`;
-            $target.style.left = `${left + deltaX}px`;
+            f.preventDefault();
+            $target.style.top = `${f.clientY}px`;
+            $target.style.left = `${f.clientX}px`;
         };
         const onPointerUp = () => {
             $target.style.top = "";
@@ -14175,11 +14207,16 @@ const ButtonOption = ({ node, onPointerDown, ...props }) => {
             window.removeEventListener('pointerup', onPointerUp);
             setDraggingObject(null);
         };
+        $target.style.top = `${e.clientY}px`;
+        $target.style.left = `${e.clientX}px`;
         window.addEventListener('pointermove', onPointerMove);
         window.addEventListener('pointerup', onPointerUp);
-        setDraggingObject({ displayName: "ButtonOption", node, $target });
-    }, [node, onPointerDown, setDraggingObject]);
-    return react_1.default.createElement("button", { disabled: used, onPointerDown: handlePointerDown, ...props, ...dragging ? { 'data-dragging': true } : {} }, node.value);
+        return () => {
+            window.removeEventListener('pointermove', onPointerMove);
+            window.removeEventListener('pointerup', onPointerUp);
+        };
+    }, [draggingObject, node, setDraggingObject]);
+    return react_1.default.createElement("button", { ref: $, disabled: used, onPointerDown: handlePointerDown, ...props, ...dragging ? { 'data-dragging': true } : {} }, node.value);
 };
 ButtonOption.displayName = "ButtonOption";
 exports.default = (0, componentify_1.default)(ButtonOption);
@@ -14887,9 +14924,9 @@ const PairingOption = ({ node, onClick, ...props }) => {
         }
         else {
             setDraggingObject({
-                $target: e.currentTarget,
                 displayName: "PairingOption",
-                node
+                node,
+                e: e.nativeEvent
             });
         }
     }, [draggingObject, node, onClick, pairing, setDraggingObject, setFlattenValue]);
@@ -15258,8 +15295,7 @@ class InteractionToken {
         return __classPrivateFieldGet(this, _InteractionToken_interactionValue, "f");
     }
     get selected() {
-        var _a;
-        return ((_a = this.input) === null || _a === void 0 ? void 0 : _a.value.includes(this.interactionValue)) || false;
+        return this.includes(this.interactionValue);
     }
     constructor(interaction, answers, index, input, callback) {
         _InteractionToken_interactionValue.set(this, void 0);
@@ -15293,7 +15329,7 @@ class InteractionToken {
                 this.answerType = InteractionAnswerType.SINGLE;
         }
     }
-    handleInteract(value) {
+    handleInteract(value, appendOnly) {
         var _a, _b, _c;
         switch (this.answerType) {
             case InteractionAnswerType.SINGLE:
@@ -15302,17 +15338,26 @@ class InteractionToken {
             case InteractionAnswerType.MULTIPLE:
                 {
                     const next = [...((_b = this.input) === null || _b === void 0 ? void 0 : _b.value) || []];
-                    const index = next.indexOf(value);
-                    if (index === -1)
+                    if (appendOnly) {
                         next.push(value);
-                    else
-                        next.splice(index, 1);
+                    }
+                    else {
+                        const index = next.indexOf(value);
+                        if (index === -1)
+                            next.push(value);
+                        else
+                            next.splice(index, 1);
+                    }
                     (_c = this.callback) === null || _c === void 0 ? void 0 : _c.call(this, { type: "MULTIPLE", value: next, ordered: this.ordered });
                 }
                 break;
             default:
                 throw Error(`Unhandled answerType: ${this.answerType}`);
         }
+    }
+    includes(value) {
+        var _a;
+        return ((_a = this.input) === null || _a === void 0 ? void 0 : _a.value.includes(value)) || false;
     }
     unsetInteract() {
         var _a;
@@ -15333,7 +15378,7 @@ function flattenAnswer(answer) {
 exports.flattenAnswer = flattenAnswer;
 function unflattenAnswer(answer) {
     for (const v of answer) {
-        if (v.type === "MULTIPLE" && !v.ordered) {
+        if ((v === null || v === void 0 ? void 0 : v.type) === "MULTIPLE" && !v.ordered) {
             v.value.sort((a, b) => a.localeCompare(b));
         }
     }
@@ -15441,9 +15486,11 @@ const useWAML = (invokingInteractionToken) => {
 exports.default = useWAML;
 const WAMLProvider = ({ document, options, defaultValue, value, onChange, children }) => {
     const $renderingVariables = (0, react_1.useRef)({
+        pendingAnswer: null,
         pendingClasses: [],
         interactionTokenIndex: {},
         buttonOptionUsed: {},
+        buttonOptions: {},
         namedInteractionTokens: {},
         pairingOptionDots: {}
     });
@@ -15484,14 +15531,16 @@ const WAMLProvider = ({ document, options, defaultValue, value, onChange, childr
             }
             function newToken(index = 0) {
                 return new interaction_token_js_1.default(v, flatAnswers.map(w => w[v.index]), index, flatValue[v.index], next => {
-                    const nextInput = [...flatValue];
+                    const nextInput = [...$renderingVariables.current.pendingAnswer || flatValue];
                     nextInput[v.index] = next;
+                    $renderingVariables.current.pendingAnswer = nextInput;
                     const nextAnswer = (0, interaction_token_js_1.unflattenAnswer)(nextInput);
                     setUncontrolledValue(nextAnswer);
                     onChange === null || onChange === void 0 ? void 0 : onChange(nextAnswer);
                 });
             }
         }
+        $renderingVariables.current.pendingAnswer = null;
         $renderingVariables.current.interactionTokenIndex = {};
         return R;
     }, [document, flatValue, onChange]);
@@ -15571,6 +15620,14 @@ const WAMLProvider = ({ document, options, defaultValue, value, onChange, childr
             noDefaultClassName: options.noDefaultClassName || false
         },
         draggingObject,
+        // eslint-disable-next-line @typescript-eslint/no-shadow
+        getButtonOptionByValue: value => {
+            var _a;
+            const candidates = Object.values($renderingVariables.current.buttonOptions).filter(v => v.value === value);
+            if (!candidates.length)
+                return null;
+            return candidates[candidates.length - (((_a = $renderingVariables.current.buttonOptionUsed[value]) === null || _a === void 0 ? void 0 : _a.length) || 1)];
+        },
         getComponentOptions: type => options[type],
         getURL: options.uriResolver || (uri => uri),
         interactionToken: null,
@@ -15591,9 +15648,10 @@ const WAMLProvider = ({ document, options, defaultValue, value, onChange, childr
         renderingVariables: $renderingVariables.current,
         setDraggingObject,
         setFlattenValue: runner => {
-            const r = runner(flatValue, 'error' in document ? null : document.metadata.answerFormat.interactions);
+            const r = runner($renderingVariables.current.pendingAnswer || flatValue, 'error' in document ? null : document.metadata.answerFormat.interactions);
             if (r === false)
                 return;
+            $renderingVariables.current.pendingAnswer = r;
             const nextAnswer = (0, interaction_token_js_1.unflattenAnswer)(r);
             setUncontrolledValue(nextAnswer);
             onChange === null || onChange === void 0 ? void 0 : onChange(nextAnswer);

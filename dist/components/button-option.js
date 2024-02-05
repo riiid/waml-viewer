@@ -30,22 +30,28 @@ const react_1 = __importStar(require("react"));
 const componentify_1 = __importDefault(require("../componentify"));
 const use_waml_1 = __importDefault(require("../use-waml"));
 const ButtonOption = ({ node, onPointerDown, ...props }) => {
-    const { draggingObject, setDraggingObject, checkButtonOptionUsed } = (0, use_waml_1.default)();
+    const $ = (0, react_1.useRef)(null);
+    const { draggingObject, setDraggingObject, checkButtonOptionUsed, renderingVariables } = (0, use_waml_1.default)();
     const used = checkButtonOptionUsed(node);
     const dragging = (draggingObject === null || draggingObject === void 0 ? void 0 : draggingObject.node) === node;
     const handlePointerDown = (0, react_1.useCallback)(e => {
         onPointerDown === null || onPointerDown === void 0 ? void 0 : onPointerDown(e);
         if (e.defaultPrevented)
             return;
-        const $target = e.currentTarget;
-        const startX = e.clientX;
-        const startY = e.clientY;
-        const { top, left } = $target.getBoundingClientRect();
+        setDraggingObject({ displayName: "ButtonOption", node, e: e.nativeEvent });
+    }, [node, onPointerDown, setDraggingObject]);
+    renderingVariables.buttonOptions[node.id] = node;
+    (0, react_1.useEffect)(() => {
+        if ((draggingObject === null || draggingObject === void 0 ? void 0 : draggingObject.node) !== node)
+            return;
+        if (!$.current)
+            return;
+        const $target = $.current;
+        const { e } = draggingObject;
         const onPointerMove = (f) => {
-            const deltaX = f.clientX - startX;
-            const deltaY = f.clientY - startY;
-            $target.style.top = `${top + deltaY}px`;
-            $target.style.left = `${left + deltaX}px`;
+            f.preventDefault();
+            $target.style.top = `${f.clientY}px`;
+            $target.style.left = `${f.clientX}px`;
         };
         const onPointerUp = () => {
             $target.style.top = "";
@@ -54,11 +60,16 @@ const ButtonOption = ({ node, onPointerDown, ...props }) => {
             window.removeEventListener('pointerup', onPointerUp);
             setDraggingObject(null);
         };
+        $target.style.top = `${e.clientY}px`;
+        $target.style.left = `${e.clientX}px`;
         window.addEventListener('pointermove', onPointerMove);
         window.addEventListener('pointerup', onPointerUp);
-        setDraggingObject({ displayName: "ButtonOption", node, $target });
-    }, [node, onPointerDown, setDraggingObject]);
-    return react_1.default.createElement("button", { disabled: used, onPointerDown: handlePointerDown, ...props, ...dragging ? { 'data-dragging': true } : {} }, node.value);
+        return () => {
+            window.removeEventListener('pointermove', onPointerMove);
+            window.removeEventListener('pointerup', onPointerUp);
+        };
+    }, [draggingObject, node, setDraggingObject]);
+    return react_1.default.createElement("button", { ref: $, disabled: used, onPointerDown: handlePointerDown, ...props, ...dragging ? { 'data-dragging': true } : {} }, node.value);
 };
 ButtonOption.displayName = "ButtonOption";
 exports.default = (0, componentify_1.default)(ButtonOption);

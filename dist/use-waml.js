@@ -39,9 +39,11 @@ const useWAML = (invokingInteractionToken) => {
 exports.default = useWAML;
 const WAMLProvider = ({ document, options, defaultValue, value, onChange, children }) => {
     const $renderingVariables = (0, react_1.useRef)({
+        pendingAnswer: null,
         pendingClasses: [],
         interactionTokenIndex: {},
         buttonOptionUsed: {},
+        buttonOptions: {},
         namedInteractionTokens: {},
         pairingOptionDots: {}
     });
@@ -82,14 +84,16 @@ const WAMLProvider = ({ document, options, defaultValue, value, onChange, childr
             }
             function newToken(index = 0) {
                 return new interaction_token_js_1.default(v, flatAnswers.map(w => w[v.index]), index, flatValue[v.index], next => {
-                    const nextInput = [...flatValue];
+                    const nextInput = [...$renderingVariables.current.pendingAnswer || flatValue];
                     nextInput[v.index] = next;
+                    $renderingVariables.current.pendingAnswer = nextInput;
                     const nextAnswer = (0, interaction_token_js_1.unflattenAnswer)(nextInput);
                     setUncontrolledValue(nextAnswer);
                     onChange === null || onChange === void 0 ? void 0 : onChange(nextAnswer);
                 });
             }
         }
+        $renderingVariables.current.pendingAnswer = null;
         $renderingVariables.current.interactionTokenIndex = {};
         return R;
     }, [document, flatValue, onChange]);
@@ -169,6 +173,14 @@ const WAMLProvider = ({ document, options, defaultValue, value, onChange, childr
             noDefaultClassName: options.noDefaultClassName || false
         },
         draggingObject,
+        // eslint-disable-next-line @typescript-eslint/no-shadow
+        getButtonOptionByValue: value => {
+            var _a;
+            const candidates = Object.values($renderingVariables.current.buttonOptions).filter(v => v.value === value);
+            if (!candidates.length)
+                return null;
+            return candidates[candidates.length - (((_a = $renderingVariables.current.buttonOptionUsed[value]) === null || _a === void 0 ? void 0 : _a.length) || 1)];
+        },
         getComponentOptions: type => options[type],
         getURL: options.uriResolver || (uri => uri),
         interactionToken: null,
@@ -189,9 +201,10 @@ const WAMLProvider = ({ document, options, defaultValue, value, onChange, childr
         renderingVariables: $renderingVariables.current,
         setDraggingObject,
         setFlattenValue: runner => {
-            const r = runner(flatValue, 'error' in document ? null : document.metadata.answerFormat.interactions);
+            const r = runner($renderingVariables.current.pendingAnswer || flatValue, 'error' in document ? null : document.metadata.answerFormat.interactions);
             if (r === false)
                 return;
+            $renderingVariables.current.pendingAnswer = r;
             const nextAnswer = (0, interaction_token_js_1.unflattenAnswer)(r);
             setUncontrolledValue(nextAnswer);
             onChange === null || onChange === void 0 ? void 0 : onChange(nextAnswer);

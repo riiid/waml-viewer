@@ -14,7 +14,8 @@ type FirstLetterOf<T extends string> = SplittedFormOf<T>[0];
 type DraggingObject = {
   'displayName': WAMLComponentType,
   'node': WAML.ButtonOption|WAML.PairingOption,
-  '$target': HTMLElement
+  'e': PointerEvent|MouseEvent,
+  'callback'?: () => void
 };
 
 type Context = {
@@ -33,15 +34,18 @@ type Context = {
     'getNetIndexByEdge': (from:string, to:string) => [number, string]
   },
   'renderingVariables': {
+    'pendingAnswer': ReturnType<typeof flattenAnswer>|null,
     'pendingClasses': string[],
     'interactionTokenIndex': Record<string, number>,
     'buttonOptionUsed': Record<string, number[]>,
+    'buttonOptions': Record<number, WAML.ButtonOption>,
     'namedInteractionTokens': Record<string, InteractionToken>,
     'pairingOptionDots': Record<string, [inbound:HTMLElement|null, outbound:HTMLElement|null]>
   },
   'value': WAML.Answer|undefined,
 
   'checkButtonOptionUsed': (node:WAML.ButtonOption) => boolean,
+  'getButtonOptionByValue': (value:string) => WAML.ButtonOption|null,
   'getComponentOptions': <T extends WAMLComponentType>(type:T) => WAMLViewerOptions[T],
   'getURL': (uri:string) => string,
   'invokeInteractionToken': (id:string) => InteractionToken,
@@ -70,9 +74,11 @@ const useWAML = (invokingInteractionToken?:boolean) => {
 export default useWAML;
 export const WAMLProvider:FCWithChildren<Props> = ({ document, options, defaultValue, value, onChange, children }) => {
   const $renderingVariables = useRef<Context['renderingVariables']>({
+    pendingAnswer: null,
     pendingClasses: [],
     interactionTokenIndex: {},
     buttonOptionUsed: {},
+    buttonOptions: {},
     namedInteractionTokens: {},
     pairingOptionDots: {}
   });
@@ -98,6 +104,7 @@ export const WAMLProvider:FCWithChildren<Props> = ({ document, options, defaultV
     const { metadata } = document;
     const R:InteractionToken[] = [];
     const flatAnswers = metadata?.answers.map(flattenAnswer);
+
     for(const v of metadata.answerFormat.interactions){
       switch(v.type){
         case WAML.InteractionType.CHOICE_OPTION:
@@ -115,8 +122,9 @@ export const WAMLProvider:FCWithChildren<Props> = ({ document, options, defaultV
           index,
           flatValue[v.index],
           next => {
-            const nextInput = [ ...flatValue ];
+            const nextInput = [ ...$renderingVariables.current.pendingAnswer || flatValue ];
             nextInput[v.index] = next;
+            $renderingVariables.current.pendingAnswer = nextInput;
             const nextAnswer = unflattenAnswer(nextInput);
             setUncontrolledValue(nextAnswer);
             onChange?.(nextAnswer);
@@ -124,6 +132,7 @@ export const WAMLProvider:FCWithChildren<Props> = ({ document, options, defaultV
         );
       }
     }
+    $renderingVariables.current.pendingAnswer = null;
     $renderingVariables.current.interactionTokenIndex = {};
     return R;
   }, [ document, flatValue, onChange ]);
@@ -199,6 +208,12 @@ export const WAMLProvider:FCWithChildren<Props> = ({ document, options, defaultV
       noDefaultClassName: options.noDefaultClassName || false
     },
     draggingObject,
+    // eslint-disable-next-line @typescript-eslint/no-shadow
+    getButtonOptionByValue: value => {
+      const candidates = Object.values($renderingVariables.current.buttonOptions).filter(v => v.value === value);
+      if(!candidates.length) return null;
+      return candidates[candidates.length - ($renderingVariables.current.buttonOptionUsed[value]?.length || 1)];
+    },
     getComponentOptions: type => options[type],
     getURL: options.uriResolver || (uri => uri),
     interactionToken: null!,
@@ -220,10 +235,11 @@ export const WAMLProvider:FCWithChildren<Props> = ({ document, options, defaultV
     setDraggingObject,
     setFlattenValue: runner => {
       const r = runner(
-        flatValue,
+        $renderingVariables.current.pendingAnswer || flatValue,
         'error' in document ? null! : document.metadata.answerFormat.interactions
       );
       if(r === false) return;
+      $renderingVariables.current.pendingAnswer = r;
       const nextAnswer = unflattenAnswer(r);
       setUncontrolledValue(nextAnswer);
       onChange?.(nextAnswer);

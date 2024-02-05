@@ -80,7 +80,7 @@ class InteractionToken {
                 this.answerType = InteractionAnswerType.SINGLE;
         }
     }
-    handleInteract(value) {
+    handleInteract(value, appendOnly) {
         var _a, _b, _c;
         switch (this.answerType) {
             case InteractionAnswerType.SINGLE:
@@ -89,11 +89,16 @@ class InteractionToken {
             case InteractionAnswerType.MULTIPLE:
                 {
                     const next = [...((_b = this.input) === null || _b === void 0 ? void 0 : _b.value) || []];
-                    const index = next.indexOf(value);
-                    if (index === -1)
+                    if (appendOnly) {
                         next.push(value);
-                    else
-                        next.splice(index, 1);
+                    }
+                    else {
+                        const index = next.indexOf(value);
+                        if (index === -1)
+                            next.push(value);
+                        else
+                            next.splice(index, 1);
+                    }
                     (_c = this.callback) === null || _c === void 0 ? void 0 : _c.call(this, { type: "MULTIPLE", value: next, ordered: this.ordered });
                 }
                 break;
@@ -120,7 +125,7 @@ function flattenAnswer(answer) {
 exports.flattenAnswer = flattenAnswer;
 function unflattenAnswer(answer) {
     for (const v of answer) {
-        if (v.type === "MULTIPLE" && !v.ordered) {
+        if ((v === null || v === void 0 ? void 0 : v.type) === "MULTIPLE" && !v.ordered) {
             v.value.sort((a, b) => a.localeCompare(b));
         }
     }

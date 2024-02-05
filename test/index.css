@@ -24,6 +24,10 @@
   opacity: 0.5;
 }
 
+.ButtonBlank>span[data-dragging] {
+  opacity: 0.5;
+}
+
 .ButtonOption[data-dragging] {
   position: fixed;
   pointer-events: none;
