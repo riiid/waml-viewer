@@ -5,7 +5,7 @@ import ScopedStyle from "./scoped-style";
 type Props = {
   'children'?: string
 };
-const BuiltinStyle:FC<Props> = ({ children }) => <ScopedStyle>{`
+const BuiltinStyle:FC<Props> = ({ children = "" }) => <ScopedStyle>{`
   @import "https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.css";
   ${children}
 `}</ScopedStyle>;
