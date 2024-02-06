@@ -14027,7 +14027,7 @@ Object.defineProperty(exports, "__esModule", {
 const react_1 = __importStar(require("react"));
 const scoped_style_1 = __importDefault(require("./scoped-style"));
 const BuiltinStyle = ({
-  children
+  children = ""
 }) => react_1.default.createElement(scoped_style_1.default, null, `
   @import "https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.css";
   ${children}
@@ -14234,7 +14234,7 @@ const react_1 = __importDefault(require("react"));
 const componentify_1 = __importDefault(require("../componentify"));
 const choice_option_1 = __importDefault(require("./choice-option"));
 const inline_1 = __importDefault(require("./inline"));
-const ChoiceOptionLine = ({ node, ...props }) => react_1.default.createElement("label", { ...props },
+const ChoiceOptionLine = ({ node, style, ...props }) => react_1.default.createElement("label", { style: { display: 'block', ...style }, ...props },
     react_1.default.createElement(choice_option_1.default, { node: node.headOption }),
     node.inlines.map((v, i) => react_1.default.createElement(inline_1.default, { key: i, node: v })));
 ChoiceOptionLine.displayName = "ChoiceOptionLine";
@@ -14671,12 +14671,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const waml_1 = require("@riiid/waml");
+const react_1 = __importDefault(require("react"));
 const componentify_1 = __importDefault(require("../componentify"));
 const line_component_1 = __importDefault(require("./line-component"));
-const react_1 = __importDefault(require("react"));
 const Line = ({ node, next, ...props }) => {
     if (node.component && (0, waml_1.hasKind)(node.component, 'Anchor')) {
         return null;
+    }
+    if (node.component && (0, waml_1.hasKind)(node.component, 'LineComponent') && node.component.headOption) {
+        return react_1.default.createElement(line_component_1.default, { node: node.component });
     }
     const anchored = (next === null || next === void 0 ? void 0 : next.component) && (0, waml_1.hasKind)(next.component, 'Anchor');
     return react_1.default.createElement("div", { ...props, ...anchored ? { 'data-anchored': true } : {} },
@@ -14989,48 +14992,22 @@ exports.default = (0, componentify_1.default)(Passage);
 
 },{"..":57,"../componentify":25,"../use-waml":61,"react":20}],50:[function(require,module,exports){
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const react_1 = __importStar(require("react"));
+const react_1 = __importDefault(require("react"));
 const componentify_1 = __importDefault(require("../componentify"));
 const react_2 = require("../react");
 const use_waml_1 = __importDefault(require("../use-waml"));
 const isoprefixed_line_group_renderer_1 = __importDefault(require("./isoprefixed-line-group-renderer"));
 const PrefixedLine = ({ node, type, depth, className, ...props }) => {
+    var _a;
     const { renderingVariables, commonOptions } = (0, use_waml_1.default)();
-    const pendingClassName = (0, react_1.useMemo)(() => {
-        var _a;
-        const R = renderingVariables.pendingClasses.pop();
-        if (R && ((_a = commonOptions.prefixedLineClassMap) === null || _a === void 0 ? void 0 : _a[R])) {
-            return commonOptions.prefixedLineClassMap[R];
-        }
-        return R;
-    }, [commonOptions.prefixedLineClassMap, renderingVariables.pendingClasses]);
+    let pendingClassName = renderingVariables.pendingClasses.pop();
+    if (pendingClassName && ((_a = commonOptions.prefixedLineClassMap) === null || _a === void 0 ? void 0 : _a[pendingClassName])) {
+        pendingClassName = commonOptions.prefixedLineClassMap[pendingClassName];
+    }
     return (react_1.default.createElement("div", { className: (0, react_2.C)(className, type, pendingClassName), ...props },
         react_1.default.createElement(isoprefixed_line_group_renderer_1.default, { depth: depth, lines: node })));
 };

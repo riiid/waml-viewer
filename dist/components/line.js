@@ -4,12 +4,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const waml_1 = require("@riiid/waml");
+const react_1 = __importDefault(require("react"));
 const componentify_1 = __importDefault(require("../componentify"));
 const line_component_1 = __importDefault(require("./line-component"));
-const react_1 = __importDefault(require("react"));
 const Line = ({ node, next, ...props }) => {
     if (node.component && (0, waml_1.hasKind)(node.component, 'Anchor')) {
         return null;
+    }
+    if (node.component && (0, waml_1.hasKind)(node.component, 'LineComponent') && node.component.headOption) {
+        return react_1.default.createElement(line_component_1.default, { node: node.component });
     }
     const anchored = (next === null || next === void 0 ? void 0 : next.component) && (0, waml_1.hasKind)(next.component, 'Anchor');
     return react_1.default.createElement("div", { ...props, ...anchored ? { 'data-anchored': true } : {} },
