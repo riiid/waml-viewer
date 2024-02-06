@@ -1,14 +1,18 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect } from "react";
 import componentify from "../componentify";
 import type { WAMLComponent } from "../types";
 import useWAML from "../use-waml";
 
-const ChoiceOption:WAMLComponent<'ChoiceOption'> = ({ node, ...props }) => {
+const ChoiceOption:WAMLComponent<'ChoiceOption'> = ({ node, onInteract, ...props }) => {
   const { interactionToken } = useWAML(true);
 
   const handleChange = useCallback(() => {
     interactionToken.handleInteract(interactionToken.interactionValue);
   }, [ interactionToken ]);
+
+  useEffect(() => {
+    onInteract?.(interactionToken.selected);
+  }, [ interactionToken.selected, onInteract ]);
 
   return <span {...props}>
     <input type="checkbox" checked={interactionToken.selected} onChange={handleChange} />

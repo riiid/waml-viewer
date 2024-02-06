@@ -29,11 +29,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const react_1 = __importStar(require("react"));
 const componentify_1 = __importDefault(require("../componentify"));
 const use_waml_1 = __importDefault(require("../use-waml"));
-const ChoiceOption = ({ node, ...props }) => {
+const ChoiceOption = ({ node, onInteract, ...props }) => {
     const { interactionToken } = (0, use_waml_1.default)(true);
     const handleChange = (0, react_1.useCallback)(() => {
         interactionToken.handleInteract(interactionToken.interactionValue);
     }, [interactionToken]);
+    (0, react_1.useEffect)(() => {
+        onInteract === null || onInteract === void 0 ? void 0 : onInteract(interactionToken.selected);
+    }, [interactionToken.selected, onInteract]);
     return react_1.default.createElement("span", { ...props },
         react_1.default.createElement("input", { type: "checkbox", checked: interactionToken.selected, onChange: handleChange }),
         react_1.default.createElement("i", null, node.value));

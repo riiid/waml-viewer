@@ -39,6 +39,9 @@ type WAMLComponentMap = {
 type WAMLComponentAdditionalPropsMap = {
     [key in keyof WAMLComponentMap]: unknown;
 } & {
+    'ChoiceOption': {
+        onInteract?: (value: boolean) => void;
+    };
     'Line': {
         next?: WAML.Line;
     };
