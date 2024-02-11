@@ -20,7 +20,14 @@ const TestPage:FC = () => {
     {explanationWrapper && <WAMLViewer
       key={waml}
       waml={waml}
-      options={{ debug: true, explanationWrapper, prefixedLineClassMap: { "Test": "Good" } }}
+      options={{
+        debug: true,
+        explanationWrapper,
+        prefixedLineClassMap: { "Test": "Good" },
+        ChoiceOption: {
+          getter: node => ({ 'data-value': node.value })
+        }
+      }}
       value={x}
       onChange={value => setX(value)}
     />}

@@ -32,7 +32,7 @@ const use_waml_js_1 = __importDefault(require("./use-waml.js"));
 function componentify(Component) {
     const R = ({ node, ...props }) => {
         const { commonOptions, getComponentOptions } = (0, use_waml_js_1.default)();
-        const componentOptions = getComponentOptions(Component.displayName);
+        let componentOptions = getComponentOptions(Component.displayName);
         if (!commonOptions.noDefaultClassName) {
             Object.assign(props, { className: (0, react_js_1.C)(Component.displayName, props.className) });
         }
@@ -42,6 +42,9 @@ function componentify(Component) {
                 node,
                 children: typeof children === "object" ? children === null || children === void 0 ? void 0 : children.props['children'] : null
             });
+        }
+        if (componentOptions && typeof componentOptions === "object" && 'getter' in componentOptions) {
+            componentOptions = componentOptions.getter(node);
         }
         return react_1.default.createElement(Component, { node: node, ...props, ...componentOptions });
     };
