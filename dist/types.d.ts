@@ -76,7 +76,7 @@ export type WAMLViewerOptions = {
     [key in WAMLComponentType]?: WAMLComponentPropsBase | FCWithChildren<{
         node: WAMLComponentMap[key];
     } & WAMLComponentAdditionalPropsMap[key]> | {
-        getter: (node: WAMLComponentMap[key]) => WAMLComponentPropsBase & Record<`data-${string}`, string>;
+        getter: (node: WAMLComponentMap[key]) => WAMLComponentPropsBase & Record<`data-${string}`, string | undefined>;
     };
 };
 export interface WAMLComponent<T extends WAMLComponentType> extends FC<WAMLComponentProps<T>> {
