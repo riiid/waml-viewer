@@ -14201,18 +14201,23 @@ const ButtonOption = ({ node, onPointerDown, ...props }) => {
             return;
         const $target = $.current;
         const { e } = draggingObject;
+        const rect = $target.getBoundingClientRect();
+        const innerLeft = e.clientX - rect.left;
+        const innerTop = e.clientY - rect.top;
         const onPointerMove = (f) => {
             f.preventDefault();
             $target.style.top = `${f.clientY}px`;
             $target.style.left = `${f.clientX}px`;
         };
         const onPointerUp = () => {
+            $target.style.transform = "";
             $target.style.top = "";
             $target.style.left = "";
             window.removeEventListener('pointermove', onPointerMove);
             window.removeEventListener('pointerup', onPointerUp);
             setDraggingObject(null);
         };
+        $target.style.transform = `translate(-${innerLeft}px, -${innerTop}px)`;
         $target.style.top = `${e.clientY}px`;
         $target.style.left = `${e.clientX}px`;
         window.addEventListener('pointermove', onPointerMove);
@@ -14970,7 +14975,7 @@ const PairingOption = ({ node, onClick, ...props }) => {
     }, [draggingObject, node, onClick, pairing, setDraggingObject, setFlattenValue]);
     return react_1.default.createElement("li", { onClick: handleClick, ...props, ...dragging ? { 'data-dragging': true } : {} },
         node.cell.inbound.length > 0 && react_1.default.createElement("input", { ref: refInbound, type: "radio", checked: inboundPaired, readOnly: true }),
-        node.inlines.map((v, i) => react_1.default.createElement(inline_1.default, { key: i, node: v })),
+        react_1.default.createElement("div", null, node.inlines.map((v, i) => react_1.default.createElement(inline_1.default, { key: i, node: v }))),
         node.cell.outbound.length > 0 && react_1.default.createElement("input", { ref: refOutbound, type: "radio", checked: outboundPaired, readOnly: true }));
 };
 PairingOption.displayName = "PairingOption";
