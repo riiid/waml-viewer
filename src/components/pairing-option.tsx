@@ -69,7 +69,9 @@ const PairingOption:WAMLComponent<'PairingOption'> = ({ node, onClick, ...props 
     {...dragging ? { 'data-dragging': true } : {}}
   >
     {node.cell.inbound.length > 0 && <input ref={refInbound} type="radio" checked={inboundPaired} readOnly />}
-    {node.inlines.map((v, i) => <Inline key={i} node={v} />)}
+    <div>
+      {node.inlines.map((v, i) => <Inline key={i} node={v} />)}
+    </div>
     {node.cell.outbound.length > 0 && <input ref={refOutbound} type="radio" checked={outboundPaired} readOnly />}
   </li>;
 };
