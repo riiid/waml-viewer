@@ -90,7 +90,7 @@ const PairingOption = ({ node, onClick, ...props }) => {
             });
         }
     }, [draggingObject, node, onClick, pairing, setDraggingObject, setFlattenValue]);
-    return react_1.default.createElement("li", { onClick: handleClick, ...props, ...dragging ? { 'data-dragging': true } : {} },
+    return react_1.default.createElement("li", { onClick: handleClick, ...props, ...dragging ? { 'data-dragging': true } : {}, ...inboundPaired ? { 'data-inbound-paired': true } : {}, ...outboundPaired ? { 'data-outbound-paired': true } : {} },
         node.cell.inbound.length > 0 && react_1.default.createElement("input", { ref: refInbound, type: "radio", checked: inboundPaired, readOnly: true }),
         react_1.default.createElement("div", null, node.inlines.map((v, i) => react_1.default.createElement(inline_1.default, { key: i, node: v }))),
         node.cell.outbound.length > 0 && react_1.default.createElement("input", { ref: refOutbound, type: "radio", checked: outboundPaired, readOnly: true }));
