@@ -13935,21 +13935,25 @@ const use_waml_js_1 = __importDefault(require("./use-waml.js"));
 function componentify(Component) {
     const R = ({ node, ...props }) => {
         const { commonOptions, getComponentOptions } = (0, use_waml_js_1.default)();
-        let componentOptions = getComponentOptions(Component.displayName);
-        if (!commonOptions.noDefaultClassName) {
-            Object.assign(props, { className: (0, react_js_1.C)(Component.displayName, props.className) });
-        }
+        const componentOptions = getComponentOptions(Component.displayName);
+        const className = (0, react_1.useMemo)(() => {
+            if (!componentOptions || typeof componentOptions === "function") {
+                return (0, react_js_1.C)(!commonOptions.noDefaultClassName && Component.displayName, props.className);
+            }
+            let r = componentOptions;
+            if ('getter' in r) {
+                r = r.getter(node);
+            }
+            return (0, react_js_1.C)(!commonOptions.noDefaultClassName && Component.displayName, r['className']);
+        }, [commonOptions.noDefaultClassName, componentOptions, node, props.className]);
         if (typeof componentOptions === "function") {
-            const children = Component({ node, ...props });
+            const children = Component({ node, ...props, className });
             return componentOptions({
                 node,
                 children: typeof children === "object" ? children === null || children === void 0 ? void 0 : children.props['children'] : null
             });
         }
-        if (componentOptions && typeof componentOptions === "object" && 'getter' in componentOptions) {
-            componentOptions = componentOptions.getter(node);
-        }
-        return react_1.default.createElement(Component, { node: node, ...props, ...componentOptions });
+        return react_1.default.createElement(Component, { node: node, ...props, ...componentOptions, className: className });
     };
     R.displayName = Component.displayName;
     return Object.assign((0, react_1.memo)(R), { displayName: R.displayName });
@@ -14973,7 +14977,7 @@ const PairingOption = ({ node, onClick, ...props }) => {
             });
         }
     }, [draggingObject, node, onClick, pairing, setDraggingObject, setFlattenValue]);
-    return react_1.default.createElement("li", { onClick: handleClick, ...props, ...dragging ? { 'data-dragging': true } : {} },
+    return react_1.default.createElement("li", { onClick: handleClick, ...props, ...dragging ? { 'data-dragging': true } : {}, ...inboundPaired ? { 'data-inbound-paired': true } : {}, ...outboundPaired ? { 'data-outbound-paired': true } : {} },
         node.cell.inbound.length > 0 && react_1.default.createElement("input", { ref: refInbound, type: "radio", checked: inboundPaired, readOnly: true }),
         react_1.default.createElement("div", null, node.inlines.map((v, i) => react_1.default.createElement(inline_1.default, { key: i, node: v }))),
         node.cell.outbound.length > 0 && react_1.default.createElement("input", { ref: refOutbound, type: "radio", checked: outboundPaired, readOnly: true }));

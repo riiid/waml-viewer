@@ -32,21 +32,32 @@ const use_waml_js_1 = __importDefault(require("./use-waml.js"));
 function componentify(Component) {
     const R = ({ node, ...props }) => {
         const { commonOptions, getComponentOptions } = (0, use_waml_js_1.default)();
-        let componentOptions = getComponentOptions(Component.displayName);
-        if (!commonOptions.noDefaultClassName) {
-            Object.assign(props, { className: (0, react_js_1.C)(Component.displayName, props.className) });
-        }
+        const componentOptions = (0, react_1.useMemo)(() => {
+            const r = getComponentOptions(Component.displayName);
+            if (!r || typeof r === "function")
+                return r;
+            if ('getter' in r)
+                return r.getter(node);
+            return r;
+        }, [getComponentOptions, node]);
+        const className = (0, react_1.useMemo)(() => {
+            if (!componentOptions || typeof componentOptions === "function") {
+                return (0, react_js_1.C)(!commonOptions.noDefaultClassName && Component.displayName, props.className);
+            }
+            let r = componentOptions;
+            if ('getter' in r) {
+                r = r.getter(node);
+            }
+            return (0, react_js_1.C)(!commonOptions.noDefaultClassName && Component.displayName, r['className']);
+        }, [commonOptions.noDefaultClassName, componentOptions, node, props.className]);
         if (typeof componentOptions === "function") {
-            const children = Component({ node, ...props });
+            const children = Component({ node, ...props, className });
             return componentOptions({
                 node,
                 children: typeof children === "object" ? children === null || children === void 0 ? void 0 : children.props['children'] : null
             });
         }
-        if (componentOptions && typeof componentOptions === "object" && 'getter' in componentOptions) {
-            componentOptions = componentOptions.getter(node);
-        }
-        return react_1.default.createElement(Component, { node: node, ...props, ...componentOptions });
+        return react_1.default.createElement(Component, { node: node, ...props, ...componentOptions, className: className });
     };
     R.displayName = Component.displayName;
     return Object.assign((0, react_1.memo)(R), { displayName: R.displayName });
