@@ -15,7 +15,7 @@ type DraggingObject = {
   'displayName': WAMLComponentType,
   'node': WAML.ButtonOption|WAML.PairingOption,
   'e': PointerEvent|MouseEvent,
-  'callback'?: () => void
+  'callback'?: (value?:string) => void
 };
 
 type Context = {

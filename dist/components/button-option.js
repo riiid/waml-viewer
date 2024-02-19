@@ -48,23 +48,18 @@ const ButtonOption = ({ node, onPointerDown, ...props }) => {
             return;
         const $target = $.current;
         const { e } = draggingObject;
-        const rect = $target.getBoundingClientRect();
-        const innerLeft = e.clientX - rect.left;
-        const innerTop = e.clientY - rect.top;
         const onPointerMove = (f) => {
             f.preventDefault();
             $target.style.top = `${f.clientY}px`;
             $target.style.left = `${f.clientX}px`;
         };
         const onPointerUp = () => {
-            $target.style.transform = "";
             $target.style.top = "";
             $target.style.left = "";
             window.removeEventListener('pointermove', onPointerMove);
             window.removeEventListener('pointerup', onPointerUp);
             setDraggingObject(null);
         };
-        $target.style.transform = `translate(-${innerLeft}px, -${innerTop}px)`;
         $target.style.top = `${e.clientY}px`;
         $target.style.left = `${e.clientX}px`;
         window.addEventListener('pointermove', onPointerMove);

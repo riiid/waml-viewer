@@ -13935,7 +13935,14 @@ const use_waml_js_1 = __importDefault(require("./use-waml.js"));
 function componentify(Component) {
     const R = ({ node, ...props }) => {
         const { commonOptions, getComponentOptions } = (0, use_waml_js_1.default)();
-        const componentOptions = getComponentOptions(Component.displayName);
+        const componentOptions = (0, react_1.useMemo)(() => {
+            const r = getComponentOptions(Component.displayName);
+            if (!r || typeof r === "function")
+                return r;
+            if ('getter' in r)
+                return r.getter(node);
+            return r;
+        }, [getComponentOptions, node]);
         const className = (0, react_1.useMemo)(() => {
             if (!componentOptions || typeof componentOptions === "function") {
                 return (0, react_js_1.C)(!commonOptions.noDefaultClassName && Component.displayName, props.className);
@@ -14115,7 +14122,7 @@ const ButtonBlank = ({ node, onPointerEnter, onPointerLeave, onPointerUp, ...pro
             return;
         if ($self.current)
             return;
-        (_a = draggingObject.callback) === null || _a === void 0 ? void 0 : _a.call(draggingObject);
+        (_a = draggingObject.callback) === null || _a === void 0 ? void 0 : _a.call(draggingObject, interactionToken.interactionValue);
         interactionToken.handleInteract(draggingObject.node.value, true);
         setPreview(undefined);
     }, [draggingObject, interactionToken, node, onPointerUp]);
@@ -14129,9 +14136,12 @@ const ButtonBlank = ({ node, onPointerEnter, onPointerLeave, onPointerUp, ...pro
             displayName: "ButtonBlank",
             node: targetNode,
             e: e.nativeEvent,
-            callback: () => {
+            callback: value => {
                 if (multiple) {
                     interactionToken.handleInteract($target.textContent);
+                }
+                else if (value) {
+                    interactionToken.handleInteract(value);
                 }
                 else {
                     interactionToken.unsetInteract();

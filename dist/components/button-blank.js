@@ -71,7 +71,7 @@ const ButtonBlank = ({ node, onPointerEnter, onPointerLeave, onPointerUp, ...pro
             return;
         if ($self.current)
             return;
-        (_a = draggingObject.callback) === null || _a === void 0 ? void 0 : _a.call(draggingObject);
+        (_a = draggingObject.callback) === null || _a === void 0 ? void 0 : _a.call(draggingObject, interactionToken.interactionValue);
         interactionToken.handleInteract(draggingObject.node.value, true);
         setPreview(undefined);
     }, [draggingObject, interactionToken, node, onPointerUp]);
@@ -85,9 +85,12 @@ const ButtonBlank = ({ node, onPointerEnter, onPointerLeave, onPointerUp, ...pro
             displayName: "ButtonBlank",
             node: targetNode,
             e: e.nativeEvent,
-            callback: () => {
+            callback: value => {
                 if (multiple) {
                     interactionToken.handleInteract($target.textContent);
+                }
+                else if (value) {
+                    interactionToken.handleInteract(value);
                 }
                 else {
                     interactionToken.unsetInteract();

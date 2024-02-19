@@ -35,7 +35,7 @@ const ButtonBlank:WAMLComponent<'ButtonBlank'> = ({ node, onPointerEnter, onPoin
     if(!hasKind(draggingObject.node, 'ButtonOption')) return;
     if(!getIntersection(draggingObject.node.group, node.value).length) return;
     if($self.current) return;
-    draggingObject.callback?.();
+    draggingObject.callback?.(interactionToken.interactionValue);
     interactionToken.handleInteract(draggingObject.node.value, true);
     setPreview(undefined);
   }, [ draggingObject, interactionToken, node, onPointerUp ]);
@@ -49,9 +49,11 @@ const ButtonBlank:WAMLComponent<'ButtonBlank'> = ({ node, onPointerEnter, onPoin
       displayName: "ButtonBlank",
       node: targetNode,
       e: e.nativeEvent,
-      callback: () => {
+      callback: value => {
         if(multiple){
           interactionToken.handleInteract($target.textContent!);
+        }else if(value){
+          interactionToken.handleInteract(value);
         }else{
           interactionToken.unsetInteract();
         }
