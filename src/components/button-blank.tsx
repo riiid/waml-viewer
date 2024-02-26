@@ -51,10 +51,9 @@ const ButtonBlank:WAMLComponent<'ButtonBlank'> = ({ node, onPointerEnter, onPoin
       e: e.nativeEvent,
       currentTarget: $target,
       callback: value => {
+        if(targetNode.value === value) return;
         if(multiple){
           interactionToken.handleInteract($target.textContent!);
-        }else if(value){
-          interactionToken.handleInteract(value);
         }else{
           interactionToken.unsetInteract();
         }
@@ -69,22 +68,30 @@ const ButtonBlank:WAMLComponent<'ButtonBlank'> = ({ node, onPointerEnter, onPoin
     }
   }, [ interactionToken, multiple ]);
 
+  const $words = interactionToken.input?.value.map((v, i) => {
+    const dragging = draggingObject?.node.kind === "ButtonOption" && draggingObject.node.value === v;
+
+    return (
+      <span
+        key={i}
+        onPointerDown={handlePointerDown}
+        onClick={handleClick}
+        data-value={v}
+        {...dragging ? { 'data-dragging': true } : {}}
+      >{v}</span>
+    );
+  });
+
   return <span
     onPointerEnter={handlePointerEnter}
     onPointerLeave={handlePointerLeave}
     onPointerUp={handlePointerUp}
     {...props}
     {...preview ? { 'data-preview': true } : {}}
+    {...draggingObject?.node.kind === "ButtonOption" && interactionToken.input?.value.includes(draggingObject.node.value) ? { 'data-child-dragging': true } : {}}
   >
-    {(multiple || !preview) && interactionToken.input?.value.map((v, i) => (
-      <span
-        key={i}
-        onPointerDown={handlePointerDown}
-        onClick={handleClick}
-        {...draggingObject?.node.kind === "ButtonOption" && draggingObject.node.value === v ? { 'data-dragging': true } : {}}
-      >{v}</span>
-    ))}
-    {Boolean(preview) && <span>{preview}</span>}
+    {$words}
+    {multiple && Boolean(preview) && <span>{preview}</span>}
   </span>;
 };
 ButtonBlank.displayName = "ButtonBlank";

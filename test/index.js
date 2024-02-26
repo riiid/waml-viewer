@@ -14083,7 +14083,7 @@ const componentify_1 = __importDefault(require("../componentify"));
 const use_waml_1 = __importDefault(require("../use-waml"));
 const utility_1 = require("../utility");
 const ButtonBlank = ({ node, onPointerEnter, onPointerLeave, onPointerUp, ...props }) => {
-    var _a, _b;
+    var _a, _b, _c;
     const $self = (0, react_1.useRef)(false);
     const { getButtonOptionByValue, draggingObject, setDraggingObject, interactionToken } = (0, use_waml_1.default)(true);
     const [preview, setPreview] = (0, react_1.useState)();
@@ -14138,11 +14138,10 @@ const ButtonBlank = ({ node, onPointerEnter, onPointerLeave, onPointerUp, ...pro
             e: e.nativeEvent,
             currentTarget: $target,
             callback: value => {
+                if (targetNode.value === value)
+                    return;
                 if (multiple) {
                     interactionToken.handleInteract($target.textContent);
-                }
-                else if (value) {
-                    interactionToken.handleInteract(value);
                 }
                 else {
                     interactionToken.unsetInteract();
@@ -14158,9 +14157,13 @@ const ButtonBlank = ({ node, onPointerEnter, onPointerLeave, onPointerUp, ...pro
             interactionToken.unsetInteract();
         }
     }, [interactionToken, multiple]);
-    return react_1.default.createElement("span", { onPointerEnter: handlePointerEnter, onPointerLeave: handlePointerLeave, onPointerUp: handlePointerUp, ...props, ...preview ? { 'data-preview': true } : {} },
-        (multiple || !preview) && ((_b = interactionToken.input) === null || _b === void 0 ? void 0 : _b.value.map((v, i) => (react_1.default.createElement("span", { key: i, onPointerDown: handlePointerDown, onClick: handleClick, ...(draggingObject === null || draggingObject === void 0 ? void 0 : draggingObject.node.kind) === "ButtonOption" && draggingObject.node.value === v ? { 'data-dragging': true } : {} }, v)))),
-        Boolean(preview) && react_1.default.createElement("span", null, preview));
+    const $words = (_b = interactionToken.input) === null || _b === void 0 ? void 0 : _b.value.map((v, i) => {
+        const dragging = (draggingObject === null || draggingObject === void 0 ? void 0 : draggingObject.node.kind) === "ButtonOption" && draggingObject.node.value === v;
+        return (react_1.default.createElement("span", { key: i, onPointerDown: handlePointerDown, onClick: handleClick, "data-value": v, ...dragging ? { 'data-dragging': true } : {} }, v));
+    });
+    return react_1.default.createElement("span", { onPointerEnter: handlePointerEnter, onPointerLeave: handlePointerLeave, onPointerUp: handlePointerUp, ...props, ...preview ? { 'data-preview': true } : {}, ...(draggingObject === null || draggingObject === void 0 ? void 0 : draggingObject.node.kind) === "ButtonOption" && ((_c = interactionToken.input) === null || _c === void 0 ? void 0 : _c.value.includes(draggingObject.node.value)) ? { 'data-child-dragging': true } : {} },
+        $words,
+        multiple && Boolean(preview) && react_1.default.createElement("span", null, preview));
 };
 ButtonBlank.displayName = "ButtonBlank";
 exports.default = (0, componentify_1.default)(ButtonBlank);
