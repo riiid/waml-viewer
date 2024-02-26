@@ -49,6 +49,7 @@ const ButtonBlank:WAMLComponent<'ButtonBlank'> = ({ node, onPointerEnter, onPoin
       displayName: "ButtonBlank",
       node: targetNode,
       e: e.nativeEvent,
+      currentTarget: $target,
       callback: value => {
         if(multiple){
           interactionToken.handleInteract($target.textContent!);

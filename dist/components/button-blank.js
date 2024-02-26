@@ -85,6 +85,7 @@ const ButtonBlank = ({ node, onPointerEnter, onPointerLeave, onPointerUp, ...pro
             displayName: "ButtonBlank",
             node: targetNode,
             e: e.nativeEvent,
+            currentTarget: $target,
             callback: value => {
                 if (multiple) {
                     interactionToken.handleInteract($target.textContent);

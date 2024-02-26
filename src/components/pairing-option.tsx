@@ -58,7 +58,8 @@ const PairingOption:WAMLComponent<'PairingOption'> = ({ node, onClick, ...props 
       setDraggingObject({
         displayName: "PairingOption",
         node,
-        e: e.nativeEvent
+        e: e.nativeEvent,
+        currentTarget: e.currentTarget
       });
     }
   }, [ draggingObject, node, onClick, pairing, setDraggingObject, setFlattenValue ]);

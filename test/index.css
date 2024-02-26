@@ -29,8 +29,14 @@
 }
 
 .ButtonOption[data-dragging] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.ButtonOption[data-ghost] {
   position: fixed;
   pointer-events: none;
+  visibility: hidden;
 }
 
 .ButtonOption:disabled {

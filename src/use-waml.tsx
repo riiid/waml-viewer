@@ -15,6 +15,7 @@ type DraggingObject = {
   'displayName': WAMLComponentType,
   'node': WAML.ButtonOption|WAML.PairingOption,
   'e': PointerEvent|MouseEvent,
+  'currentTarget': HTMLElement,
   'callback'?: (value?:string) => void
 };
 

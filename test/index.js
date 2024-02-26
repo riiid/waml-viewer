@@ -14136,6 +14136,7 @@ const ButtonBlank = ({ node, onPointerEnter, onPointerLeave, onPointerUp, ...pro
             displayName: "ButtonBlank",
             node: targetNode,
             e: e.nativeEvent,
+            currentTarget: $target,
             callback: value => {
                 if (multiple) {
                     interactionToken.handleInteract($target.textContent);
@@ -14198,6 +14199,7 @@ const componentify_1 = __importDefault(require("../componentify"));
 const use_waml_1 = __importDefault(require("../use-waml"));
 const ButtonOption = ({ node, onPointerDown, ...props }) => {
     const $ = (0, react_1.useRef)(null);
+    const $ghost = (0, react_1.useRef)(null);
     const { draggingObject, setDraggingObject, checkButtonOptionUsed, renderingVariables } = (0, use_waml_1.default)();
     const used = checkButtonOptionUsed(node);
     const dragging = (draggingObject === null || draggingObject === void 0 ? void 0 : draggingObject.node) === node;
@@ -14205,28 +14207,31 @@ const ButtonOption = ({ node, onPointerDown, ...props }) => {
         onPointerDown === null || onPointerDown === void 0 ? void 0 : onPointerDown(e);
         if (e.defaultPrevented)
             return;
-        setDraggingObject({ displayName: "ButtonOption", node, e: e.nativeEvent });
+        setDraggingObject({ displayName: "ButtonOption", node, e: e.nativeEvent, currentTarget: e.currentTarget });
     }, [node, onPointerDown, setDraggingObject]);
     renderingVariables.buttonOptions[node.id] = node;
     (0, react_1.useEffect)(() => {
         if ((draggingObject === null || draggingObject === void 0 ? void 0 : draggingObject.node) !== node)
             return;
-        if (!$.current)
+        if (!$ghost.current)
             return;
-        const $target = $.current;
-        const { e } = draggingObject;
+        const $target = $ghost.current;
+        const { e, currentTarget } = draggingObject;
+        const rect = currentTarget.getBoundingClientRect();
+        const startX = e.clientX - rect.left;
+        const startY = e.clientY - rect.top;
         const onPointerMove = (f) => {
             f.preventDefault();
             $target.style.top = `${f.clientY}px`;
             $target.style.left = `${f.clientX}px`;
         };
         const onPointerUp = () => {
-            $target.style.top = "";
-            $target.style.left = "";
             window.removeEventListener('pointermove', onPointerMove);
             window.removeEventListener('pointerup', onPointerUp);
             setDraggingObject(null);
         };
+        $target.style.visibility = "visible";
+        $target.style.transform = `translate(-${startX}px, -${startY}px)`;
         $target.style.top = `${e.clientY}px`;
         $target.style.left = `${e.clientX}px`;
         window.addEventListener('pointermove', onPointerMove);
@@ -14236,7 +14241,12 @@ const ButtonOption = ({ node, onPointerDown, ...props }) => {
             window.removeEventListener('pointerup', onPointerUp);
         };
     }, [draggingObject, node, setDraggingObject]);
-    return react_1.default.createElement("button", { ref: $, disabled: used, onPointerDown: handlePointerDown, ...props, ...dragging ? { 'data-dragging': true } : {} }, node.value);
+    const R = react_1.default.createElement("button", { ref: $, disabled: used, onPointerDown: handlePointerDown, ...props, ...dragging ? { 'data-dragging': true } : {} }, node.value);
+    return dragging
+        ? react_1.default.createElement(react_1.default.Fragment, null,
+            R,
+            react_1.default.createElement("button", { ref: $ghost, ...props, "data-ghost": true }, node.value))
+        : R;
 };
 ButtonOption.displayName = "ButtonOption";
 exports.default = (0, componentify_1.default)(ButtonOption);
@@ -14646,8 +14656,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const waml_1 = require("@riiid/waml");
 const react_latex_next_1 = __importDefault(require("react-latex-next"));
+const react_1 = __importDefault(require("react"));
 const componentify_1 = __importDefault(require("../componentify"));
-const use_waml_1 = __importDefault(require("../use-waml"));
 const inline_1 = __importDefault(require("./inline"));
 const anchor_1 = __importDefault(require("./anchor"));
 const figure_title_1 = __importDefault(require("./figure-title"));
@@ -14658,9 +14668,7 @@ const long_lingual_option_1 = __importDefault(require("./long-lingual-option"));
 const hr_1 = __importDefault(require("./hr"));
 const passage_1 = __importDefault(require("./passage"));
 const footnote_1 = __importDefault(require("./footnote"));
-const react_1 = __importDefault(require("react"));
 const LineComponent = ({ node, ...props }) => {
-    const { renderingVariables } = (0, use_waml_1.default)();
     if (node === null)
         return react_1.default.createElement("br", null);
     if ((0, waml_1.isMooToken)(node, 'longLingualOption')) {
@@ -14677,9 +14685,6 @@ const LineComponent = ({ node, ...props }) => {
             }
             return react_1.default.createElement("span", { ...props }, children);
         }
-        case "ClassedBlock":
-            renderingVariables.pendingClasses.push(node.name);
-            return null;
         case "Math":
             return react_1.default.createElement(react_latex_next_1.default, null, `$$${node.content}$$`);
         case "FigureAddon":
@@ -14710,7 +14715,7 @@ const LineComponent = ({ node, ...props }) => {
 LineComponent.displayName = "LineComponent";
 exports.default = (0, componentify_1.default)(LineComponent);
 
-},{"../componentify":25,"../use-waml":61,"./anchor":26,"./choice-option-line":31,"./figure-caption":35,"./figure-title":36,"./footnote":37,"./hr":38,"./inline":40,"./long-lingual-option":44,"./passage":49,"./short-lingual-option":53,"@riiid/waml":3,"react":20,"react-latex-next":17}],43:[function(require,module,exports){
+},{"../componentify":25,"./anchor":26,"./choice-option-line":31,"./figure-caption":35,"./figure-title":36,"./footnote":37,"./hr":38,"./inline":40,"./long-lingual-option":44,"./passage":49,"./short-lingual-option":53,"@riiid/waml":3,"react":20,"react-latex-next":17}],43:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -14719,13 +14724,16 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const waml_1 = require("@riiid/waml");
 const react_1 = __importDefault(require("react"));
 const componentify_1 = __importDefault(require("../componentify"));
+const use_waml_1 = __importDefault(require("../use-waml"));
 const line_component_1 = __importDefault(require("./line-component"));
 const Line = ({ node, next, ...props }) => {
+    const { renderingVariables } = (0, use_waml_1.default)();
     if (node.component) {
         if ((0, waml_1.hasKind)(node.component, 'Anchor')) {
             return null;
         }
         if ((0, waml_1.hasKind)(node.component, 'ClassedBlock')) {
+            renderingVariables.pendingClasses.push(node.component.name);
             return null;
         }
     }
@@ -14740,7 +14748,7 @@ const Line = ({ node, next, ...props }) => {
 Line.displayName = "Line";
 exports.default = (0, componentify_1.default)(Line);
 
-},{"../componentify":25,"./line-component":42,"@riiid/waml":3,"react":20}],44:[function(require,module,exports){
+},{"../componentify":25,"../use-waml":61,"./line-component":42,"@riiid/waml":3,"react":20}],44:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -14983,7 +14991,8 @@ const PairingOption = ({ node, onClick, ...props }) => {
             setDraggingObject({
                 displayName: "PairingOption",
                 node,
-                e: e.nativeEvent
+                e: e.nativeEvent,
+                currentTarget: e.currentTarget
             });
         }
     }, [draggingObject, node, onClick, pairing, setDraggingObject, setFlattenValue]);
