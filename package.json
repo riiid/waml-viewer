@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "react": "^18.2.0",
-    "@riiid/waml": "github:riiid/waml#5e3b2b4526ecfe14bdfde18b162608fb155f3b29",
+    "@riiid/waml": "github:riiid/waml#e97a4ded70904a6ccc995b3961363a9618f0b1df",
     "react-latex-next": "^2.2.0"
   }
 }
