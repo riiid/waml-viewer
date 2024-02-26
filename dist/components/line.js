@@ -6,10 +6,18 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const waml_1 = require("@riiid/waml");
 const react_1 = __importDefault(require("react"));
 const componentify_1 = __importDefault(require("../componentify"));
+const use_waml_1 = __importDefault(require("../use-waml"));
 const line_component_1 = __importDefault(require("./line-component"));
 const Line = ({ node, next, ...props }) => {
-    if (node.component && (0, waml_1.hasKind)(node.component, 'Anchor')) {
-        return null;
+    const { renderingVariables } = (0, use_waml_1.default)();
+    if (node.component) {
+        if ((0, waml_1.hasKind)(node.component, 'Anchor')) {
+            return null;
+        }
+        if ((0, waml_1.hasKind)(node.component, 'ClassedBlock')) {
+            renderingVariables.pendingClasses.push(node.component.name);
+            return null;
+        }
     }
     if (node.component && (0, waml_1.hasKind)(node.component, 'LineComponent') && node.component.headOption) {
         return react_1.default.createElement(line_component_1.default, { node: node.component });

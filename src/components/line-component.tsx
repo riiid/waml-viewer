@@ -1,8 +1,8 @@
 import { isMooToken } from "@riiid/waml";
 import Latex from "react-latex-next";
+import React from "react";
 import componentify from "../componentify";
 import type { WAMLComponent } from "../types";
-import useWAML from "../use-waml";
 import Inline from "./inline";
 import Anchor from "./anchor";
 import FigureTitle from "./figure-title";
@@ -13,11 +13,8 @@ import LongLingualOption from "./long-lingual-option";
 import HR from "./hr";
 import Passage from "./passage";
 import Footnote from "./footnote";
-import React from "react";
 
 const LineComponent:WAMLComponent<'LineComponent'> = ({ node, ...props }) => {
-  const { renderingVariables } = useWAML();
-
   if(node === null) return <br />;
   if(isMooToken(node, 'longLingualOption')){
     return <LongLingualOption node={node} />;
@@ -34,9 +31,6 @@ const LineComponent:WAMLComponent<'LineComponent'> = ({ node, ...props }) => {
       }
       return <span {...props}>{children}</span>;
     }
-    case "ClassedBlock":
-      renderingVariables.pendingClasses.push(node.name);
-      return null;
     case "Math":
       return <Latex>{`$$${node.content}$$`}</Latex>;
     case "FigureAddon":

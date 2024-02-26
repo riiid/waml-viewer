@@ -2,11 +2,20 @@ import { hasKind } from "@riiid/waml";
 import React from "react";
 import componentify from "../componentify";
 import type { WAMLComponent } from "../types";
+import useWAML from "../use-waml";
 import LineComponent from "./line-component";
 
 const Line:WAMLComponent<'Line'> = ({ node, next, ...props }) => {
-  if(node.component && hasKind(node.component, 'Anchor')){
-    return null;
+  const { renderingVariables } = useWAML();
+
+  if(node.component){
+    if(hasKind(node.component, 'Anchor')){
+      return null;
+    }
+    if(hasKind(node.component, 'ClassedBlock')){
+      renderingVariables.pendingClasses.push(node.component.name);
+      return null;
+    }
   }
   if(node.component && hasKind(node.component, 'LineComponent') && node.component.headOption){
     return <LineComponent node={node.component} />;

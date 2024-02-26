@@ -601,7 +601,7 @@ function id(x) { return x[0]; }
     "a": "audio",
     "v": "video"
   };
-  const mediumPattern = new RegExp(`!(${Object.keys(MEDIUM_TYPES).join("|")})?(?:\\[(.+?)\\])?\\((.+?)\\)`);
+  const mediumPattern = new RegExp(`!(${Object.keys(MEDIUM_TYPES).join("|")})?(?:\\[(.+?)\\])?\\((.+?)\\)(\\{.+?\\})?`);
 
   const textual = {
     prefix: /[#>|](?=\s|$)/,
@@ -638,9 +638,9 @@ function id(x) { return x[0]; }
     medium: {
       match: ungroup(mediumPattern),
       value: chunk => {
-        const [ , typeKey = "i", title, uri ] = chunk.match(mediumPattern);
+        const [ , typeKey = "i", title, uri, json ] = chunk.match(mediumPattern);
 
-        return { type: MEDIUM_TYPES[typeKey], title, uri };
+        return { type: MEDIUM_TYPES[typeKey], title, uri, json: json ? JSON.parse(json) : {} };
       }
     },
     lineBreak: { match: /\r?\n/, lineBreaks: true },
@@ -14215,23 +14215,18 @@ const ButtonOption = ({ node, onPointerDown, ...props }) => {
             return;
         const $target = $.current;
         const { e } = draggingObject;
-        const rect = $target.getBoundingClientRect();
-        const innerLeft = e.clientX - rect.left;
-        const innerTop = e.clientY - rect.top;
         const onPointerMove = (f) => {
             f.preventDefault();
             $target.style.top = `${f.clientY}px`;
             $target.style.left = `${f.clientX}px`;
         };
         const onPointerUp = () => {
-            $target.style.transform = "";
             $target.style.top = "";
             $target.style.left = "";
             window.removeEventListener('pointermove', onPointerMove);
             window.removeEventListener('pointerup', onPointerUp);
             setDraggingObject(null);
         };
-        $target.style.transform = `translate(-${innerLeft}px, -${innerTop}px)`;
         $target.style.top = `${e.clientY}px`;
         $target.style.left = `${e.clientX}px`;
         window.addEventListener('pointermove', onPointerMove);
@@ -14726,8 +14721,13 @@ const react_1 = __importDefault(require("react"));
 const componentify_1 = __importDefault(require("../componentify"));
 const line_component_1 = __importDefault(require("./line-component"));
 const Line = ({ node, next, ...props }) => {
-    if (node.component && (0, waml_1.hasKind)(node.component, 'Anchor')) {
-        return null;
+    if (node.component) {
+        if ((0, waml_1.hasKind)(node.component, 'Anchor')) {
+            return null;
+        }
+        if ((0, waml_1.hasKind)(node.component, 'ClassedBlock')) {
+            return null;
+        }
     }
     if (node.component && (0, waml_1.hasKind)(node.component, 'LineComponent') && node.component.headOption) {
         return react_1.default.createElement(line_component_1.default, { node: node.component });

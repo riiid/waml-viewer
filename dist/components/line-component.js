@@ -5,8 +5,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const waml_1 = require("@riiid/waml");
 const react_latex_next_1 = __importDefault(require("react-latex-next"));
+const react_1 = __importDefault(require("react"));
 const componentify_1 = __importDefault(require("../componentify"));
-const use_waml_1 = __importDefault(require("../use-waml"));
 const inline_1 = __importDefault(require("./inline"));
 const anchor_1 = __importDefault(require("./anchor"));
 const figure_title_1 = __importDefault(require("./figure-title"));
@@ -17,9 +17,7 @@ const long_lingual_option_1 = __importDefault(require("./long-lingual-option"));
 const hr_1 = __importDefault(require("./hr"));
 const passage_1 = __importDefault(require("./passage"));
 const footnote_1 = __importDefault(require("./footnote"));
-const react_1 = __importDefault(require("react"));
 const LineComponent = ({ node, ...props }) => {
-    const { renderingVariables } = (0, use_waml_1.default)();
     if (node === null)
         return react_1.default.createElement("br", null);
     if ((0, waml_1.isMooToken)(node, 'longLingualOption')) {
@@ -36,9 +34,6 @@ const LineComponent = ({ node, ...props }) => {
             }
             return react_1.default.createElement("span", { ...props }, children);
         }
-        case "ClassedBlock":
-            renderingVariables.pendingClasses.push(node.name);
-            return null;
         case "Math":
             return react_1.default.createElement(react_latex_next_1.default, null, `$$${node.content}$$`);
         case "FigureAddon":
