@@ -30,9 +30,11 @@ const react_1 = __importStar(require("react"));
 const waml_1 = require("@riiid/waml");
 const componentify_1 = __importDefault(require("../componentify"));
 const waml_error_1 = __importDefault(require("../waml-error"));
+const use_waml_1 = __importDefault(require("../use-waml"));
 const semantic_error_handler_1 = __importDefault(require("./semantic-error-handler"));
 const isoprefixed_line_group_renderer_1 = __importDefault(require("./isoprefixed-line-group-renderer"));
 const Document = ({ node, ...props }) => {
+    const { draggingObject } = (0, use_waml_1.default)();
     const lines = (0, react_1.useMemo)(() => {
         const R = [];
         let lastMeaningfulLineIndex = 0;
@@ -49,7 +51,7 @@ const Document = ({ node, ...props }) => {
         return R.slice(0, lastMeaningfulLineIndex + 1);
     }, [node]);
     return react_1.default.createElement(WAMLErrorBoundary, { document: node },
-        react_1.default.createElement("section", { ...props },
+        react_1.default.createElement("section", { ...props, ...draggingObject ? { 'data-dragging': true } : {} },
             react_1.default.createElement(isoprefixed_line_group_renderer_1.default, { lines: lines })));
 };
 Document.displayName = "Document";

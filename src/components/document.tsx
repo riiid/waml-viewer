@@ -5,10 +5,13 @@ import { hasKind } from "@riiid/waml";
 import componentify from "../componentify";
 import type { WAMLComponent } from "../types";
 import WAMLError from "../waml-error";
+import useWAML from "../use-waml";
 import SemanticErrorHandler from "./semantic-error-handler";
 import IsoprefixedLineGroupRenderer from "./isoprefixed-line-group-renderer";
 
 const Document:WAMLComponent<'Document'> = ({ node, ...props }) => {
+  const { draggingObject } = useWAML();
+
   const lines = useMemo(() => {
     const R:WAML.Line[] = [];
     let lastMeaningfulLineIndex = 0;
@@ -24,7 +27,7 @@ const Document:WAMLComponent<'Document'> = ({ node, ...props }) => {
   }, [ node ]);
 
   return <WAMLErrorBoundary document={node}>
-    <section {...props}>
+    <section {...props} {...draggingObject ? { 'data-dragging': true } : {}}>
       <IsoprefixedLineGroupRenderer lines={lines} />
     </section>
   </WAMLErrorBoundary>;
