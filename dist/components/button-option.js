@@ -29,7 +29,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const react_1 = __importStar(require("react"));
 const componentify_1 = __importDefault(require("../componentify"));
 const use_waml_1 = __importDefault(require("../use-waml"));
-const ButtonOption = ({ node, onPointerDown, ...props }) => {
+const ButtonOption = ({ node, style, onPointerDown, ...props }) => {
     const $ = (0, react_1.useRef)(null);
     const $ghost = (0, react_1.useRef)(null);
     const { draggingObject, setDraggingObject, checkButtonOptionUsed, renderingVariables } = (0, use_waml_1.default)();
@@ -39,8 +39,9 @@ const ButtonOption = ({ node, onPointerDown, ...props }) => {
         onPointerDown === null || onPointerDown === void 0 ? void 0 : onPointerDown(e);
         if (e.defaultPrevented)
             return;
+        // NOTE https://github.com/w3c/pointerevents/issues/178#issuecomment-1029108322
+        e.target.releasePointerCapture(e.pointerId);
         setDraggingObject({ displayName: "ButtonOption", node, e: e.nativeEvent, currentTarget: e.currentTarget });
-        e.preventDefault();
     }, [node, onPointerDown, setDraggingObject]);
     renderingVariables.buttonOptions[node.id] = node;
     (0, react_1.useEffect)(() => {
@@ -53,18 +54,12 @@ const ButtonOption = ({ node, onPointerDown, ...props }) => {
         const rect = currentTarget.getBoundingClientRect();
         const startX = e.clientX - rect.left;
         const startY = e.clientY - rect.top;
-        const onTouchMove = (f) => {
-            f.preventDefault();
-            $target.style.top = `${f.touches[0].clientY}px`;
-            $target.style.left = `${f.touches[0].clientX}px`;
-        };
         const onPointerMove = (f) => {
             f.preventDefault();
             $target.style.top = `${f.clientY}px`;
             $target.style.left = `${f.clientX}px`;
         };
         const onPointerUp = () => {
-            window.removeEventListener('touchmove', onTouchMove);
             window.removeEventListener('pointermove', onPointerMove);
             window.removeEventListener('pointerup', onPointerUp);
             setDraggingObject(null);
@@ -73,16 +68,14 @@ const ButtonOption = ({ node, onPointerDown, ...props }) => {
         $target.style.transform = `translate(-${startX}px, -${startY}px)`;
         $target.style.top = `${e.clientY}px`;
         $target.style.left = `${e.clientX}px`;
-        window.addEventListener('touchmove', onTouchMove);
         window.addEventListener('pointermove', onPointerMove);
         window.addEventListener('pointerup', onPointerUp);
         return () => {
-            window.removeEventListener('touchmove', onTouchMove);
             window.removeEventListener('pointermove', onPointerMove);
             window.removeEventListener('pointerup', onPointerUp);
         };
     }, [draggingObject, node, setDraggingObject]);
-    const R = react_1.default.createElement("button", { ref: $, disabled: used, onPointerDown: handlePointerDown, ...props, ...dragging ? { 'data-dragging': true } : {} }, node.value);
+    const R = react_1.default.createElement("button", { ref: $, disabled: used, onPointerDown: handlePointerDown, ...props, ...dragging ? { 'data-dragging': true } : {}, style: { ...style, 'touchAction': "none" } }, node.value);
     return dragging
         ? react_1.default.createElement(react_1.default.Fragment, null,
             R,
