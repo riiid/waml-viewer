@@ -16,6 +16,7 @@ const ButtonOption:WAMLComponent<'ButtonOption'> = ({ node, onPointerDown, ...pr
     onPointerDown?.(e);
     if(e.defaultPrevented) return;
     setDraggingObject({ displayName: "ButtonOption", node, e: e.nativeEvent, currentTarget: e.currentTarget });
+    e.preventDefault();
   }, [ node, onPointerDown, setDraggingObject ]);
 
   renderingVariables.buttonOptions[node.id] = node;
@@ -27,12 +28,18 @@ const ButtonOption:WAMLComponent<'ButtonOption'> = ({ node, onPointerDown, ...pr
     const rect = currentTarget.getBoundingClientRect();
     const startX = e.clientX - rect.left;
     const startY = e.clientY - rect.top;
+    const onTouchMove = (f:TouchEvent) => {
+      f.preventDefault();
+      $target.style.top = `${f.touches[0].clientY}px`;
+      $target.style.left = `${f.touches[0].clientX}px`;
+    };
     const onPointerMove = (f:PointerEvent) => {
       f.preventDefault();
       $target.style.top = `${f.clientY}px`;
       $target.style.left = `${f.clientX}px`;
     };
     const onPointerUp = () => {
+      window.removeEventListener('touchmove', onTouchMove);
       window.removeEventListener('pointermove', onPointerMove);
       window.removeEventListener('pointerup', onPointerUp);
       setDraggingObject(null);
@@ -41,9 +48,11 @@ const ButtonOption:WAMLComponent<'ButtonOption'> = ({ node, onPointerDown, ...pr
     $target.style.transform = `translate(-${startX}px, -${startY}px)`;
     $target.style.top = `${e.clientY}px`;
     $target.style.left = `${e.clientX}px`;
+    window.addEventListener('touchmove', onTouchMove);
     window.addEventListener('pointermove', onPointerMove);
     window.addEventListener('pointerup', onPointerUp);
     return () => {
+      window.removeEventListener('touchmove', onTouchMove);
       window.removeEventListener('pointermove', onPointerMove);
       window.removeEventListener('pointerup', onPointerUp);
     };

@@ -14808,6 +14808,8 @@ const componentify_1 = __importDefault(require("../componentify"));
 const use_waml_1 = __importDefault(require("../use-waml"));
 const PairingLine = ({ node, from, to, onClick, style, ...props }) => {
     const { setFlattenValue } = (0, use_waml_1.default)();
+    // eslint-disable-next-line react/hook-use-state
+    const [, setCounter] = (0, react_1.useState)(0);
     const fromRect = from.getBoundingClientRect();
     const toRect = to.getBoundingClientRect();
     const handleClick = (0, react_1.useCallback)(e => {
@@ -14830,6 +14832,12 @@ const PairingLine = ({ node, from, to, onClick, style, ...props }) => {
             return next;
         });
     }, [node, onClick, setFlattenValue]);
+    (0, react_1.useEffect)(() => {
+        const timer = window.setInterval(() => {
+            setCounter(prev => prev + 1);
+        }, 30);
+        return () => window.clearInterval(timer);
+    }, []);
     return react_1.default.createElement("line", { ...props, style: { pointerEvents: "all", ...style }, onClick: handleClick, x1: fromRect.left + 0.5 * fromRect.width, y1: fromRect.top + 0.5 * fromRect.height, x2: toRect.left + 0.5 * toRect.width, y2: toRect.top + 0.5 * toRect.height });
 };
 PairingLine.displayName = "PairingLine";
@@ -14865,7 +14873,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const react_1 = __importStar(require("react"));
-const react_2 = require("react");
 const use_waml_1 = __importDefault(require("../use-waml"));
 const pairing_line_1 = __importDefault(require("./pairing-line"));
 const PairingLines = () => {
@@ -14892,7 +14899,7 @@ const PairingLines = () => {
     }, [pairing.pairedVertices, renderingVariables.pairingOptionDots]);
     return react_1.default.createElement("svg", { width: "100%", height: "100%", style: { position: "fixed", left: 0, top: 0, pointerEvents: "none" } }, lines);
 };
-exports.default = (0, react_2.memo)(PairingLines);
+exports.default = (0, react_1.memo)(PairingLines);
 
 },{"../use-waml":61,"./pairing-line":45,"react":20}],47:[function(require,module,exports){
 "use strict";

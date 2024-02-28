@@ -1,7 +1,5 @@
-import type { ReactNode } from "react";
-import React, { useEffect, useState } from "react";
-import type { FC } from "react";
-import { memo } from "react";
+import type { FC, ReactNode } from "react";
+import React, { memo, useEffect, useState } from "react";
 import useWAML from "../use-waml";
 import PairingLine from "./pairing-line";
 

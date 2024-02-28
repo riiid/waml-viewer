@@ -27,7 +27,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const react_1 = __importStar(require("react"));
-const react_2 = require("react");
 const use_waml_1 = __importDefault(require("../use-waml"));
 const pairing_line_1 = __importDefault(require("./pairing-line"));
 const PairingLines = () => {
@@ -54,4 +53,4 @@ const PairingLines = () => {
     }, [pairing.pairedVertices, renderingVariables.pairingOptionDots]);
     return react_1.default.createElement("svg", { width: "100%", height: "100%", style: { position: "fixed", left: 0, top: 0, pointerEvents: "none" } }, lines);
 };
-exports.default = (0, react_2.memo)(PairingLines);
+exports.default = (0, react_1.memo)(PairingLines);

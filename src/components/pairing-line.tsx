@@ -1,5 +1,5 @@
 import type { MouseEventHandler } from "react";
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { WAML } from "@riiid/waml";
 import componentify from "../componentify";
 import type { WAMLComponent } from "../types";
@@ -7,6 +7,8 @@ import useWAML from "../use-waml";
 
 const PairingLine:WAMLComponent<'PairingLine'> = ({ node, from, to, onClick, style, ...props }) => {
   const { setFlattenValue } = useWAML();
+  // eslint-disable-next-line react/hook-use-state
+  const [ , setCounter ] = useState(0);
 
   const fromRect = from.getBoundingClientRect();
   const toRect = to.getBoundingClientRect();
@@ -29,6 +31,13 @@ const PairingLine:WAMLComponent<'PairingLine'> = ({ node, from, to, onClick, sty
       return next;
     });
   }, [ node, onClick, setFlattenValue ]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setCounter(prev => prev + 1);
+    }, 30);
+    return () => window.clearInterval(timer);
+  }, []);
 
   return <line
     {...props as any}
