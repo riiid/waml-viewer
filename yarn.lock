@@ -347,9 +347,9 @@
     "@nodelib/fs.scandir" "2.1.5"
     fastq "^1.6.0"
 
-"@riiid/waml@github:riiid/waml#5e3b2b4526ecfe14bdfde18b162608fb155f3b29":
-  version "1.5.3"
-  resolved "https://codeload.github.com/riiid/waml/tar.gz/5e3b2b4526ecfe14bdfde18b162608fb155f3b29"
+"@riiid/waml@github:riiid/waml#872659a8409386e876f7df2d7b5ee157006c5ad9":
+  version "1.5.4"
+  resolved "https://codeload.github.com/riiid/waml/tar.gz/872659a8409386e876f7df2d7b5ee157006c5ad9"
   dependencies:
     moo "^0.5.2"
     nearley "^2.20.1"
