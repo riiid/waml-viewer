@@ -57,10 +57,12 @@ const PairingLine = ({ node, from, to, onClick, style, ...props }) => {
         });
     }, [node, onClick, setFlattenValue]);
     (0, react_1.useEffect)(() => {
-        const timer = window.setInterval(() => {
+        const onTick = () => {
             setCounter(prev => prev + 1);
-        }, 30);
-        return () => window.clearInterval(timer);
+            timer = window.requestAnimationFrame(onTick);
+        };
+        let timer = window.requestAnimationFrame(onTick);
+        return () => window.cancelAnimationFrame(timer);
     }, []);
     return react_1.default.createElement("line", { ...props, style: { pointerEvents: "all", ...style }, onClick: handleClick, x1: fromRect.left + 0.5 * fromRect.width, y1: fromRect.top + 0.5 * fromRect.height, x2: toRect.left + 0.5 * toRect.width, y2: toRect.top + 0.5 * toRect.height });
 };

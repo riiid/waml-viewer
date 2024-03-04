@@ -14127,6 +14127,8 @@ const ButtonBlank = ({ node, onPointerEnter, onPointerLeave, onPointerUp, ...pro
         setPreview(undefined);
     }, [draggingObject, interactionToken, node, onPointerUp]);
     const handlePointerDown = (0, react_1.useCallback)(e => {
+        // NOTE https://github.com/w3c/pointerevents/issues/178#issuecomment-1029108322
+        e.target.releasePointerCapture(e.pointerId);
         const $target = e.currentTarget;
         const targetNode = getButtonOptionByValue($target.textContent);
         if (!targetNode)
@@ -14151,6 +14153,7 @@ const ButtonBlank = ({ node, onPointerEnter, onPointerLeave, onPointerUp, ...pro
                 }
             }
         });
+        e.preventDefault();
     }, [getButtonOptionByValue, interactionToken, multiple, setDraggingObject]);
     const handleClick = (0, react_1.useCallback)(e => {
         if (multiple) {
@@ -14216,6 +14219,7 @@ const ButtonOption = ({ node, style, onPointerDown, ...props }) => {
         // NOTE https://github.com/w3c/pointerevents/issues/178#issuecomment-1029108322
         e.target.releasePointerCapture(e.pointerId);
         setDraggingObject({ displayName: "ButtonOption", node, e: e.nativeEvent, currentTarget: e.currentTarget });
+        e.preventDefault();
     }, [node, onPointerDown, setDraggingObject]);
     renderingVariables.buttonOptions[node.id] = node;
     (0, react_1.useEffect)(() => {
@@ -14838,10 +14842,12 @@ const PairingLine = ({ node, from, to, onClick, style, ...props }) => {
         });
     }, [node, onClick, setFlattenValue]);
     (0, react_1.useEffect)(() => {
-        const timer = window.setInterval(() => {
+        const onTick = () => {
             setCounter(prev => prev + 1);
-        }, 30);
-        return () => window.clearInterval(timer);
+            timer = window.requestAnimationFrame(onTick);
+        };
+        let timer = window.requestAnimationFrame(onTick);
+        return () => window.cancelAnimationFrame(timer);
     }, []);
     return react_1.default.createElement("line", { ...props, style: { pointerEvents: "all", ...style }, onClick: handleClick, x1: fromRect.left + 0.5 * fromRect.width, y1: fromRect.top + 0.5 * fromRect.height, x2: toRect.left + 0.5 * toRect.width, y2: toRect.top + 0.5 * toRect.height });
 };

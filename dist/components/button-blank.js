@@ -76,6 +76,8 @@ const ButtonBlank = ({ node, onPointerEnter, onPointerLeave, onPointerUp, ...pro
         setPreview(undefined);
     }, [draggingObject, interactionToken, node, onPointerUp]);
     const handlePointerDown = (0, react_1.useCallback)(e => {
+        // NOTE https://github.com/w3c/pointerevents/issues/178#issuecomment-1029108322
+        e.target.releasePointerCapture(e.pointerId);
         const $target = e.currentTarget;
         const targetNode = getButtonOptionByValue($target.textContent);
         if (!targetNode)
@@ -100,6 +102,7 @@ const ButtonBlank = ({ node, onPointerEnter, onPointerLeave, onPointerUp, ...pro
                 }
             }
         });
+        e.preventDefault();
     }, [getButtonOptionByValue, interactionToken, multiple, setDraggingObject]);
     const handleClick = (0, react_1.useCallback)(e => {
         if (multiple) {

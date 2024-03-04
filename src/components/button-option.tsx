@@ -18,6 +18,7 @@ const ButtonOption:WAMLComponent<'ButtonOption'> = ({ node, style, onPointerDown
     // NOTE https://github.com/w3c/pointerevents/issues/178#issuecomment-1029108322
     (e.target as Element).releasePointerCapture(e.pointerId);
     setDraggingObject({ displayName: "ButtonOption", node, e: e.nativeEvent, currentTarget: e.currentTarget });
+    e.preventDefault();
   }, [ node, onPointerDown, setDraggingObject ]);
 
   renderingVariables.buttonOptions[node.id] = node;

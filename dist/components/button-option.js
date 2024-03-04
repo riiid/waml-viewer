@@ -42,6 +42,7 @@ const ButtonOption = ({ node, style, onPointerDown, ...props }) => {
         // NOTE https://github.com/w3c/pointerevents/issues/178#issuecomment-1029108322
         e.target.releasePointerCapture(e.pointerId);
         setDraggingObject({ displayName: "ButtonOption", node, e: e.nativeEvent, currentTarget: e.currentTarget });
+        e.preventDefault();
     }, [node, onPointerDown, setDraggingObject]);
     renderingVariables.buttonOptions[node.id] = node;
     (0, react_1.useEffect)(() => {

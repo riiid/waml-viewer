@@ -40,7 +40,9 @@ const ButtonBlank:WAMLComponent<'ButtonBlank'> = ({ node, onPointerEnter, onPoin
     setPreview(undefined);
   }, [ draggingObject, interactionToken, node, onPointerUp ]);
 
-  const handlePointerDown = useCallback<MouseEventHandler<HTMLSpanElement>>(e => {
+  const handlePointerDown = useCallback<PointerEventHandler<HTMLSpanElement>>(e => {
+    // NOTE https://github.com/w3c/pointerevents/issues/178#issuecomment-1029108322
+    (e.target as Element).releasePointerCapture(e.pointerId);
     const $target = e.currentTarget;
     const targetNode = getButtonOptionByValue($target.textContent!);
     if(!targetNode) throw Error(`Unexpected ButtonBlank value: ${$target.textContent}`);
@@ -61,6 +63,7 @@ const ButtonBlank:WAMLComponent<'ButtonBlank'> = ({ node, onPointerEnter, onPoin
         }
       }
     });
+    e.preventDefault();
   }, [ getButtonOptionByValue, interactionToken, multiple, setDraggingObject ]);
   const handleClick = useCallback<MouseEventHandler<HTMLSpanElement>>(e => {
     if(multiple){

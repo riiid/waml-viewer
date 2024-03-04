@@ -33,10 +33,13 @@ const PairingLine:WAMLComponent<'PairingLine'> = ({ node, from, to, onClick, sty
   }, [ node, onClick, setFlattenValue ]);
 
   useEffect(() => {
-    const timer = window.setInterval(() => {
+    const onTick = () => {
       setCounter(prev => prev + 1);
-    }, 30);
-    return () => window.clearInterval(timer);
+      timer = window.requestAnimationFrame(onTick);
+    };
+    let timer = window.requestAnimationFrame(onTick);
+
+    return () => window.cancelAnimationFrame(timer);
   }, []);
 
   return <line
