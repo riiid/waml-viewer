@@ -43,6 +43,7 @@ const ButtonBlank:WAMLComponent<'ButtonBlank'> = ({ node, onPointerEnter, onPoin
   const handlePointerDown = useCallback<PointerEventHandler<HTMLSpanElement>>(e => {
     // NOTE https://github.com/w3c/pointerevents/issues/178#issuecomment-1029108322
     (e.target as Element).releasePointerCapture(e.pointerId);
+
     const $target = e.currentTarget;
     const targetNode = getButtonOptionByValue($target.textContent!);
     if(!targetNode) throw Error(`Unexpected ButtonBlank value: ${$target.textContent}`);

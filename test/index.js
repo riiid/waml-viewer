@@ -14129,6 +14129,15 @@ const ButtonBlank = ({ node, onPointerEnter, onPointerLeave, onPointerUp, ...pro
     const handlePointerDown = (0, react_1.useCallback)(e => {
         // NOTE https://github.com/w3c/pointerevents/issues/178#issuecomment-1029108322
         e.target.releasePointerCapture(e.pointerId);
+        const onTouchMove = (f) => {
+            f.preventDefault();
+        };
+        const onTouchEnd = () => {
+            document.removeEventListener('touchmove', onTouchMove);
+            document.removeEventListener('touchend', onTouchEnd);
+        };
+        document.addEventListener('touchmove', onTouchMove, { passive: false });
+        document.addEventListener('touchend', onTouchEnd);
         const $target = e.currentTarget;
         const targetNode = getButtonOptionByValue($target.textContent);
         if (!targetNode)
