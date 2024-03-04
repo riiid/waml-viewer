@@ -54,6 +54,8 @@ const ButtonBlank:WAMLComponent<'ButtonBlank'> = ({ node, onPointerEnter, onPoin
         if(targetNode.value === value) return;
         if(multiple){
           interactionToken.handleInteract($target.textContent!);
+        }else if(value){
+          interactionToken.handleInteract(value);
         }else{
           interactionToken.unsetInteract();
         }

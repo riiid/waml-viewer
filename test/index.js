@@ -14143,6 +14143,9 @@ const ButtonBlank = ({ node, onPointerEnter, onPointerLeave, onPointerUp, ...pro
                 if (multiple) {
                     interactionToken.handleInteract($target.textContent);
                 }
+                else if (value) {
+                    interactionToken.handleInteract(value);
+                }
                 else {
                     interactionToken.unsetInteract();
                 }
