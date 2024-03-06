@@ -44,7 +44,7 @@ const TestPage = () => {
                 ChoiceOption: {
                     getter: node => ({ 'data-value': node.value })
                 }
-            }, value: x, onChange: value => setX(value) }),
+            }, value: x, onChange: value => setX(value), onInteract: e => console.log("WAML Interaction", e) }),
         react_1.default.createElement("aside", { ref: setExplanationWrapper }));
 };
 react_dom_1.default.render(react_1.default.createElement(TestPage, null), document.querySelector("#stage"));

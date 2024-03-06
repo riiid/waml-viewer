@@ -30,6 +30,7 @@ const TestPage:FC = () => {
       }}
       value={x}
       onChange={value => setX(value)}
+      onInteract={e => console.log("WAML Interaction", e)}
     />}
     <aside ref={setExplanationWrapper} />
   </>;

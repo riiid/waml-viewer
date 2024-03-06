@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useId, useMemo, useRef, useState } from "react";
 import type { WAMLDocument } from "@riiid/waml";
 import { WAML } from "@riiid/waml";
-import type { FCWithChildren, WAMLComponentType, WAMLViewerOptions } from "./types.js";
+import type { FCWithChildren, WAMLComponentType, WAMLUserInteraction, WAMLViewerOptions } from "./types.js";
 import InteractionToken, { flattenAnswer, unflattenAnswer } from "./interaction-token.js";
 
 type SplittedFormOf<T extends string> = T extends `${infer A}${infer B}`
@@ -50,6 +50,7 @@ type Context = {
   'getComponentOptions': <T extends WAMLComponentType>(type:T) => WAMLViewerOptions[T],
   'getURL': (uri:string) => string,
   'invokeInteractionToken': (id:string) => InteractionToken,
+  'logInteraction': (e:Omit<WAMLUserInteraction, 'timestamp'>) => void,
   'setDraggingObject': (value:DraggingObject|null) => void,
   'setFlattenValue': (runner:(prev:ReturnType<typeof flattenAnswer>, interactions:WAML.Interaction[]) => false|typeof prev) => void
 };
@@ -58,7 +59,8 @@ type Props = {
   'options': WAMLViewerOptions,
   'defaultValue'?: WAML.Answer,
   'value'?: WAML.Answer,
-  'onChange'?: (value:WAML.Answer) => void
+  'onChange'?: (value:WAML.Answer) => void,
+  'onInteract'?: (e:WAMLUserInteraction) => void
 };
 
 const context = createContext<Context>(null!);
@@ -73,7 +75,7 @@ const useWAML = (invokingInteractionToken?:boolean) => {
 };
 
 export default useWAML;
-export const WAMLProvider:FCWithChildren<Props> = ({ document, options, defaultValue, value, onChange, children }) => {
+export const WAMLProvider:FCWithChildren<Props> = ({ document, options, defaultValue, value, onChange, onInteract, children }) => {
   const $renderingVariables = useRef<Context['renderingVariables']>({
     pendingAnswer: null,
     pendingClasses: [],
@@ -228,6 +230,7 @@ export const WAMLProvider:FCWithChildren<Props> = ({ document, options, defaultV
       }
       return r;
     },
+    logInteraction: e => onInteract?.({ ...e, timestamp: Date.now() }),
     metadata: 'error' in document ? null! : document.metadata,
     pairing,
     renderingVariables: $renderingVariables.current,
@@ -244,7 +247,7 @@ export const WAMLProvider:FCWithChildren<Props> = ({ document, options, defaultV
       onChange?.(nextAnswer);
     },
     value: uncontrolledValue
-  }), [ buttonOptionState, document, draggingObject, flatValue, interactionTokens, onChange, options, pairing, uncontrolledValue ]);
+  }), [ buttonOptionState, document, draggingObject, flatValue, interactionTokens, onChange, onInteract, options, pairing, uncontrolledValue ]);
 
   return <context.Provider value={R}>
     {children}

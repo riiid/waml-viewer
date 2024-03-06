@@ -14129,15 +14129,6 @@ const ButtonBlank = ({ node, onPointerEnter, onPointerLeave, onPointerUp, ...pro
     const handlePointerDown = (0, react_1.useCallback)(e => {
         // NOTE https://github.com/w3c/pointerevents/issues/178#issuecomment-1029108322
         e.target.releasePointerCapture(e.pointerId);
-        const onTouchMove = (f) => {
-            f.preventDefault();
-        };
-        const onTouchEnd = () => {
-            document.removeEventListener('touchmove', onTouchMove);
-            document.removeEventListener('touchend', onTouchEnd);
-        };
-        document.addEventListener('touchmove', onTouchMove, { passive: false });
-        document.addEventListener('touchend', onTouchEnd);
         const $target = e.currentTarget;
         const targetNode = getButtonOptionByValue($target.textContent);
         if (!targetNode)
@@ -14347,10 +14338,11 @@ const react_1 = __importStar(require("react"));
 const componentify_1 = __importDefault(require("../componentify"));
 const use_waml_1 = __importDefault(require("../use-waml"));
 const ChoiceOption = ({ node, onInteract, ...props }) => {
-    const { interactionToken } = (0, use_waml_1.default)(true);
+    const { interactionToken, logInteraction } = (0, use_waml_1.default)(true);
     const handleChange = (0, react_1.useCallback)(() => {
         interactionToken.handleInteract(interactionToken.interactionValue);
-    }, [interactionToken]);
+        logInteraction({ type: "choice-interaction-click", value: node.value });
+    }, [interactionToken, logInteraction, node.value]);
     (0, react_1.useEffect)(() => {
         onInteract === null || onInteract === void 0 ? void 0 : onInteract(interactionToken.selected);
     }, [interactionToken.selected, onInteract]);
@@ -15320,7 +15312,7 @@ const use_waml_1 = require("./use-waml");
 const pairing_lines_1 = __importDefault(require("./components/pairing-lines"));
 const defaultOptions = {};
 const defaultMiddlewares = [];
-const WAMLViewer = ({ waml, middlewares = defaultMiddlewares, options = defaultOptions, bare, defaultValue, value, onChange, ...props }) => {
+const WAMLViewer = ({ waml, middlewares = defaultMiddlewares, options = defaultOptions, bare, defaultValue, value, onChange, onInteract, ...props }) => {
     const document = (0, react_1.useMemo)(() => {
         try {
             const R = typeof waml === "string" ? new waml_1.WAMLDocument(waml) : waml;
@@ -15373,7 +15365,7 @@ const WAMLViewer = ({ waml, middlewares = defaultMiddlewares, options = defaultO
     }
     return react_2.default.createElement("article", { ...props },
         react_2.default.createElement(builtin_style_1.default, null, options.builtinCSS),
-        react_2.default.createElement(use_waml_1.WAMLProvider, { document: document, options: options, value: value, defaultValue: defaultValue, onChange: onChange },
+        react_2.default.createElement(use_waml_1.WAMLProvider, { document: document, options: options, value: value, defaultValue: defaultValue, onChange: onChange, onInteract: onInteract },
             styles.map((v, i) => (react_2.default.createElement(scoped_style_1.default, { key: i }, v))),
             react_2.default.createElement(document_1.default, { node: document.raw }),
             react_2.default.createElement(pairing_lines_1.default, null),
@@ -15580,7 +15572,7 @@ const TestPage = () => {
                 ChoiceOption: {
                     getter: node => ({ 'data-value': node.value })
                 }
-            }, value: x, onChange: value => setX(value) }),
+            }, value: x, onChange: value => setX(value), onInteract: e => console.log("WAML Interaction", e) }),
         react_1.default.createElement("aside", { ref: setExplanationWrapper }));
 };
 react_dom_1.default.render(react_1.default.createElement(TestPage, null), document.querySelector("#stage"));
@@ -15625,7 +15617,7 @@ const useWAML = (invokingInteractionToken) => {
     return R;
 };
 exports.default = useWAML;
-const WAMLProvider = ({ document, options, defaultValue, value, onChange, children }) => {
+const WAMLProvider = ({ document, options, defaultValue, value, onChange, onInteract, children }) => {
     const $renderingVariables = (0, react_1.useRef)({
         pendingAnswer: null,
         pendingClasses: [],
@@ -15782,6 +15774,7 @@ const WAMLProvider = ({ document, options, defaultValue, value, onChange, childr
             }
             return r;
         },
+        logInteraction: e => onInteract === null || onInteract === void 0 ? void 0 : onInteract({ ...e, timestamp: Date.now() }),
         metadata: 'error' in document ? null : document.metadata,
         pairing,
         renderingVariables: $renderingVariables.current,
@@ -15796,7 +15789,7 @@ const WAMLProvider = ({ document, options, defaultValue, value, onChange, childr
             onChange === null || onChange === void 0 ? void 0 : onChange(nextAnswer);
         },
         value: uncontrolledValue
-    }), [buttonOptionState, document, draggingObject, flatValue, interactionTokens, onChange, options, pairing, uncontrolledValue]);
+    }), [buttonOptionState, document, draggingObject, flatValue, interactionTokens, onChange, onInteract, options, pairing, uncontrolledValue]);
     return react_1.default.createElement(context.Provider, { value: R }, children);
 };
 exports.WAMLProvider = WAMLProvider;

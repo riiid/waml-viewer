@@ -30,10 +30,11 @@ const react_1 = __importStar(require("react"));
 const componentify_1 = __importDefault(require("../componentify"));
 const use_waml_1 = __importDefault(require("../use-waml"));
 const ChoiceOption = ({ node, onInteract, ...props }) => {
-    const { interactionToken } = (0, use_waml_1.default)(true);
+    const { interactionToken, logInteraction } = (0, use_waml_1.default)(true);
     const handleChange = (0, react_1.useCallback)(() => {
         interactionToken.handleInteract(interactionToken.interactionValue);
-    }, [interactionToken]);
+        logInteraction({ type: "choice-interaction-click", value: node.value });
+    }, [interactionToken, logInteraction, node.value]);
     (0, react_1.useEffect)(() => {
         onInteract === null || onInteract === void 0 ? void 0 : onInteract(interactionToken.selected);
     }, [interactionToken.selected, onInteract]);

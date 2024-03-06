@@ -9,7 +9,7 @@ import DebugConsole from "./components/debug-console";
 import Document from "./components/document";
 import ScopedStyle from "./components/scoped-style";
 import SyntaxErrorHandler from "./components/syntax-error-handler";
-import type { ASTMiddleware, WAMLViewerOptions } from "./types";
+import type { ASTMiddleware, WAMLUserInteraction, WAMLViewerOptions } from "./types";
 import { WAMLProvider } from "./use-waml";
 import PairingLines from "./components/pairing-lines";
 
@@ -24,6 +24,7 @@ export interface WAMLViewerProps extends Omit<HTMLAttributes<HTMLElement>, 'defa
   defaultValue?:WAML.Answer;
   value?:WAML.Answer;
   onChange?(value:WAML.Answer):void;
+  onInteract?(e:WAMLUserInteraction):void;
 }
 const WAMLViewer:FC<WAMLViewerProps> = ({
   waml,
@@ -33,6 +34,7 @@ const WAMLViewer:FC<WAMLViewerProps> = ({
   defaultValue,
   value,
   onChange,
+  onInteract,
   ...props
 }) => {
   const document = useMemo(() => {
@@ -87,7 +89,7 @@ const WAMLViewer:FC<WAMLViewerProps> = ({
   }
   return <article {...props}>
     <BuiltinStyle>{options.builtinCSS}</BuiltinStyle>
-    <WAMLProvider document={document} options={options} value={value} defaultValue={defaultValue} onChange={onChange}>
+    <WAMLProvider document={document} options={options} value={value} defaultValue={defaultValue} onChange={onChange} onInteract={onInteract}>
       {styles.map((v, i) => (
         <ScopedStyle key={i}>{v}</ScopedStyle>
       ))}

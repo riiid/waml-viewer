@@ -1,6 +1,6 @@
 import type { WAMLDocument } from "@riiid/waml";
 import { WAML } from "@riiid/waml";
-import type { FCWithChildren, WAMLComponentType, WAMLViewerOptions } from "./types.js";
+import type { FCWithChildren, WAMLComponentType, WAMLUserInteraction, WAMLViewerOptions } from "./types.js";
 import InteractionToken, { flattenAnswer } from "./interaction-token.js";
 type SplittedFormOf<T extends string> = T extends `${infer A}${infer B}` ? B extends "" ? [A] : [A, ...SplittedFormOf<B>] : [];
 type FirstLetterOf<T extends string> = SplittedFormOf<T>[0];
@@ -47,6 +47,7 @@ type Context = {
     'getComponentOptions': <T extends WAMLComponentType>(type: T) => WAMLViewerOptions[T];
     'getURL': (uri: string) => string;
     'invokeInteractionToken': (id: string) => InteractionToken;
+    'logInteraction': (e: Omit<WAMLUserInteraction, 'timestamp'>) => void;
     'setDraggingObject': (value: DraggingObject | null) => void;
     'setFlattenValue': (runner: (prev: ReturnType<typeof flattenAnswer>, interactions: WAML.Interaction[]) => false | typeof prev) => void;
 };
@@ -56,6 +57,7 @@ type Props = {
     'defaultValue'?: WAML.Answer;
     'value'?: WAML.Answer;
     'onChange'?: (value: WAML.Answer) => void;
+    'onInteract'?: (e: WAMLUserInteraction) => void;
 };
 declare const useWAML: (invokingInteractionToken?: boolean) => Context;
 export default useWAML;

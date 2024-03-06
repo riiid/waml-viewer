@@ -86,4 +86,10 @@ export type WAMLComponentProps<T extends WAMLComponentType> = WAMLComponentProps
     node: WAMLComponentMap[T];
 };
 export type ASTMiddleware = (documemt: WAML.Document, metadata: WAML.Metadata) => boolean;
+export type WAMLUserInteraction = {
+    'timestamp': number;
+} & ({
+    'type': "choice-interaction-click";
+    'value': string;
+});
 export {};

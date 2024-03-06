@@ -4,11 +4,12 @@ import type { WAMLComponent } from "../types";
 import useWAML from "../use-waml";
 
 const ChoiceOption:WAMLComponent<'ChoiceOption'> = ({ node, onInteract, ...props }) => {
-  const { interactionToken } = useWAML(true);
+  const { interactionToken, logInteraction } = useWAML(true);
 
   const handleChange = useCallback(() => {
     interactionToken.handleInteract(interactionToken.interactionValue);
-  }, [ interactionToken ]);
+    logInteraction({ type: "choice-interaction-click", value: node.value });
+  }, [ interactionToken, logInteraction, node.value ]);
 
   useEffect(() => {
     onInteract?.(interactionToken.selected);

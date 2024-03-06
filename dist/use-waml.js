@@ -37,7 +37,7 @@ const useWAML = (invokingInteractionToken) => {
     return R;
 };
 exports.default = useWAML;
-const WAMLProvider = ({ document, options, defaultValue, value, onChange, children }) => {
+const WAMLProvider = ({ document, options, defaultValue, value, onChange, onInteract, children }) => {
     const $renderingVariables = (0, react_1.useRef)({
         pendingAnswer: null,
         pendingClasses: [],
@@ -194,6 +194,7 @@ const WAMLProvider = ({ document, options, defaultValue, value, onChange, childr
             }
             return r;
         },
+        logInteraction: e => onInteract === null || onInteract === void 0 ? void 0 : onInteract({ ...e, timestamp: Date.now() }),
         metadata: 'error' in document ? null : document.metadata,
         pairing,
         renderingVariables: $renderingVariables.current,
@@ -208,7 +209,7 @@ const WAMLProvider = ({ document, options, defaultValue, value, onChange, childr
             onChange === null || onChange === void 0 ? void 0 : onChange(nextAnswer);
         },
         value: uncontrolledValue
-    }), [buttonOptionState, document, draggingObject, flatValue, interactionTokens, onChange, options, pairing, uncontrolledValue]);
+    }), [buttonOptionState, document, draggingObject, flatValue, interactionTokens, onChange, onInteract, options, pairing, uncontrolledValue]);
     return react_1.default.createElement(context.Provider, { value: R }, children);
 };
 exports.WAMLProvider = WAMLProvider;

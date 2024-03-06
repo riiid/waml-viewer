@@ -1,7 +1,7 @@
 import type { WAML } from "@riiid/waml";
 import { WAMLDocument } from "@riiid/waml";
 import type { FC, HTMLAttributes } from "react";
-import type { ASTMiddleware, WAMLViewerOptions } from "./types";
+import type { ASTMiddleware, WAMLUserInteraction, WAMLViewerOptions } from "./types";
 export interface WAMLViewerProps extends Omit<HTMLAttributes<HTMLElement>, 'defaultValue' | 'onChange' | 'children'> {
     waml: string | WAMLDocument;
     middlewares?: ASTMiddleware[];
@@ -10,6 +10,7 @@ export interface WAMLViewerProps extends Omit<HTMLAttributes<HTMLElement>, 'defa
     defaultValue?: WAML.Answer;
     value?: WAML.Answer;
     onChange?(value: WAML.Answer): void;
+    onInteract?(e: WAMLUserInteraction): void;
 }
 declare const WAMLViewer: FC<WAMLViewerProps>;
 export default WAMLViewer;
