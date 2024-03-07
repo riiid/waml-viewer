@@ -13982,16 +13982,61 @@ exports.default = (0, componentify_1.default)(Anchor);
 
 },{"../componentify":25,"./inline":40,"react":20}],27:[function(require,module,exports){
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const react_1 = __importDefault(require("react"));
+const react_1 = __importStar(require("react"));
 const componentify_1 = __importDefault(require("../componentify"));
 const use_waml_1 = __importDefault(require("../use-waml"));
-const Audio = ({ node, ...props }) => {
-    const { getURL } = (0, use_waml_1.default)();
-    return react_1.default.createElement("audio", { title: node.value.alt, src: getURL(node.value.uri), controls: true, ...props });
+const Audio = ({ node, onPlay, onPause, onVolumeChange, ...props }) => {
+    const { getURL, logInteraction } = (0, use_waml_1.default)();
+    const url = (0, react_1.useMemo)(() => getURL(node.value.uri), [getURL, node.value.uri]);
+    const handlePlay = (0, react_1.useCallback)(e => {
+        onPlay === null || onPlay === void 0 ? void 0 : onPlay(e);
+        if (e.defaultPrevented)
+            return;
+        const { currentTime, duration } = e.currentTarget;
+        logInteraction({ type: "medium-play", url, progress: currentTime / duration });
+    }, [logInteraction, onPlay, url]);
+    const handlePause = (0, react_1.useCallback)(e => {
+        onPause === null || onPause === void 0 ? void 0 : onPause(e);
+        if (e.defaultPrevented)
+            return;
+        const { currentTime, duration } = e.currentTarget;
+        logInteraction({ type: "medium-pause", url, progress: currentTime / duration });
+    }, [logInteraction, onPause, url]);
+    const handleVolumeChange = (0, react_1.useCallback)(e => {
+        onVolumeChange === null || onVolumeChange === void 0 ? void 0 : onVolumeChange(e);
+        if (e.defaultPrevented)
+            return;
+        const { volume, muted } = e.currentTarget;
+        logInteraction({ type: "medium-volume-set", url, value: muted ? 0 : volume }, true);
+    }, [logInteraction, onVolumeChange, url]);
+    return react_1.default.createElement("audio", { title: node.value.alt, src: url, controls: true, onPlay: handlePlay, onPause: handlePause, onVolumeChange: handleVolumeChange, ...props });
 };
 Audio.displayName = "Audio";
 exports.default = (0, componentify_1.default)(Audio);
@@ -15279,16 +15324,61 @@ exports.default = (0, componentify_1.default)(Table);
 
 },{"../componentify":25,"../react":59,"../waml-error":63,"./document":34,"@riiid/waml":3,"react":20}],56:[function(require,module,exports){
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const react_1 = __importDefault(require("react"));
+const react_1 = __importStar(require("react"));
 const componentify_1 = __importDefault(require("../componentify"));
 const use_waml_1 = __importDefault(require("../use-waml"));
-const Video = ({ node, ...props }) => {
-    const { getURL } = (0, use_waml_1.default)();
-    return react_1.default.createElement("video", { title: node.value.alt, src: getURL(node.value.uri), controls: true, ...props });
+const Video = ({ node, onPlay, onPause, onVolumeChange, ...props }) => {
+    const { getURL, logInteraction } = (0, use_waml_1.default)();
+    const url = (0, react_1.useMemo)(() => getURL(node.value.uri), [getURL, node.value.uri]);
+    const handlePlay = (0, react_1.useCallback)(e => {
+        onPlay === null || onPlay === void 0 ? void 0 : onPlay(e);
+        if (e.defaultPrevented)
+            return;
+        const { currentTime, duration } = e.currentTarget;
+        logInteraction({ type: "medium-play", url, progress: currentTime / duration });
+    }, [logInteraction, onPlay, url]);
+    const handlePause = (0, react_1.useCallback)(e => {
+        onPause === null || onPause === void 0 ? void 0 : onPause(e);
+        if (e.defaultPrevented)
+            return;
+        const { currentTime, duration } = e.currentTarget;
+        logInteraction({ type: "medium-pause", url, progress: currentTime / duration });
+    }, [logInteraction, onPause, url]);
+    const handleVolumeChange = (0, react_1.useCallback)(e => {
+        onVolumeChange === null || onVolumeChange === void 0 ? void 0 : onVolumeChange(e);
+        if (e.defaultPrevented)
+            return;
+        const { volume, muted } = e.currentTarget;
+        logInteraction({ type: "medium-volume-set", url, value: muted ? 0 : volume }, true);
+    }, [logInteraction, onVolumeChange, url]);
+    return react_1.default.createElement("video", { title: node.value.alt, src: url, controls: true, onPlay: handlePlay, onPause: handlePause, onVolumeChange: handleVolumeChange, ...props });
 };
 Video.displayName = "Video";
 exports.default = (0, componentify_1.default)(Video);
@@ -15616,6 +15706,7 @@ const useWAML = (invokingInteractionToken) => {
     }
     return R;
 };
+const debouncingInterval = 500;
 exports.default = useWAML;
 const WAMLProvider = ({ document, options, defaultValue, value, onChange, onInteract, children }) => {
     const $renderingVariables = (0, react_1.useRef)({
@@ -15627,6 +15718,7 @@ const WAMLProvider = ({ document, options, defaultValue, value, onChange, onInte
         namedInteractionTokens: {},
         pairingOptionDots: {}
     });
+    const $debouncedInteractions = (0, react_1.useRef)({});
     const [uncontrolledValue, setUncontrolledValue] = (0, react_1.useState)(defaultValue);
     const [draggingObject, setDraggingObject] = (0, react_1.useState)(null);
     const flatValue = (0, react_1.useMemo)(() => uncontrolledValue ? (0, interaction_token_js_1.flattenAnswer)(uncontrolledValue) : [], [uncontrolledValue]);
@@ -15774,7 +15866,22 @@ const WAMLProvider = ({ document, options, defaultValue, value, onChange, onInte
             }
             return r;
         },
-        logInteraction: e => onInteract === null || onInteract === void 0 ? void 0 : onInteract({ ...e, timestamp: Date.now() }),
+        logInteraction: (e, debounceable) => {
+            var _a;
+            const now = Date.now();
+            (_a = e.timestamp) !== null && _a !== void 0 ? _a : (e.timestamp = now);
+            if (debounceable) {
+                const debounced = e.type in $debouncedInteractions.current;
+                $debouncedInteractions.current[e.type] = e;
+                if (!debounced)
+                    window.setTimeout(() => {
+                        onInteract === null || onInteract === void 0 ? void 0 : onInteract($debouncedInteractions.current[e.type]);
+                        delete $debouncedInteractions.current[e.type];
+                    }, debouncingInterval);
+                return;
+            }
+            onInteract === null || onInteract === void 0 ? void 0 : onInteract(e);
+        },
         metadata: 'error' in document ? null : document.metadata,
         pairing,
         renderingVariables: $renderingVariables.current,

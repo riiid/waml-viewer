@@ -47,7 +47,7 @@ type Context = {
     'getComponentOptions': <T extends WAMLComponentType>(type: T) => WAMLViewerOptions[T];
     'getURL': (uri: string) => string;
     'invokeInteractionToken': (id: string) => InteractionToken;
-    'logInteraction': (e: Omit<WAMLUserInteraction, 'timestamp'>) => void;
+    'logInteraction': (e: WAMLUserInteraction, debounceable?: boolean) => void;
     'setDraggingObject': (value: DraggingObject | null) => void;
     'setFlattenValue': (runner: (prev: ReturnType<typeof flattenAnswer>, interactions: WAML.Interaction[]) => false | typeof prev) => void;
 };

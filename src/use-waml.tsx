@@ -50,7 +50,7 @@ type Context = {
   'getComponentOptions': <T extends WAMLComponentType>(type:T) => WAMLViewerOptions[T],
   'getURL': (uri:string) => string,
   'invokeInteractionToken': (id:string) => InteractionToken,
-  'logInteraction': (e:Omit<WAMLUserInteraction, 'timestamp'>) => void,
+  'logInteraction': (e:WAMLUserInteraction, debounceable?:boolean) => void,
   'setDraggingObject': (value:DraggingObject|null) => void,
   'setFlattenValue': (runner:(prev:ReturnType<typeof flattenAnswer>, interactions:WAML.Interaction[]) => false|typeof prev) => void
 };
@@ -73,6 +73,7 @@ const useWAML = (invokingInteractionToken?:boolean) => {
   }
   return R;
 };
+const debouncingInterval = 500;
 
 export default useWAML;
 export const WAMLProvider:FCWithChildren<Props> = ({ document, options, defaultValue, value, onChange, onInteract, children }) => {
@@ -85,6 +86,7 @@ export const WAMLProvider:FCWithChildren<Props> = ({ document, options, defaultV
     namedInteractionTokens: {},
     pairingOptionDots: {}
   });
+  const $debouncedInteractions = useRef<Record<string, WAMLUserInteraction>>({});
   const [ uncontrolledValue, setUncontrolledValue ] = useState(defaultValue);
   const [ draggingObject, setDraggingObject ] = useState<DraggingObject|null>(null);
 
@@ -230,7 +232,22 @@ export const WAMLProvider:FCWithChildren<Props> = ({ document, options, defaultV
       }
       return r;
     },
-    logInteraction: e => onInteract?.({ ...e, timestamp: Date.now() }),
+    logInteraction: (e, debounceable) => {
+      const now = Date.now();
+
+      e.timestamp ??= now;
+      if(debounceable){
+        const debounced = e.type in $debouncedInteractions.current;
+
+        $debouncedInteractions.current[e.type] = e;
+        if(!debounced) window.setTimeout(() => {
+          onInteract?.($debouncedInteractions.current[e.type]);
+          delete $debouncedInteractions.current[e.type];
+        }, debouncingInterval);
+        return;
+      }
+      onInteract?.(e);
+    },
     metadata: 'error' in document ? null! : document.metadata,
     pairing,
     renderingVariables: $renderingVariables.current,

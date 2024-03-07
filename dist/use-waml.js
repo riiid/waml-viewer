@@ -36,6 +36,7 @@ const useWAML = (invokingInteractionToken) => {
     }
     return R;
 };
+const debouncingInterval = 500;
 exports.default = useWAML;
 const WAMLProvider = ({ document, options, defaultValue, value, onChange, onInteract, children }) => {
     const $renderingVariables = (0, react_1.useRef)({
@@ -47,6 +48,7 @@ const WAMLProvider = ({ document, options, defaultValue, value, onChange, onInte
         namedInteractionTokens: {},
         pairingOptionDots: {}
     });
+    const $debouncedInteractions = (0, react_1.useRef)({});
     const [uncontrolledValue, setUncontrolledValue] = (0, react_1.useState)(defaultValue);
     const [draggingObject, setDraggingObject] = (0, react_1.useState)(null);
     const flatValue = (0, react_1.useMemo)(() => uncontrolledValue ? (0, interaction_token_js_1.flattenAnswer)(uncontrolledValue) : [], [uncontrolledValue]);
@@ -194,7 +196,22 @@ const WAMLProvider = ({ document, options, defaultValue, value, onChange, onInte
             }
             return r;
         },
-        logInteraction: e => onInteract === null || onInteract === void 0 ? void 0 : onInteract({ ...e, timestamp: Date.now() }),
+        logInteraction: (e, debounceable) => {
+            var _a;
+            const now = Date.now();
+            (_a = e.timestamp) !== null && _a !== void 0 ? _a : (e.timestamp = now);
+            if (debounceable) {
+                const debounced = e.type in $debouncedInteractions.current;
+                $debouncedInteractions.current[e.type] = e;
+                if (!debounced)
+                    window.setTimeout(() => {
+                        onInteract === null || onInteract === void 0 ? void 0 : onInteract($debouncedInteractions.current[e.type]);
+                        delete $debouncedInteractions.current[e.type];
+                    }, debouncingInterval);
+                return;
+            }
+            onInteract === null || onInteract === void 0 ? void 0 : onInteract(e);
+        },
         metadata: 'error' in document ? null : document.metadata,
         pairing,
         renderingVariables: $renderingVariables.current,

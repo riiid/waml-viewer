@@ -72,8 +72,20 @@ export type WAMLComponentProps<T extends WAMLComponentType> = WAMLComponentProps
 };
 export type ASTMiddleware = (documemt:WAML.Document, metadata:WAML.Metadata) => boolean;
 export type WAMLUserInteraction = {
-  'timestamp': number
+  'timestamp'?: number
 }&({
   'type': "choice-interaction-click",
   'value': string
+}|{
+  'type': "medium-play"|"medium-pause",
+  'url': string,
+  /**
+   * 매체의 진행 정도를 백분율로 나타낸 값.
+   * 1인 경우 모두 재생했음을 의미한다.
+   */
+  'progress': number
+}|{
+  'type': "medium-volume-set",
+  'url': string,
+  'value': number
 });
