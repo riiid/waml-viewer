@@ -14,3 +14,4 @@ export interface WAMLViewerProps extends Omit<HTMLAttributes<HTMLElement>, 'defa
 }
 declare const WAMLViewer: FC<WAMLViewerProps>;
 export default WAMLViewer;
+export * from "./types";

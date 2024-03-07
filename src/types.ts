@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-redundant-type-constituents */
 /* eslint-disable @jjoriping/variable-name */
 import type { WAML } from "@riiid/waml";
 import type { FC, HTMLAttributes, ReactNode } from "react";
@@ -106,4 +107,8 @@ export type WAMLUserInteraction = {
   'type': "button-blank-set",
   'value': string|null,
   'index': number
-});
+}|{
+  [key in keyof CustomUserInteractionTable]: {type: key}&CustomUserInteractionTable[key]
+}[keyof CustomUserInteractionTable]);
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface CustomUserInteractionTable{}

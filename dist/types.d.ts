@@ -121,5 +121,11 @@ export type WAMLUserInteraction = {
     'type': "button-blank-set";
     'value': string | null;
     'index': number;
-});
+} | {
+    [key in keyof CustomUserInteractionTable]: {
+        type: key;
+    } & CustomUserInteractionTable[key];
+}[keyof CustomUserInteractionTable]);
+export interface CustomUserInteractionTable {
+}
 export {};

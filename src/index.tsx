@@ -104,3 +104,4 @@ const WAMLViewer:FC<WAMLViewerProps> = ({
   </article>;
 };
 export default WAMLViewer;
+export * from "./types";
