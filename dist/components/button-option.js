@@ -32,7 +32,7 @@ const use_waml_1 = __importDefault(require("../use-waml"));
 const ButtonOption = ({ node, style, onPointerDown, ...props }) => {
     const $ = (0, react_1.useRef)(null);
     const $ghost = (0, react_1.useRef)(null);
-    const { draggingObject, setDraggingObject, checkButtonOptionUsed, renderingVariables } = (0, use_waml_1.default)();
+    const { draggingObject, setDraggingObject, checkButtonOptionUsed, renderingVariables, logInteraction } = (0, use_waml_1.default)();
     const used = checkButtonOptionUsed(node);
     const dragging = (draggingObject === null || draggingObject === void 0 ? void 0 : draggingObject.node) === node;
     const handlePointerDown = (0, react_1.useCallback)(e => {
@@ -41,9 +41,19 @@ const ButtonOption = ({ node, style, onPointerDown, ...props }) => {
             return;
         // NOTE https://github.com/w3c/pointerevents/issues/178#issuecomment-1029108322
         e.target.releasePointerCapture(e.pointerId);
-        setDraggingObject({ displayName: "ButtonOption", node, e: e.nativeEvent, currentTarget: e.currentTarget });
+        logInteraction({ type: "button-option-down", value: node.value });
+        setDraggingObject({
+            displayName: "ButtonOption",
+            node,
+            e: e.nativeEvent,
+            currentTarget: e.currentTarget,
+            callback: token => {
+                token.handleInteract(node.value, true);
+                logInteraction({ type: "button-blank-set", value: node.value, index: token.seq });
+            }
+        });
         e.preventDefault();
-    }, [node, onPointerDown, setDraggingObject]);
+    }, [logInteraction, node, onPointerDown, setDraggingObject]);
     renderingVariables.buttonOptions[node.id] = node;
     (0, react_1.useEffect)(() => {
         if ((draggingObject === null || draggingObject === void 0 ? void 0 : draggingObject.node) !== node)
@@ -61,6 +71,7 @@ const ButtonOption = ({ node, style, onPointerDown, ...props }) => {
             $target.style.left = `${f.clientX}px`;
         };
         const onPointerUp = () => {
+            logInteraction({ type: "button-option-up", value: node.value });
             window.removeEventListener('pointermove', onPointerMove);
             window.removeEventListener('pointerup', onPointerUp);
             setDraggingObject(null);
@@ -75,7 +86,7 @@ const ButtonOption = ({ node, style, onPointerDown, ...props }) => {
             window.removeEventListener('pointermove', onPointerMove);
             window.removeEventListener('pointerup', onPointerUp);
         };
-    }, [draggingObject, node, setDraggingObject]);
+    }, [draggingObject, logInteraction, node, setDraggingObject]);
     const R = react_1.default.createElement("button", { ref: $, disabled: used, onPointerDown: handlePointerDown, ...props, ...dragging ? { 'data-dragging': true } : {}, style: { ...style, 'touchAction': "none" } }, node.value);
     return dragging
         ? react_1.default.createElement(react_1.default.Fragment, null,

@@ -7,7 +7,7 @@ import useWAML from "../use-waml";
 import Inline from "./inline";
 
 const PairingOption:WAMLComponent<'PairingOption'> = ({ node, onClick, ...props }) => {
-  const { draggingObject, setDraggingObject, pairing, setFlattenValue } = useWAML();
+  const { draggingObject, setDraggingObject, pairing, setFlattenValue, logInteraction } = useWAML();
   const { refInbound, refOutbound } = pairing.getDotRefs(node);
 
   const dragging = draggingObject?.node === node;
@@ -20,6 +20,7 @@ const PairingOption:WAMLComponent<'PairingOption'> = ({ node, onClick, ...props 
     if(draggingObject){
       setDraggingObject(null);
       if(!hasKind(draggingObject.node, 'PairingOption')) return;
+      logInteraction({ type: "pairing-option-click", prev: draggingObject.node.cell.value, value: node.cell.value });
       const draggingNode = draggingObject.node;
 
       setFlattenValue((prev, interactions) => {
@@ -55,6 +56,7 @@ const PairingOption:WAMLComponent<'PairingOption'> = ({ node, onClick, ...props 
         return next;
       });
     }else{
+      logInteraction({ type: "pairing-option-click", value: node.cell.value });
       setDraggingObject({
         displayName: "PairingOption",
         node,
@@ -62,7 +64,7 @@ const PairingOption:WAMLComponent<'PairingOption'> = ({ node, onClick, ...props 
         currentTarget: e.currentTarget
       });
     }
-  }, [ draggingObject, node, onClick, pairing, setDraggingObject, setFlattenValue ]);
+  }, [ draggingObject, logInteraction, node, onClick, pairing, setDraggingObject, setFlattenValue ]);
 
   return <li
     onClick={handleClick}

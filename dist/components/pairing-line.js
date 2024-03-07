@@ -31,7 +31,7 @@ const waml_1 = require("@riiid/waml");
 const componentify_1 = __importDefault(require("../componentify"));
 const use_waml_1 = __importDefault(require("../use-waml"));
 const PairingLine = ({ node, from, to, onClick, style, ...props }) => {
-    const { setFlattenValue } = (0, use_waml_1.default)();
+    const { setFlattenValue, logInteraction } = (0, use_waml_1.default)();
     // eslint-disable-next-line react/hook-use-state
     const [, setCounter] = (0, react_1.useState)(0);
     const fromRect = from.getBoundingClientRect();
@@ -40,6 +40,7 @@ const PairingLine = ({ node, from, to, onClick, style, ...props }) => {
         onClick === null || onClick === void 0 ? void 0 : onClick(e);
         if (e.defaultPrevented)
             return;
+        logInteraction({ type: "pairing-line-click", value: node });
         setFlattenValue((prev, interactions) => {
             const next = [...prev];
             for (const v of interactions) {
@@ -55,7 +56,7 @@ const PairingLine = ({ node, from, to, onClick, style, ...props }) => {
             }
             return next;
         });
-    }, [node, onClick, setFlattenValue]);
+    }, [logInteraction, node, onClick, setFlattenValue]);
     (0, react_1.useEffect)(() => {
         const onTick = () => {
             setCounter(prev => prev + 1);

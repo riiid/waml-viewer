@@ -34,7 +34,7 @@ const utility_1 = require("../utility");
 const ButtonBlank = ({ node, onPointerEnter, onPointerLeave, onPointerUp, ...props }) => {
     var _a, _b, _c;
     const $self = (0, react_1.useRef)(false);
-    const { getButtonOptionByValue, draggingObject, setDraggingObject, interactionToken } = (0, use_waml_1.default)(true);
+    const { getButtonOptionByValue, draggingObject, setDraggingObject, interactionToken, logInteraction } = (0, use_waml_1.default)(true);
     const [preview, setPreview] = (0, react_1.useState)();
     const multiple = ((_a = interactionToken.input) === null || _a === void 0 ? void 0 : _a.type) === "MULTIPLE";
     const handlePointerEnter = (0, react_1.useCallback)(e => {
@@ -71,10 +71,9 @@ const ButtonBlank = ({ node, onPointerEnter, onPointerLeave, onPointerUp, ...pro
             return;
         if ($self.current)
             return;
-        (_a = draggingObject.callback) === null || _a === void 0 ? void 0 : _a.call(draggingObject, interactionToken.interactionValue);
-        interactionToken.handleInteract(draggingObject.node.value, true);
+        (_a = draggingObject.callback) === null || _a === void 0 ? void 0 : _a.call(draggingObject, interactionToken);
         setPreview(undefined);
-    }, [draggingObject, interactionToken, node, onPointerUp]);
+    }, [draggingObject, interactionToken, node.value, onPointerUp]);
     const handlePointerDown = (0, react_1.useCallback)(e => {
         // NOTE https://github.com/w3c/pointerevents/issues/178#issuecomment-1029108322
         e.target.releasePointerCapture(e.pointerId);
@@ -83,27 +82,34 @@ const ButtonBlank = ({ node, onPointerEnter, onPointerLeave, onPointerUp, ...pro
         if (!targetNode)
             throw Error(`Unexpected ButtonBlank value: ${$target.textContent}`);
         $self.current = true;
+        logInteraction({ type: "button-option-down", value: $target.textContent, index: interactionToken.seq });
         setDraggingObject({
             displayName: "ButtonBlank",
             node: targetNode,
             e: e.nativeEvent,
             currentTarget: $target,
-            callback: value => {
-                if (targetNode.value === value)
+            callback: token => {
+                const { seq, input, interactionValue } = token;
+                if (seq === interactionToken.seq)
                     return;
-                if (multiple) {
-                    interactionToken.handleInteract($target.textContent);
-                }
-                else if (value) {
-                    interactionToken.handleInteract(value);
+                console.log(interactionToken.input, input);
+                if (multiple || (input === null || input === void 0 ? void 0 : input.type) === "MULTIPLE" || !interactionValue) {
+                    if (multiple)
+                        interactionToken.handleInteract(targetNode.value);
+                    else
+                        interactionToken.unsetInteract();
+                    logInteraction({ type: "button-blank-set", value: null, index: interactionToken.seq });
                 }
                 else {
-                    interactionToken.unsetInteract();
+                    interactionToken.handleInteract(interactionValue);
+                    logInteraction({ type: "button-blank-set", value: interactionValue, index: interactionToken.seq });
                 }
+                token.handleInteract(targetNode.value, true);
+                logInteraction({ type: "button-blank-set", value: targetNode.value, index: seq });
             }
         });
         e.preventDefault();
-    }, [getButtonOptionByValue, interactionToken, multiple, setDraggingObject]);
+    }, [getButtonOptionByValue, interactionToken, logInteraction, multiple, setDraggingObject]);
     const handleClick = (0, react_1.useCallback)(e => {
         if (multiple) {
             interactionToken.handleInteract(e.currentTarget.textContent);
@@ -111,7 +117,8 @@ const ButtonBlank = ({ node, onPointerEnter, onPointerLeave, onPointerUp, ...pro
         else {
             interactionToken.unsetInteract();
         }
-    }, [interactionToken, multiple]);
+        logInteraction({ type: "button-blank-set", value: null, index: interactionToken.seq });
+    }, [interactionToken, logInteraction, multiple]);
     const $words = (_b = interactionToken.input) === null || _b === void 0 ? void 0 : _b.value.map((v, i) => {
         const dragging = (draggingObject === null || draggingObject === void 0 ? void 0 : draggingObject.node.kind) === "ButtonOption" && draggingObject.node.value === v;
         return (react_1.default.createElement("span", { key: i, onPointerDown: handlePointerDown, onClick: handleClick, "data-value": v, ...dragging ? { 'data-dragging': true } : {} }, v));

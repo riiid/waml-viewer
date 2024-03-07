@@ -8,7 +8,7 @@ import { getIntersection } from "../utility";
 
 const ButtonBlank:WAMLComponent<'ButtonBlank'> = ({ node, onPointerEnter, onPointerLeave, onPointerUp, ...props }) => {
   const $self = useRef(false);
-  const { getButtonOptionByValue, draggingObject, setDraggingObject, interactionToken } = useWAML(true);
+  const { getButtonOptionByValue, draggingObject, setDraggingObject, interactionToken, logInteraction } = useWAML(true);
 
   const [ preview, setPreview ] = useState<string>();
   const multiple = interactionToken.input?.type === "MULTIPLE";
@@ -35,10 +35,9 @@ const ButtonBlank:WAMLComponent<'ButtonBlank'> = ({ node, onPointerEnter, onPoin
     if(!hasKind(draggingObject.node, 'ButtonOption')) return;
     if(!getIntersection(draggingObject.node.group, node.value).length) return;
     if($self.current) return;
-    draggingObject.callback?.(interactionToken.interactionValue);
-    interactionToken.handleInteract(draggingObject.node.value, true);
+    draggingObject.callback?.(interactionToken);
     setPreview(undefined);
-  }, [ draggingObject, interactionToken, node, onPointerUp ]);
+  }, [ draggingObject, interactionToken, node.value, onPointerUp ]);
 
   const handlePointerDown = useCallback<PointerEventHandler<HTMLSpanElement>>(e => {
     // NOTE https://github.com/w3c/pointerevents/issues/178#issuecomment-1029108322
@@ -48,31 +47,38 @@ const ButtonBlank:WAMLComponent<'ButtonBlank'> = ({ node, onPointerEnter, onPoin
     const targetNode = getButtonOptionByValue($target.textContent!);
     if(!targetNode) throw Error(`Unexpected ButtonBlank value: ${$target.textContent}`);
     $self.current = true;
+    logInteraction({ type: "button-option-down", value: $target.textContent!, index: interactionToken.seq });
     setDraggingObject({
       displayName: "ButtonBlank",
       node: targetNode,
       e: e.nativeEvent,
       currentTarget: $target,
-      callback: value => {
-        if(targetNode.value === value) return;
-        if(multiple){
-          interactionToken.handleInteract($target.textContent!);
-        }else if(value){
-          interactionToken.handleInteract(value);
+      callback: token => {
+        const { seq, input, interactionValue } = token;
+        if(seq === interactionToken.seq) return;
+        console.log(interactionToken.input, input);
+        if(multiple || input?.type === "MULTIPLE" || !interactionValue){
+          if(multiple) interactionToken.handleInteract(targetNode.value);
+          else interactionToken.unsetInteract();
+          logInteraction({ type: "button-blank-set", value: null, index: interactionToken.seq });
         }else{
-          interactionToken.unsetInteract();
+          interactionToken.handleInteract(interactionValue);
+          logInteraction({ type: "button-blank-set", value: interactionValue, index: interactionToken.seq });
         }
+        token.handleInteract(targetNode.value, true);
+        logInteraction({ type: "button-blank-set", value: targetNode.value, index: seq });
       }
     });
     e.preventDefault();
-  }, [ getButtonOptionByValue, interactionToken, multiple, setDraggingObject ]);
+  }, [ getButtonOptionByValue, interactionToken, logInteraction, multiple, setDraggingObject ]);
   const handleClick = useCallback<MouseEventHandler<HTMLSpanElement>>(e => {
     if(multiple){
       interactionToken.handleInteract(e.currentTarget.textContent!);
     }else{
       interactionToken.unsetInteract();
     }
-  }, [ interactionToken, multiple ]);
+    logInteraction({ type: "button-blank-set", value: null, index: interactionToken.seq });
+  }, [ interactionToken, logInteraction, multiple ]);
 
   const $words = interactionToken.input?.value.map((v, i) => {
     const dragging = draggingObject?.node.kind === "ButtonOption" && draggingObject.node.value === v;

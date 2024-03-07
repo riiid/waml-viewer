@@ -88,4 +88,22 @@ export type WAMLUserInteraction = {
   'type': "medium-volume-set",
   'url': string,
   'value': number
+}|{
+  'type': "pairing-option-click",
+  'value': string,
+  'prev'?: string
+}|{
+  'type': "pairing-line-click",
+  'value': string
+}|{
+  'type': "button-option-down",
+  'value': string,
+  'index'?: number
+}|{
+  'type': "button-option-up",
+  'value': string
+}|{
+  'type': "button-blank-set",
+  'value': string|null,
+  'index': number
 });

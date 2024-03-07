@@ -7,7 +7,7 @@ import useWAML from "../use-waml";
 const ButtonOption:WAMLComponent<'ButtonOption'> = ({ node, style, onPointerDown, ...props }) => {
   const $ = useRef<HTMLButtonElement>(null);
   const $ghost = useRef<HTMLButtonElement>(null);
-  const { draggingObject, setDraggingObject, checkButtonOptionUsed, renderingVariables } = useWAML();
+  const { draggingObject, setDraggingObject, checkButtonOptionUsed, renderingVariables, logInteraction } = useWAML();
 
   const used = checkButtonOptionUsed(node);
   const dragging = draggingObject?.node === node;
@@ -17,9 +17,19 @@ const ButtonOption:WAMLComponent<'ButtonOption'> = ({ node, style, onPointerDown
     if(e.defaultPrevented) return;
     // NOTE https://github.com/w3c/pointerevents/issues/178#issuecomment-1029108322
     (e.target as Element).releasePointerCapture(e.pointerId);
-    setDraggingObject({ displayName: "ButtonOption", node, e: e.nativeEvent, currentTarget: e.currentTarget });
+    logInteraction({ type: "button-option-down", value: node.value });
+    setDraggingObject({
+      displayName: "ButtonOption",
+      node,
+      e: e.nativeEvent,
+      currentTarget: e.currentTarget,
+      callback: token => {
+        token.handleInteract(node.value, true);
+        logInteraction({ type: "button-blank-set", value: node.value, index: token.seq });
+      }
+    });
     e.preventDefault();
-  }, [ node, onPointerDown, setDraggingObject ]);
+  }, [ logInteraction, node, onPointerDown, setDraggingObject ]);
 
   renderingVariables.buttonOptions[node.id] = node;
   useEffect(() => {
@@ -36,6 +46,7 @@ const ButtonOption:WAMLComponent<'ButtonOption'> = ({ node, style, onPointerDown
       $target.style.left = `${f.clientX}px`;
     };
     const onPointerUp = () => {
+      logInteraction({ type: "button-option-up", value: node.value });
       window.removeEventListener('pointermove', onPointerMove);
       window.removeEventListener('pointerup', onPointerUp);
       setDraggingObject(null);
@@ -50,7 +61,7 @@ const ButtonOption:WAMLComponent<'ButtonOption'> = ({ node, style, onPointerDown
       window.removeEventListener('pointermove', onPointerMove);
       window.removeEventListener('pointerup', onPointerUp);
     };
-  }, [ draggingObject, node, setDraggingObject ]);
+  }, [ draggingObject, logInteraction, node, setDraggingObject ]);
 
   const R = <button
     ref={$}

@@ -33,7 +33,7 @@ const use_waml_1 = __importDefault(require("../use-waml"));
 const inline_1 = __importDefault(require("./inline"));
 const PairingOption = ({ node, onClick, ...props }) => {
     var _a, _b;
-    const { draggingObject, setDraggingObject, pairing, setFlattenValue } = (0, use_waml_1.default)();
+    const { draggingObject, setDraggingObject, pairing, setFlattenValue, logInteraction } = (0, use_waml_1.default)();
     const { refInbound, refOutbound } = pairing.getDotRefs(node);
     const dragging = (draggingObject === null || draggingObject === void 0 ? void 0 : draggingObject.node) === node;
     const inboundPaired = ((_a = pairing.pairedVertices[node.cell.value]) === null || _a === void 0 ? void 0 : _a.some(v => 'from' in v)) || false;
@@ -46,6 +46,7 @@ const PairingOption = ({ node, onClick, ...props }) => {
             setDraggingObject(null);
             if (!(0, waml_1.hasKind)(draggingObject.node, 'PairingOption'))
                 return;
+            logInteraction({ type: "pairing-option-click", prev: draggingObject.node.cell.value, value: node.cell.value });
             const draggingNode = draggingObject.node;
             setFlattenValue((prev, interactions) => {
                 const [netIndex, actualValue] = pairing.getNetIndexByEdge(draggingNode.cell.value, node.cell.value);
@@ -83,6 +84,7 @@ const PairingOption = ({ node, onClick, ...props }) => {
             });
         }
         else {
+            logInteraction({ type: "pairing-option-click", value: node.cell.value });
             setDraggingObject({
                 displayName: "PairingOption",
                 node,
@@ -90,7 +92,7 @@ const PairingOption = ({ node, onClick, ...props }) => {
                 currentTarget: e.currentTarget
             });
         }
-    }, [draggingObject, node, onClick, pairing, setDraggingObject, setFlattenValue]);
+    }, [draggingObject, logInteraction, node, onClick, pairing, setDraggingObject, setFlattenValue]);
     return react_1.default.createElement("li", { onClick: handleClick, ...props, ...dragging ? { 'data-dragging': true } : {}, ...inboundPaired ? { 'data-inbound-paired': true } : {}, ...outboundPaired ? { 'data-outbound-paired': true } : {} },
         node.cell.inbound.length > 0 && react_1.default.createElement("input", { ref: refInbound, type: "radio", checked: inboundPaired, readOnly: true }),
         react_1.default.createElement("div", null, node.inlines.map((v, i) => react_1.default.createElement(inline_1.default, { key: i, node: v }))),

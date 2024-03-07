@@ -9,7 +9,7 @@ type DraggingObject = {
     'node': WAML.ButtonOption | WAML.PairingOption;
     'e': PointerEvent | MouseEvent;
     'currentTarget': HTMLElement;
-    'callback'?: (value?: string) => void;
+    'callback'?: (token: InteractionToken) => void;
 };
 type Context = {
     'commonOptions': {

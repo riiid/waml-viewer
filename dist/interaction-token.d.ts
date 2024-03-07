@@ -2,6 +2,7 @@ import { WAML } from "@riiid/waml";
 export default class InteractionToken {
     #private;
     readonly input?: ReturnType<typeof flattenAnswer>[number];
+    readonly seq: number;
     private readonly answers;
     private readonly callback?;
     private readonly index;

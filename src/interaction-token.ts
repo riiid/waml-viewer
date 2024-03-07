@@ -8,6 +8,7 @@ const enum InteractionAnswerType{
 
 export default class InteractionToken{
   public readonly input?:ReturnType<typeof flattenAnswer>[number];
+  public readonly seq:number;
   private readonly answers:ReturnType<typeof flattenAnswer>;
   private readonly callback?:(next:ReturnType<typeof flattenAnswer>[number]) => void;
   private readonly index:number;
@@ -47,6 +48,7 @@ export default class InteractionToken{
     input?:ReturnType<typeof flattenAnswer>[number],
     callback?:(next:Exclude<typeof input, undefined>) => void
   ){
+    this.seq = interaction.index;
     this.answers = answers;
     this.index = index;
     this.input = input;

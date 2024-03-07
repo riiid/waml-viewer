@@ -50,6 +50,7 @@ class InteractionToken {
     }
     constructor(interaction, answers, index, input, callback) {
         _InteractionToken_interactionValue.set(this, void 0);
+        this.seq = interaction.index;
         this.answers = answers;
         this.index = index;
         this.input = input;

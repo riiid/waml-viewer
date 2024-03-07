@@ -6,7 +6,7 @@ import type { WAMLComponent } from "../types";
 import useWAML from "../use-waml";
 
 const PairingLine:WAMLComponent<'PairingLine'> = ({ node, from, to, onClick, style, ...props }) => {
-  const { setFlattenValue } = useWAML();
+  const { setFlattenValue, logInteraction } = useWAML();
   // eslint-disable-next-line react/hook-use-state
   const [ , setCounter ] = useState(0);
 
@@ -16,6 +16,7 @@ const PairingLine:WAMLComponent<'PairingLine'> = ({ node, from, to, onClick, sty
   const handleClick = useCallback<MouseEventHandler<SVGLineElement>>(e => {
     onClick?.(e as any);
     if(e.defaultPrevented) return;
+    logInteraction({ type: "pairing-line-click", value: node });
     setFlattenValue((prev, interactions) => {
       const next = [ ...prev ];
 
@@ -30,7 +31,7 @@ const PairingLine:WAMLComponent<'PairingLine'> = ({ node, from, to, onClick, sty
       }
       return next;
     });
-  }, [ node, onClick, setFlattenValue ]);
+  }, [ logInteraction, node, onClick, setFlattenValue ]);
 
   useEffect(() => {
     const onTick = () => {
