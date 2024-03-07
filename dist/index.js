@@ -30,7 +30,7 @@ const use_waml_1 = require("./use-waml");
 const pairing_lines_1 = __importDefault(require("./components/pairing-lines"));
 const defaultOptions = {};
 const defaultMiddlewares = [];
-const WAMLViewer = ({ waml, middlewares = defaultMiddlewares, options = defaultOptions, bare, defaultValue, value, onChange, onInteract, ...props }) => {
+const WAMLViewer = ({ waml, middlewares = defaultMiddlewares, options = defaultOptions, bare, defaultValue, value, onChange, onInteract, children, ...props }) => {
     const document = (0, react_1.useMemo)(() => {
         try {
             const R = typeof waml === "string" ? new waml_1.WAMLDocument(waml) : waml;
@@ -90,6 +90,7 @@ const WAMLViewer = ({ waml, middlewares = defaultMiddlewares, options = defaultO
             options.explanationWrapper
                 ? (0, react_dom_1.createPortal)($explanations, options.explanationWrapper)
                 : $explanations,
+            children,
             options.debug && react_2.default.createElement(debug_console_1.default, { document: document })));
 };
 exports.default = WAMLViewer;

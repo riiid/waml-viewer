@@ -16,7 +16,7 @@ import PairingLines from "./components/pairing-lines";
 const defaultOptions:WAMLViewerOptions = {};
 const defaultMiddlewares:ASTMiddleware[] = [];
 
-export interface WAMLViewerProps extends Omit<HTMLAttributes<HTMLElement>, 'defaultValue'|'onChange'|'children'>{
+export interface WAMLViewerProps extends Omit<HTMLAttributes<HTMLElement>, 'defaultValue'|'onChange'>{
   waml:string|WAMLDocument;
   middlewares?:ASTMiddleware[];
   options?:WAMLViewerOptions;
@@ -35,6 +35,7 @@ const WAMLViewer:FC<WAMLViewerProps> = ({
   value,
   onChange,
   onInteract,
+  children,
   ...props
 }) => {
   const document = useMemo(() => {
@@ -99,6 +100,7 @@ const WAMLViewer:FC<WAMLViewerProps> = ({
         ? createPortal($explanations, options.explanationWrapper)
         : $explanations
       }
+      {children}
       {options.debug && <DebugConsole document={document} />}
     </WAMLProvider>
   </article>;
