@@ -51,6 +51,6 @@ const PairingLines = () => {
         }
         setLines($lines);
     }, [pairing.pairedVertices, renderingVariables.pairingOptionDots]);
-    return react_1.default.createElement("svg", { width: "100%", height: "100%", style: { position: "fixed", left: 0, top: 0, pointerEvents: "none" } }, lines);
+    return react_1.default.createElement("svg", { width: "100%", height: "100%", style: { position: "absolute", left: 0, top: 0, pointerEvents: "none" } }, lines);
 };
 exports.default = (0, react_1.memo)(PairingLines);

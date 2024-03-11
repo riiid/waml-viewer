@@ -94,8 +94,9 @@ const WAMLViewer:FC<WAMLViewerProps> = ({
       {styles.map((v, i) => (
         <ScopedStyle key={i}>{v}</ScopedStyle>
       ))}
-      <Document node={document.raw} />
-      <PairingLines />
+      <Document node={document.raw} style={{ position: "relative" }}>
+        <PairingLines />
+      </Document>
       {options.explanationWrapper
         ? createPortal($explanations, options.explanationWrapper)
         : $explanations

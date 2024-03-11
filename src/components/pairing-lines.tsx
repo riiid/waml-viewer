@@ -26,7 +26,7 @@ const PairingLines:FC = () => {
     setLines($lines);
   }, [ pairing.pairedVertices, renderingVariables.pairingOptionDots ]);
 
-  return <svg width="100%" height="100%" style={{ position: "fixed", left: 0, top: 0, pointerEvents: "none" }}>
+  return <svg width="100%" height="100%" style={{ position: "absolute", left: 0, top: 0, pointerEvents: "none" }}>
     {lines}
   </svg>;
 };

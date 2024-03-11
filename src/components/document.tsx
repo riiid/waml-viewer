@@ -9,7 +9,7 @@ import useWAML from "../use-waml";
 import SemanticErrorHandler from "./semantic-error-handler";
 import IsoprefixedLineGroupRenderer from "./isoprefixed-line-group-renderer";
 
-const Document:WAMLComponent<'Document'> = ({ node, ...props }) => {
+const Document:WAMLComponent<'Document'> = ({ node, children, ...props }) => {
   const { draggingObject } = useWAML();
 
   const lines = useMemo(() => {
@@ -29,6 +29,7 @@ const Document:WAMLComponent<'Document'> = ({ node, ...props }) => {
   return <WAMLErrorBoundary document={node}>
     <section {...props} {...draggingObject ? { 'data-dragging': true } : {}}>
       <IsoprefixedLineGroupRenderer lines={lines} />
+      {children}
     </section>
   </WAMLErrorBoundary>;
 };

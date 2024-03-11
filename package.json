@@ -1,6 +1,6 @@
 {
   "name": "waml-viewer",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "main": "dist/index.js",
   "repository": "https://github.com/riiid/waml-viewer.git",
   "author": "Juyeong Jeong <juyeong.jeong@riiid.co>",

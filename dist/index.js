@@ -85,8 +85,8 @@ const WAMLViewer = ({ waml, middlewares = defaultMiddlewares, options = defaultO
         react_2.default.createElement(builtin_style_1.default, null, options.builtinCSS),
         react_2.default.createElement(use_waml_1.WAMLProvider, { document: document, options: options, value: value, defaultValue: defaultValue, onChange: onChange, onInteract: onInteract },
             styles.map((v, i) => (react_2.default.createElement(scoped_style_1.default, { key: i }, v))),
-            react_2.default.createElement(document_1.default, { node: document.raw }),
-            react_2.default.createElement(pairing_lines_1.default, null),
+            react_2.default.createElement(document_1.default, { node: document.raw, style: { position: "relative" } },
+                react_2.default.createElement(pairing_lines_1.default, null)),
             options.explanationWrapper
                 ? (0, react_dom_1.createPortal)($explanations, options.explanationWrapper)
                 : $explanations,

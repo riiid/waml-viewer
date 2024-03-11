@@ -1,5 +1,5 @@
 import type { MouseEventHandler } from "react";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { WAML } from "@riiid/waml";
 import componentify from "../componentify";
 import type { WAMLComponent } from "../types";
@@ -10,6 +10,13 @@ const PairingLine:WAMLComponent<'PairingLine'> = ({ node, from, to, onClick, sty
   // eslint-disable-next-line react/hook-use-state
   const [ , setCounter ] = useState(0);
 
+  const $container = useMemo(() => {
+    const $R = from.closest<HTMLElement>("article > section");
+    if(!$R) throw Error("WAML container document not found");
+    return $R;
+  }, [ from ]);
+
+  const containerRect = $container.getBoundingClientRect();
   const fromRect = from.getBoundingClientRect();
   const toRect = to.getBoundingClientRect();
 
@@ -47,10 +54,10 @@ const PairingLine:WAMLComponent<'PairingLine'> = ({ node, from, to, onClick, sty
     {...props as any}
     style={{ pointerEvents: "all", ...style }}
     onClick={handleClick}
-    x1={fromRect.left + 0.5 * fromRect.width}
-    y1={fromRect.top + 0.5 * fromRect.height}
-    x2={toRect.left + 0.5 * toRect.width}
-    y2={toRect.top + 0.5 * toRect.height}
+    x1={fromRect.left + 0.5 * fromRect.width - containerRect.left}
+    y1={fromRect.top + 0.5 * fromRect.height - containerRect.top}
+    x2={toRect.left + 0.5 * toRect.width - containerRect.left}
+    y2={toRect.top + 0.5 * toRect.height - containerRect.top}
   />;
 };
 PairingLine.displayName = "PairingLine";

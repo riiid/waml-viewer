@@ -39,6 +39,9 @@ type WAMLComponentMap = {
 type WAMLComponentAdditionalPropsMap = {
     [key in keyof WAMLComponentMap]: unknown;
 } & {
+    'Document': {
+        children?: ReactNode;
+    };
     'ChoiceOption': {
         onInteract?: (value: boolean) => void;
     };

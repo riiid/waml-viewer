@@ -13967,7 +13967,7 @@ function componentify(Component) {
 }
 exports.default = componentify;
 
-},{"./react.js":59,"./use-waml.js":61,"react":20}],26:[function(require,module,exports){
+},{"./react.js":59,"./use-waml.js":62,"react":20}],26:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -14041,7 +14041,7 @@ const Audio = ({ node, onPlay, onPause, onVolumeChange, ...props }) => {
 Audio.displayName = "Audio";
 exports.default = (0, componentify_1.default)(Audio);
 
-},{"../componentify":25,"../use-waml":61,"react":20}],28:[function(require,module,exports){
+},{"../componentify":25,"../use-waml":62,"react":20}],28:[function(require,module,exports){
 "use strict";
 
 var __createBinding = void 0 && (void 0).__createBinding || (Object.create ? function (o, m, k, k2) {
@@ -14226,7 +14226,7 @@ const ButtonBlank = ({ node, onPointerEnter, onPointerLeave, onPointerUp, ...pro
 ButtonBlank.displayName = "ButtonBlank";
 exports.default = (0, componentify_1.default)(ButtonBlank);
 
-},{"../componentify":25,"../use-waml":61,"../utility":62,"@riiid/waml":3,"react":20}],30:[function(require,module,exports){
+},{"../componentify":25,"../use-waml":62,"../utility":63,"@riiid/waml":3,"react":20}],30:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -14326,7 +14326,7 @@ const ButtonOption = ({ node, style, onPointerDown, ...props }) => {
 ButtonOption.displayName = "ButtonOption";
 exports.default = (0, componentify_1.default)(ButtonOption);
 
-},{"../componentify":25,"../use-waml":61,"react":20}],31:[function(require,module,exports){
+},{"../componentify":25,"../use-waml":62,"react":20}],31:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -14416,7 +14416,7 @@ const ChoiceOption = ({ node, onInteract, ...props }) => {
 ChoiceOption.displayName = "ChoiceOption";
 exports.default = (0, componentify_1.default)(ChoiceOption);
 
-},{"../componentify":25,"../use-waml":61,"react":20}],33:[function(require,module,exports){
+},{"../componentify":25,"../use-waml":62,"react":20}],33:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -14440,7 +14440,7 @@ const DebugConsole = ({ document }) => {
 };
 exports.default = DebugConsole;
 
-},{"../use-waml":61,"react":20}],34:[function(require,module,exports){
+},{"../use-waml":62,"react":20}],34:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -14476,7 +14476,7 @@ const waml_error_1 = __importDefault(require("../waml-error"));
 const use_waml_1 = __importDefault(require("../use-waml"));
 const semantic_error_handler_1 = __importDefault(require("./semantic-error-handler"));
 const isoprefixed_line_group_renderer_1 = __importDefault(require("./isoprefixed-line-group-renderer"));
-const Document = ({ node, ...props }) => {
+const Document = ({ node, children, ...props }) => {
     const { draggingObject } = (0, use_waml_1.default)();
     const lines = (0, react_1.useMemo)(() => {
         const R = [];
@@ -14495,7 +14495,8 @@ const Document = ({ node, ...props }) => {
     }, [node]);
     return react_1.default.createElement(WAMLErrorBoundary, { document: node },
         react_1.default.createElement("section", { ...props, ...draggingObject ? { 'data-dragging': true } : {} },
-            react_1.default.createElement(isoprefixed_line_group_renderer_1.default, { lines: lines })));
+            react_1.default.createElement(isoprefixed_line_group_renderer_1.default, { lines: lines }),
+            children));
 };
 Document.displayName = "Document";
 exports.default = (0, componentify_1.default)(Document);
@@ -14526,7 +14527,7 @@ class WAMLErrorBoundary extends react_1.Component {
     }
 }
 
-},{"../componentify":25,"../use-waml":61,"../waml-error":63,"./isoprefixed-line-group-renderer":41,"./semantic-error-handler":52,"@riiid/waml":3,"react":20}],35:[function(require,module,exports){
+},{"../componentify":25,"../use-waml":62,"../waml-error":64,"./isoprefixed-line-group-renderer":41,"./semantic-error-handler":52,"@riiid/waml":3,"react":20}],35:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -14599,7 +14600,7 @@ const Image = ({ node, ...props }) => {
 Image.displayName = "Image";
 exports.default = (0, componentify_1.default)(Image);
 
-},{"../componentify":25,"../use-waml":61,"react":20}],40:[function(require,module,exports){
+},{"../componentify":25,"../use-waml":62,"react":20}],40:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -14826,7 +14827,7 @@ const Line = ({ node, next, ...props }) => {
 Line.displayName = "Line";
 exports.default = (0, componentify_1.default)(Line);
 
-},{"../componentify":25,"../use-waml":61,"./line-component":42,"@riiid/waml":3,"react":20}],44:[function(require,module,exports){
+},{"../componentify":25,"../use-waml":62,"./line-component":42,"@riiid/waml":3,"react":20}],44:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -14846,7 +14847,7 @@ const LongLingualOption = ({ node, ...props }) => {
 LongLingualOption.displayName = "LongLingualOption";
 exports.default = (0, componentify_1.default)(LongLingualOption);
 
-},{"../componentify":25,"../use-waml":61,"react":20}],45:[function(require,module,exports){
+},{"../componentify":25,"../use-waml":62,"react":20}],45:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -14883,6 +14884,13 @@ const PairingLine = ({ node, from, to, onClick, style, ...props }) => {
     const { setFlattenValue, logInteraction } = (0, use_waml_1.default)();
     // eslint-disable-next-line react/hook-use-state
     const [, setCounter] = (0, react_1.useState)(0);
+    const $container = (0, react_1.useMemo)(() => {
+        const $R = from.closest("article > section");
+        if (!$R)
+            throw Error("WAML container document not found");
+        return $R;
+    }, [from]);
+    const containerRect = $container.getBoundingClientRect();
     const fromRect = from.getBoundingClientRect();
     const toRect = to.getBoundingClientRect();
     const handleClick = (0, react_1.useCallback)(e => {
@@ -14914,12 +14922,12 @@ const PairingLine = ({ node, from, to, onClick, style, ...props }) => {
         let timer = window.requestAnimationFrame(onTick);
         return () => window.cancelAnimationFrame(timer);
     }, []);
-    return react_1.default.createElement("line", { ...props, style: { pointerEvents: "all", ...style }, onClick: handleClick, x1: fromRect.left + 0.5 * fromRect.width, y1: fromRect.top + 0.5 * fromRect.height, x2: toRect.left + 0.5 * toRect.width, y2: toRect.top + 0.5 * toRect.height });
+    return react_1.default.createElement("line", { ...props, style: { pointerEvents: "all", ...style }, onClick: handleClick, x1: fromRect.left + 0.5 * fromRect.width - containerRect.left, y1: fromRect.top + 0.5 * fromRect.height - containerRect.top, x2: toRect.left + 0.5 * toRect.width - containerRect.left, y2: toRect.top + 0.5 * toRect.height - containerRect.top });
 };
 PairingLine.displayName = "PairingLine";
 exports.default = (0, componentify_1.default)(PairingLine);
 
-},{"../componentify":25,"../use-waml":61,"@riiid/waml":3,"react":20}],46:[function(require,module,exports){
+},{"../componentify":25,"../use-waml":62,"@riiid/waml":3,"react":20}],46:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -14973,11 +14981,11 @@ const PairingLines = () => {
         }
         setLines($lines);
     }, [pairing.pairedVertices, renderingVariables.pairingOptionDots]);
-    return react_1.default.createElement("svg", { width: "100%", height: "100%", style: { position: "fixed", left: 0, top: 0, pointerEvents: "none" } }, lines);
+    return react_1.default.createElement("svg", { width: "100%", height: "100%", style: { position: "absolute", left: 0, top: 0, pointerEvents: "none" } }, lines);
 };
 exports.default = (0, react_1.memo)(PairingLines);
 
-},{"../use-waml":61,"./pairing-line":45,"react":20}],47:[function(require,module,exports){
+},{"../use-waml":62,"./pairing-line":45,"react":20}],47:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -15094,7 +15102,7 @@ const PairingOption = ({ node, onClick, ...props }) => {
 PairingOption.displayName = "PairingOption";
 exports.default = (0, componentify_1.default)(PairingOption);
 
-},{"../componentify":25,"../use-waml":61,"./inline":40,"@riiid/waml":3,"react":20}],49:[function(require,module,exports){
+},{"../componentify":25,"../use-waml":62,"./inline":40,"@riiid/waml":3,"react":20}],49:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -15140,7 +15148,7 @@ const Passage = ({ node, fallback, defaultValue, onChange, ...props }) => {
 Passage.displayName = "Passage";
 exports.default = (0, componentify_1.default)(Passage);
 
-},{"..":57,"../componentify":25,"../use-waml":61,"react":20}],50:[function(require,module,exports){
+},{"..":57,"../componentify":25,"../use-waml":62,"react":20}],50:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -15198,7 +15206,7 @@ const PrefixedLine = ({ node, type, depth, className, ...props }) => {
 PrefixedLine.displayName = "PrefixedLine";
 exports.default = (0, componentify_1.default)(PrefixedLine);
 
-},{"../componentify":25,"../react":59,"../use-waml":61,"./isoprefixed-line-group-renderer":41,"react":20}],51:[function(require,module,exports){
+},{"../componentify":25,"../react":59,"../use-waml":62,"./isoprefixed-line-group-renderer":41,"react":20}],51:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -15249,7 +15257,7 @@ const ShortLingualOption = ({ node, inline, ...props }) => {
 ShortLingualOption.displayName = "ShortLingualOption";
 exports.default = (0, componentify_1.default)(ShortLingualOption);
 
-},{"../componentify":25,"../use-waml":61,"react":20}],54:[function(require,module,exports){
+},{"../componentify":25,"../use-waml":62,"react":20}],54:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -15343,7 +15351,7 @@ const Table = ({ node, style, className, ...props }) => {
 Table.displayName = "Table";
 exports.default = (0, componentify_1.default)(Table);
 
-},{"../componentify":25,"../react":59,"../waml-error":63,"./document":34,"@riiid/waml":3,"react":20}],56:[function(require,module,exports){
+},{"../componentify":25,"../react":59,"../waml-error":64,"./document":34,"@riiid/waml":3,"react":20}],56:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -15404,8 +15412,22 @@ const Video = ({ node, onPlay, onPause, onVolumeChange, ...props }) => {
 Video.displayName = "Video";
 exports.default = (0, componentify_1.default)(Video);
 
-},{"../componentify":25,"../use-waml":61,"react":20}],57:[function(require,module,exports){
+},{"../componentify":25,"../use-waml":62,"react":20}],57:[function(require,module,exports){
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __exportStar = (this && this.__exportStar) || function(m, exports) {
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -15423,7 +15445,7 @@ const use_waml_1 = require("./use-waml");
 const pairing_lines_1 = __importDefault(require("./components/pairing-lines"));
 const defaultOptions = {};
 const defaultMiddlewares = [];
-const WAMLViewer = ({ waml, middlewares = defaultMiddlewares, options = defaultOptions, bare, defaultValue, value, onChange, onInteract, ...props }) => {
+const WAMLViewer = ({ waml, middlewares = defaultMiddlewares, options = defaultOptions, bare, defaultValue, value, onChange, onInteract, children, ...props }) => {
     const document = (0, react_1.useMemo)(() => {
         try {
             const R = typeof waml === "string" ? new waml_1.WAMLDocument(waml) : waml;
@@ -15478,16 +15500,18 @@ const WAMLViewer = ({ waml, middlewares = defaultMiddlewares, options = defaultO
         react_2.default.createElement(builtin_style_1.default, null, options.builtinCSS),
         react_2.default.createElement(use_waml_1.WAMLProvider, { document: document, options: options, value: value, defaultValue: defaultValue, onChange: onChange, onInteract: onInteract },
             styles.map((v, i) => (react_2.default.createElement(scoped_style_1.default, { key: i }, v))),
-            react_2.default.createElement(document_1.default, { node: document.raw }),
-            react_2.default.createElement(pairing_lines_1.default, null),
+            react_2.default.createElement(document_1.default, { node: document.raw, style: { position: "relative" } },
+                react_2.default.createElement(pairing_lines_1.default, null)),
             options.explanationWrapper
                 ? (0, react_dom_1.createPortal)($explanations, options.explanationWrapper)
                 : $explanations,
+            children,
             options.debug && react_2.default.createElement(debug_console_1.default, { document: document })));
 };
 exports.default = WAMLViewer;
+__exportStar(require("./types"), exports);
 
-},{"./components/builtin-style":28,"./components/debug-console":33,"./components/document":34,"./components/pairing-lines":46,"./components/scoped-style":51,"./components/syntax-error-handler":54,"./use-waml":61,"@riiid/waml":3,"react":20,"react-dom":16}],58:[function(require,module,exports){
+},{"./components/builtin-style":28,"./components/debug-console":33,"./components/document":34,"./components/pairing-lines":46,"./components/scoped-style":51,"./components/syntax-error-handler":54,"./types":61,"./use-waml":62,"@riiid/waml":3,"react":20,"react-dom":16}],58:[function(require,module,exports){
 "use strict";
 var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (receiver, state, kind, f) {
     if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
@@ -15690,6 +15714,10 @@ const TestPage = () => {
 react_dom_1.default.render(react_1.default.createElement(TestPage, null), document.querySelector("#stage"));
 
 },{".":57,"react":20,"react-dom":16}],61:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+
+},{}],62:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -15923,7 +15951,7 @@ const WAMLProvider = ({ document, options, defaultValue, value, onChange, onInte
 };
 exports.WAMLProvider = WAMLProvider;
 
-},{"./interaction-token.js":58,"@riiid/waml":3,"react":20}],62:[function(require,module,exports){
+},{"./interaction-token.js":58,"@riiid/waml":3,"react":20}],63:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getIntersection = void 0;
@@ -15936,7 +15964,7 @@ function getIntersection(a, b) {
 }
 exports.getIntersection = getIntersection;
 
-},{}],63:[function(require,module,exports){
+},{}],64:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.NOT_YET_IMPLEMENTED = void 0;
