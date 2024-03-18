@@ -1,5 +1,6 @@
 import { isMooToken } from "@riiid/waml";
 import Latex from "react-latex-next";
+import React from "react";
 import componentify from "../componentify";
 import type { WAMLComponent } from "../types";
 import ChoiceOption from "./choice-option";
@@ -11,7 +12,7 @@ import Audio from "./audio";
 import ButtonOption from "./button-option";
 import Table from "./table";
 import PairingOptionGroup from "./pairing-option-group";
-import React from "react";
+import ChoiceOptionGroup from "./choice-option-group";
 
 const Inline:WAMLComponent<'Inline'> = ({ node }) => {
   if(typeof node === "string"){
@@ -41,14 +42,18 @@ const Inline:WAMLComponent<'Inline'> = ({ node }) => {
           return <i>{$inlines}</i>;
         case "strikethrough":
           return <s>{$inlines}</s>;
+        default: throw Error(`Unhandled style: ${node.style}`);
       }
     }
     case "XMLElement":
       switch(node.tag){
+        case "cog":
+          return <ChoiceOptionGroup node={node.content} />;
         case "pog":
           return <PairingOptionGroup node={node.content} />;
         case "table":
           return <Table node={node} />;
+        default: throw Error(`Unhandled tag: ${node.tag}`);
       }
     case "Math":
       return <Latex>{`$${node.content}$`}</Latex>;

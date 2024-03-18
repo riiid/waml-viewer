@@ -11,6 +11,7 @@ type WAMLComponentMap = {
   'ButtonBlank': WAML.MooToken<'buttonBlank'>,
   'ButtonOption': WAML.ButtonOption,
   'ChoiceOption': WAML.ChoiceOption,
+  'ChoiceOptionGroup': WAML.Inline[],
   'ChoiceOptionLine': Include<WAML.LineComponent, { kind: "LineComponent" }>,
   'Document': WAML.Document,
   'FigureCaption': WAML.FigureAddon,

@@ -30,6 +30,9 @@ const react_1 = __importStar(require("react"));
 const scoped_style_1 = __importDefault(require("./scoped-style"));
 const BuiltinStyle = ({ children = "" }) => react_1.default.createElement(scoped_style_1.default, null, `
   @import "https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.css";
+  .ChoiceOptionGroup {
+    display: contents;
+  }
   ${children}
 `);
 exports.default = (0, react_1.memo)(BuiltinStyle);

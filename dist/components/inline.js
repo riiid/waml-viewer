@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const waml_1 = require("@riiid/waml");
 const react_latex_next_1 = __importDefault(require("react-latex-next"));
+const react_1 = __importDefault(require("react"));
 const componentify_1 = __importDefault(require("../componentify"));
 const choice_option_1 = __importDefault(require("./choice-option"));
 const short_lingual_option_1 = __importDefault(require("./short-lingual-option"));
@@ -15,7 +16,7 @@ const audio_1 = __importDefault(require("./audio"));
 const button_option_1 = __importDefault(require("./button-option"));
 const table_1 = __importDefault(require("./table"));
 const pairing_option_group_1 = __importDefault(require("./pairing-option-group"));
-const react_1 = __importDefault(require("react"));
+const choice_option_group_1 = __importDefault(require("./choice-option-group"));
 const Inline = ({ node }) => {
     if (typeof node === "string") {
         return node;
@@ -43,14 +44,18 @@ const Inline = ({ node }) => {
                     return react_1.default.createElement("i", null, $inlines);
                 case "strikethrough":
                     return react_1.default.createElement("s", null, $inlines);
+                default: throw Error(`Unhandled style: ${node.style}`);
             }
         }
         case "XMLElement":
             switch (node.tag) {
+                case "cog":
+                    return react_1.default.createElement(choice_option_group_1.default, { node: node.content });
                 case "pog":
                     return react_1.default.createElement(pairing_option_group_1.default, { node: node.content });
                 case "table":
                     return react_1.default.createElement(table_1.default, { node: node });
+                default: throw Error(`Unhandled tag: ${node.tag}`);
             }
         case "Math":
             return react_1.default.createElement(react_latex_next_1.default, null, `$${node.content}$`);

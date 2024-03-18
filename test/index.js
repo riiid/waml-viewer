@@ -180,6 +180,7 @@ function getAnswerFormat(document, answer) {
   const flattenAnswers = answer ? getFlattenAnswers(answer) : [];
   const choiceOptionValues = getChoiceOptionValues(document);
   const interactions = [];
+  let cogIndex = 0;
   const existingChoiceOptionGroup = {};
   const existingPairingNetGroup = {};
   const buttonOptionValues = {};
@@ -225,6 +226,14 @@ function getAnswerFormat(document, answer) {
             if (!(0, _check.hasKind)(w, "Cell")) continue;
             iterateDocument(w.body);
           }
+        } else if (v.tag === "cog") {
+          const myIndex = cogIndex++;
+          for (const w of iterate(v.content)) {
+            if (typeof w !== "string" && (0, _check.hasKind)(w, "ChoiceOption")) {
+              w.group = myIndex;
+            }
+            yield w;
+          }
         }
         continue;
       }
@@ -267,7 +276,7 @@ function getAnswerFormat(document, answer) {
     } else if ((0, _check.hasKind)(inline, "StyledInline") || (0, _check.hasKind)(inline, "ClassedInline")) {
       for (const v of inline.inlines) checkInline(v);
     } else if ((0, _check.hasKind)(inline, "ChoiceOption")) {
-      handleChoiceOption(inline.value);
+      handleChoiceOption(inline.value, inline.group);
     } else if ((0, _check.hasKind)(inline, "ButtonOption")) {
       handleButtonOption(inline.value, inline.group);
     } else if ((0, _check.hasKind)(inline, "ShortLingualOption")) {
@@ -278,22 +287,24 @@ function getAnswerFormat(document, answer) {
       });
     }
   }
-  function handleChoiceOption(value) {
-    let group;
-    if (ambiguousLowerRomanValues.includes(value) && choiceOptionValues.includes("ii")) {
-      group = _type.WAML.ChoiceOptionGroup.LOWER_ROMAN;
+  function handleChoiceOption(value, group) {
+    let actualGroup;
+    if (group !== undefined) {
+      actualGroup = group;
+    } else if (ambiguousLowerRomanValues.includes(value) && choiceOptionValues.includes("ii")) {
+      actualGroup = _type.WAML.ChoiceOptionGroup.LOWER_ROMAN;
     } else if (ambiguousUpperRomanValues.includes(value) && choiceOptionValues.includes("II")) {
-      group = _type.WAML.ChoiceOptionGroup.UPPER_ROMAN;
+      actualGroup = _type.WAML.ChoiceOptionGroup.UPPER_ROMAN;
     } else {
-      group = (0, _check.guessChoiceOptionGroup)(value);
+      actualGroup = (0, _check.guessChoiceOptionGroup)(value);
     }
-    if (existingChoiceOptionGroup[group]) {
-      existingChoiceOptionGroup[group].values.push(value);
+    if (existingChoiceOptionGroup[actualGroup]) {
+      existingChoiceOptionGroup[actualGroup].values.push(value);
     } else {
-      interactions.push(existingChoiceOptionGroup[group] = {
+      interactions.push(existingChoiceOptionGroup[actualGroup] = {
         index: interactions.length,
         type: _type.WAML.InteractionType.CHOICE_OPTION,
-        group,
+        group: actualGroup,
         values: [value],
         multipleness: getMultipleness(interactions.length)
       });
@@ -546,15 +557,16 @@ var WAML;
     InteractionType[InteractionType["LONG_LINGUAL_OPTION"] = 3] = "LONG_LINGUAL_OPTION";
     InteractionType[InteractionType["PAIRING_NET"] = 4] = "PAIRING_NET";
   })(InteractionType = WAML.InteractionType || (WAML.InteractionType = {}));
+  // 0부터는 <cog>에 의해 자동 설정된 값들이 들어갑니다.
   let ChoiceOptionGroup;
   (function (ChoiceOptionGroup) {
-    ChoiceOptionGroup[ChoiceOptionGroup["NUMERIC"] = 0] = "NUMERIC";
-    ChoiceOptionGroup[ChoiceOptionGroup["LOWER_ALPHABETIC"] = 1] = "LOWER_ALPHABETIC";
-    ChoiceOptionGroup[ChoiceOptionGroup["UPPER_ALPHABETIC"] = 2] = "UPPER_ALPHABETIC";
-    ChoiceOptionGroup[ChoiceOptionGroup["HANGEUL_CONSONANTAL"] = 3] = "HANGEUL_CONSONANTAL";
-    ChoiceOptionGroup[ChoiceOptionGroup["HANGEUL_FULL"] = 4] = "HANGEUL_FULL";
-    ChoiceOptionGroup[ChoiceOptionGroup["LOWER_ROMAN"] = 5] = "LOWER_ROMAN";
-    ChoiceOptionGroup[ChoiceOptionGroup["UPPER_ROMAN"] = 6] = "UPPER_ROMAN";
+    ChoiceOptionGroup[ChoiceOptionGroup["NUMERIC"] = -7] = "NUMERIC";
+    ChoiceOptionGroup[ChoiceOptionGroup["LOWER_ALPHABETIC"] = -6] = "LOWER_ALPHABETIC";
+    ChoiceOptionGroup[ChoiceOptionGroup["UPPER_ALPHABETIC"] = -5] = "UPPER_ALPHABETIC";
+    ChoiceOptionGroup[ChoiceOptionGroup["HANGEUL_CONSONANTAL"] = -4] = "HANGEUL_CONSONANTAL";
+    ChoiceOptionGroup[ChoiceOptionGroup["HANGEUL_FULL"] = -3] = "HANGEUL_FULL";
+    ChoiceOptionGroup[ChoiceOptionGroup["LOWER_ROMAN"] = -2] = "LOWER_ROMAN";
+    ChoiceOptionGroup[ChoiceOptionGroup["UPPER_ROMAN"] = -1] = "UPPER_ROMAN";
   })(ChoiceOptionGroup = WAML.ChoiceOptionGroup || (WAML.ChoiceOptionGroup = {}));
   let LinePrefix;
   (function (LinePrefix) {
@@ -601,15 +613,16 @@ function id(x) { return x[0]; }
     "a": "audio",
     "v": "video"
   };
-  const mediumPattern = new RegExp(`!(${Object.keys(MEDIUM_TYPES).join("|")})?(?:\\[(.+?)\\])?\\((.+?)\\)(\\{.+?\\})?`);
+  const mediumPattern = /!(i|a|v)?(?:\[(.+?)\])?\((.+?)\)(\{.+?\})?/;
+  const ungroupedMediumPattern = /!(?:i|a|v)?(?:\[(?:.+?)\])?\((?:.+?)\)(?:\{.+?\})?/;
 
+  const escaping = { match: /\\/, push: "escaping" };
   const textual = {
     prefix: /[#>|](?=\s|$)/,
     identifiable: /[\w가-힣-]/,
     character: /./
   };
   const withoutXML = {
-    escaping: { match: /\\./, value: chunk => chunk[1] },
     lineComment: /^\/\/[^\n]+/,
     classOpen: "[[", classClose: "]]",
     blockMathOpen: { match: "$$", push: "blockMath" },
@@ -621,8 +634,10 @@ function id(x) { return x[0]; }
     buttonBlank: { match: /{[\d,]*\[_{3,}\]}/, value: chunk => (chunk.match(/^{([\d,]*)\[/)[1] || "0").split(',').filter(v => v).map(v => parseInt(v)) },
     buttonOptionOpen: { match: /{[\d,]*\[/, value: chunk => chunk.match(/^{([\d,]*)\[/)[1] || "0", push: "singleButtonOption" },
     choiceOptionOpen: { match: /{/, push: "singleChoiceOption" },
-    pairingOptionGroupOpen: { match: /<pog>/ },
     xTableOpen: { match: /<table/, push: "xTableOpening", value: () => "table" },
+    xActionOpen: { match: /<action/, push: "xActionOpening", value: () => "action" },
+    inlineKnobOpen: { match: /\(\d*?\(/, push: "inlineKnob", value: chunk => chunk.match(/\((\d*?)\(/)[1] || "0" },
+    buttonKnobOpen: { match: /\(\d*?\[/, push: "buttonKnob", value: chunk => chunk.match(/\((\d*?)\[/)[1] || "0" },
 
     dKVDirective: { match: /@(?:passage|answertype)\b/, value: chunk => chunk.slice(1) },
     dAnswer: { match: "@answer", push: "answer" },
@@ -631,16 +646,22 @@ function id(x) { return x[0]; }
     sBoldOpen: { match: /\*\*/, push: "sBold" },
     footnote: "*)",
     anchor: "^>",
-    sItalicOpen: { match: /(?<!\\)\*/, push: "sItalic" },
+    sItalicOpen: { match: /\*/, push: "sItalic" },
     title: "##",
     caption: "))",
 
     medium: {
-      match: ungroup(mediumPattern),
+      match: ungroupedMediumPattern,
       value: chunk => {
-        const [ , typeKey = "i", title, uri, json ] = chunk.match(mediumPattern);
+        const [ , typeKey = "i", title, uri, jsonChunk ] = chunk.match(mediumPattern);
+        let json = {};
 
-        return { type: MEDIUM_TYPES[typeKey], title, uri, json: json ? JSON.parse(json) : {} };
+        if(jsonChunk) try{
+          json = JSON.parse(jsonChunk);
+        }catch(error){
+          json = { error: error.toString() };
+        }
+        return { type: MEDIUM_TYPES[typeKey], title, uri, json };
       }
     },
     lineBreak: { match: /\r?\n/, lineBreaks: true },
@@ -650,9 +671,11 @@ function id(x) { return x[0]; }
     character: textual.character
   };
   const main = {
+    escaping,
     xStyleOpen: { match: /<style>\s*/, push: "xStyle", value: () => "style" },
     xExplanationOpen: { match: /<explanation>\s*/, push: "xExplanation", value: () => "explanation" },
     xPOGOpen: { match: /<pog>\s*/, push: "xPOG", value: () => "pog" },
+    xCOGOpen: { match: /<cog>\s*/, push: "xCOG", value: () => "cog" },
     ...withoutXML
   };
   const getCellOpenTokenValue = inline => chunk => {
@@ -664,26 +687,33 @@ function id(x) { return x[0]; }
   };
   const lexer = moo.states({
     main,
+    escaping: {
+      any: { match: /[\s\S]/, lineBreaks: true, pop: 1 }
+    },
     xStyle: {
+      escaping,
       xStyleClose: { match: /\s*<\/style>/, pop: 1 },
       any: { match: /[\s\S]/, lineBreaks: true }
     },
     xExplanation: {
+      escaping,
       xExplanationClose: { match: /\s*<\/explanation>/, pop: 1 },
       xTableOpen: main.xTableOpen,
       ...withoutXML
     },
     xPOG: {
+      escaping,
       xPOGClose: { match: /\s*<\/pog>/, pop: 1 },
       ...withoutXML
     },
-    xTableOpening: {
-      tagClose: { match: />/, next: "xTable" },
-      spaces: withoutXML.spaces,
-      identifiable: withoutXML.identifiable,
-      character: withoutXML.character
+    xCOG: {
+      escaping,
+      xCOGClose: { match: /\s*<\/cog>/, pop: 1 },
+      ...omit(withoutXML, 'longLingualOption', 'shortLingualOptionOpen', 'buttonBlank', 'buttonOptionOpen')
     },
+    xTableOpening: xmlOpening("xTable"),
     xTable: {
+      escaping,
       xTableClose: { match: /\s*<\/table>/, pop: 1 },
       cellOpen: { match: /^\s*#?\[:?/, push: "xTableCell", value: getCellOpenTokenValue(false) },
       inlineCellOpen: { match: /#?\[:?/, push: "xTableCell", value: getCellOpenTokenValue(true) },
@@ -692,6 +722,7 @@ function id(x) { return x[0]; }
       spaces: /[ \t]+/
     },
     xTableCell: {
+      escaping,
       classClose: main.classClose,
       cellClose: { match: /:?]-*(?:\r?\n\|)*/, lineBreaks: true, pop: 1, value: chunk => {
         const colspan = chunk.split('-').length;
@@ -705,8 +736,42 @@ function id(x) { return x[0]; }
       }},
       ...omit(main, 'classClose')
     },
+    xActionOpening: xmlOpening("xAction"),
+    xAction: {
+      escaping,
+      xActionClose: { match: /\s*<\/action>/, pop: 1 },
+      actionCondition: [ "onLoad", "onClick" ],
+      aPlay: "play ",
+      aReplace: { match: /replace /, push: "aReplace" },
+      action: [
+        { match: /go next/, value: () => ({ command: "go", value: "next" }) },
+        { match: /go back/, value: () => ({ command: "go", value: "back" }) },
+        { match: /go \d+/, value: chunk => ({ command: "go", value: parseInt(chunk.match(/\d+/)[0]) }) },
+        {
+          match: [ /set (?:\d+ )?(?:enabled|disabled|activated|inactivated)/ ],
+          value: function(chunk){
+            const [ , index, value ] = chunk.match(addGroups(this.match[0]));
+            
+            if(index){
+              return { command: "set", index: parseInt(index), value };
+            }
+            return { command: "set", value };
+          }
+        },
+        { match: /dispatch \w+/, value: chunk => ({ command: "dispatch", value: chunk.slice(9) }) }
+      ],
+      allSpaces: { match: /[ \t\r\n]+/, lineBreaks: true },
+      medium: withoutXML.medium,
+      ...textual
+    },
+    aReplace: {
+      escaping,
+      comma: { match: /,/, pop: 1 },
+      ...textual
+    },
     answer: {
-      pairingNetOpen: { match: /(?<=[\w가-힣]){\s*/, push: "pairingNet" },
+      escaping,
+      pairingNetOpen: { match: /[\w가-힣]+?{\s*/, push: "pairingNet", value: chunk => chunk.split('{')[0] },
       shortLingualOptionOpen: { match: /{{/, push: "option" },
       buttonOptionOpen: { match: /{\[/, push: "objectiveOption" },
       choiceOptionOpen: { match: /{/, push: "objectiveOption" },
@@ -715,63 +780,81 @@ function id(x) { return x[0]; }
       spaces: withoutXML.spaces
     },
     pairingNet: {
+      escaping,
       pairingNetItemOpen: { match: /{/, push: "pairingNetItem" },
       arraySeparator: /\s*,\s*/,
       pairingNetClose: { match: /\s*}\s*?/, pop: 1 },
       spaces: withoutXML.spaces
     },
     pairingNetItem: {
+      escaping,
       pairingNetItemArrow: /\s*->\s*/,
       pairingNetItemClose: { match: /}/, pop: 1 },
       identifiable: textual.identifiable,
       spaces: withoutXML.spaces
     },
     option: { // 단답형
-      escaping: withoutXML.escaping,
+      escaping,
       shortLingualOptionClose: { match: /}}/, pop: 1 },
       shortLingualDefaultValue: { match: "=" },
       ...textual
     },
     singleButtonOption: { // @answer 이외
-      escaping: withoutXML.escaping,
+      escaping,
       buttonOptionClose: { match: /,?]}/, pop: 1 },
       ...textual
     },
     singleChoiceOption: { // @answer 이외
-      escaping: withoutXML.escaping,
+      escaping,
       pairingSeparator: /\s*(?:->|=>|<-|<=)\s*/,
       choiceOptionClose: { match: /,?}/, pop: 1 },
       ...textual
     },
     objectiveOption: { // @answer 한정
-      escaping: withoutXML.escaping,
+      escaping,
       buttonOptionClose: { match: /,?]}/, pop: 1 },
       choiceOptionClose: { match: /,?}/, pop: 1 },
       orderedOptionSeparator: /\s*->\s*/,
-      unorderedOptionSeparator: /\s*(?<!\\),\s*/,
+      unorderedOptionSeparator: /\s*,\s*/,
       ...textual
     },
+    inlineKnob: {
+      escaping,
+      inlineKnobClose: { match: /\)\)/, pop: 1 },
+      ...withoutXML
+    },
+    buttonKnob: {
+      escaping,
+      buttonKnobClose: { match: /\]\)/, pop: 1 },
+      ...withoutXML
+    },
     blockMath: {
+      escaping,
       blockMathClose: { match: "$$", pop: 1 },
       any: { match: /[\s\S]/, lineBreaks: true }
     },
     inlineMath: {
-      inlineMathClose: { match: /(?<!\\)\$/, pop: 1 },
+      escaping,
+      inlineMathClose: { match: /\$/, pop: 1 },
       any: { match: /[\s\S]/, lineBreaks: true }
     },
     sBold: {
+      escaping,
       sBoldClose: { match: /\*\*/, pop: 1 },
       ...withoutXML
     },
     sItalic: {
-      sItalicClose: { match: /(?<!\\)\*/, pop: 1 },
+      escaping,
+      sItalicClose: { match: /\*/, pop: 1 },
       ...withoutXML
     },
     sStrikethrough: {
+      escaping,
       sStrikethroughClose: { match: /~~/, pop: 1 },
       ...withoutXML
     },
     sUnderline: {
+      escaping,
       sUnderlineClose: { match: /__/, pop: 1 },
       ...withoutXML
     }
@@ -779,12 +862,6 @@ function id(x) { return x[0]; }
 
   let buttonOptionCounter = 0;
 
-  function ungroup(pattern){
-    return new RegExp(
-      pattern.source.replace(/(?<!\\)\((?!\?:)(.+?)(?<!\\)\)/g, "(?:$1)"),
-      pattern.flags
-    );
-  }
   function trimArray(array){
     while(array.length){
       if(typeof array[0] !== "string" || array[0].trim()){
@@ -807,6 +884,18 @@ function id(x) { return x[0]; }
 
     for(const k of keys) delete R[k];
     return R;
+  }
+  function addGroups(pattern){
+    return new RegExp(pattern.source.replaceAll("(?:", "("), pattern.flags);
+  }
+  function xmlOpening(next){
+    return {
+      escaping,
+      tagClose: { match: />/, next },
+      spaces: withoutXML.spaces,
+      identifiable: withoutXML.identifiable,
+      character: withoutXML.character
+    };
   }
 var grammar = {
     Lexer: lexer,
@@ -884,12 +973,14 @@ var grammar = {
     {"name": "Inline", "symbols": ["StyledInline"], "postprocess": id},
     {"name": "Inline", "symbols": ["ClassedInline"], "postprocess": id},
     {"name": "Inline", "symbols": ["LineXMLElement"], "postprocess": id},
+    {"name": "Inline", "symbols": ["InlineKnob"], "postprocess": id},
+    {"name": "Inline", "symbols": ["ButtonKnob"], "postprocess": id},
     {"name": "Text", "symbols": [(lexer.has("identifiable") ? {type: "identifiable"} : identifiable)], "postprocess": ([ token ]) => token.value},
     {"name": "Text", "symbols": [(lexer.has("title") ? {type: "title"} : title)], "postprocess": ([ token ]) => token.value},
     {"name": "Text", "symbols": [(lexer.has("caption") ? {type: "caption"} : caption)], "postprocess": ([ token ]) => token.value},
     {"name": "Text", "symbols": [(lexer.has("prefix") ? {type: "prefix"} : prefix)], "postprocess": ([ token ]) => token.value},
     {"name": "Text", "symbols": [(lexer.has("character") ? {type: "character"} : character)], "postprocess": ([ token ]) => token.value},
-    {"name": "Text", "symbols": [(lexer.has("escaping") ? {type: "escaping"} : escaping)], "postprocess": ([ token ]) => token.value},
+    {"name": "Text", "symbols": [(lexer.has("escaping") ? {type: "escaping"} : escaping), (lexer.has("any") ? {type: "any"} : any)], "postprocess": ([ , token ]) => token.value},
     {"name": "StyledInline$ebnf$1", "symbols": []},
     {"name": "StyledInline$ebnf$1", "symbols": ["StyledInline$ebnf$1", "Inline"], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
     {"name": "StyledInline", "symbols": [(lexer.has("sUnderlineOpen") ? {type: "sUnderlineOpen"} : sUnderlineOpen), "StyledInline$ebnf$1", (lexer.has("sUnderlineClose") ? {type: "sUnderlineClose"} : sUnderlineClose)], "postprocess": ([ , inlines ]) => ({ kind: "StyledInline", style: "underline", inlines })},
@@ -922,6 +1013,26 @@ var grammar = {
     {"name": "XMLElement$macrocall$8", "symbols": [(lexer.has("xExplanationClose") ? {type: "xExplanationClose"} : xExplanationClose)]},
     {"name": "XMLElement$macrocall$5", "symbols": ["XMLElement$macrocall$6", "XMLElement$macrocall$7", "XMLElement$macrocall$8"], "postprocess": ([ open, body ]) => ({ tag: open[0].value, body: body[0] })},
     {"name": "XMLElement", "symbols": ["XMLElement$macrocall$5"], "postprocess": ([{ tag, body }]) => ({ kind: "XMLElement", tag, content: body })},
+    {"name": "XMLElement$macrocall$10", "symbols": [(lexer.has("xActionOpen") ? {type: "xActionOpen"} : xActionOpen)]},
+    {"name": "XMLElement$macrocall$11", "symbols": ["ActionDefinition"]},
+    {"name": "XMLElement$macrocall$12", "symbols": [(lexer.has("xActionClose") ? {type: "xActionClose"} : xActionClose)]},
+    {"name": "XMLElement$macrocall$9$ebnf$1", "symbols": []},
+    {"name": "XMLElement$macrocall$9$ebnf$1", "symbols": ["XMLElement$macrocall$9$ebnf$1", "XMLAttribute"], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
+    {"name": "XMLElement$macrocall$9$ebnf$2", "symbols": [(lexer.has("spaces") ? {type: "spaces"} : spaces)], "postprocess": id},
+    {"name": "XMLElement$macrocall$9$ebnf$2", "symbols": [], "postprocess": function(d) {return null;}},
+    {"name": "XMLElement$macrocall$9", "symbols": ["XMLElement$macrocall$10", "XMLElement$macrocall$9$ebnf$1", "XMLElement$macrocall$9$ebnf$2", (lexer.has("tagClose") ? {type: "tagClose"} : tagClose), "XMLElement$macrocall$11", "XMLElement$macrocall$12"], "postprocess":  ([ open, attributes,,, body ]) => ({
+          tag: open[0].value,
+          attributes,
+          body: body[0]
+        })},
+    {"name": "XMLElement", "symbols": ["XMLElement$macrocall$9"], "postprocess":  ([{ tag, attributes, body }]) => {
+          let index = 0;
+          for(const { key, value } of attributes){
+            if(key !== "for") throw Error(`Unexpected attribute of <action>: ${key}`);
+            index = parseInt(value) || 0;
+          }
+          return { kind: "XMLElement", tag, index, condition: body.condition, actions: body.actions };
+        }},
     {"name": "LineXMLElement$macrocall$2", "symbols": [(lexer.has("xTableOpen") ? {type: "xTableOpen"} : xTableOpen)]},
     {"name": "LineXMLElement$macrocall$3", "symbols": ["Table"]},
     {"name": "LineXMLElement$macrocall$4", "symbols": [(lexer.has("xTableClose") ? {type: "xTableClose"} : xTableClose)]},
@@ -935,17 +1046,24 @@ var grammar = {
           body: body[0]
         })},
     {"name": "LineXMLElement", "symbols": ["LineXMLElement$macrocall$1"], "postprocess": ([{ tag, attributes, body }]) => ({ kind: "XMLElement", tag, attributes, content: body })},
-    {"name": "LineXMLElement$macrocall$6", "symbols": [(lexer.has("xPOGOpen") ? {type: "xPOGOpen"} : xPOGOpen)]},
-    {"name": "LineXMLElement$macrocall$7$macrocall$2", "symbols": ["PairingOption"]},
-    {"name": "LineXMLElement$macrocall$7$macrocall$3", "symbols": [(lexer.has("lineBreak") ? {type: "lineBreak"} : lineBreak)]},
-    {"name": "LineXMLElement$macrocall$7$macrocall$1$ebnf$1", "symbols": []},
-    {"name": "LineXMLElement$macrocall$7$macrocall$1$ebnf$1$subexpression$1", "symbols": ["LineXMLElement$macrocall$7$macrocall$3", "LineXMLElement$macrocall$7$macrocall$2"]},
-    {"name": "LineXMLElement$macrocall$7$macrocall$1$ebnf$1", "symbols": ["LineXMLElement$macrocall$7$macrocall$1$ebnf$1", "LineXMLElement$macrocall$7$macrocall$1$ebnf$1$subexpression$1"], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
-    {"name": "LineXMLElement$macrocall$7$macrocall$1", "symbols": ["LineXMLElement$macrocall$7$macrocall$2", "LineXMLElement$macrocall$7$macrocall$1$ebnf$1"], "postprocess": ([ first, rest ]) => [ first[0], ...rest.map(v => v[1][0]) ]},
-    {"name": "LineXMLElement$macrocall$7", "symbols": ["LineXMLElement$macrocall$7$macrocall$1"]},
-    {"name": "LineXMLElement$macrocall$8", "symbols": [(lexer.has("xPOGClose") ? {type: "xPOGClose"} : xPOGClose)]},
+    {"name": "LineXMLElement$macrocall$6", "symbols": [(lexer.has("xCOGOpen") ? {type: "xCOGOpen"} : xCOGOpen)]},
+    {"name": "LineXMLElement$macrocall$7$ebnf$1", "symbols": ["Inline"]},
+    {"name": "LineXMLElement$macrocall$7$ebnf$1", "symbols": ["LineXMLElement$macrocall$7$ebnf$1", "Inline"], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
+    {"name": "LineXMLElement$macrocall$7", "symbols": ["LineXMLElement$macrocall$7$ebnf$1"]},
+    {"name": "LineXMLElement$macrocall$8", "symbols": [(lexer.has("xCOGClose") ? {type: "xCOGClose"} : xCOGClose)]},
     {"name": "LineXMLElement$macrocall$5", "symbols": ["LineXMLElement$macrocall$6", "LineXMLElement$macrocall$7", "LineXMLElement$macrocall$8"], "postprocess": ([ open, body ]) => ({ tag: open[0].value, body: body[0] })},
     {"name": "LineXMLElement", "symbols": ["LineXMLElement$macrocall$5"], "postprocess": ([{ tag, body }]) => ({ kind: "XMLElement", tag, content: body })},
+    {"name": "LineXMLElement$macrocall$10", "symbols": [(lexer.has("xPOGOpen") ? {type: "xPOGOpen"} : xPOGOpen)]},
+    {"name": "LineXMLElement$macrocall$11$macrocall$2", "symbols": ["PairingOption"]},
+    {"name": "LineXMLElement$macrocall$11$macrocall$3", "symbols": [(lexer.has("lineBreak") ? {type: "lineBreak"} : lineBreak)]},
+    {"name": "LineXMLElement$macrocall$11$macrocall$1$ebnf$1", "symbols": []},
+    {"name": "LineXMLElement$macrocall$11$macrocall$1$ebnf$1$subexpression$1", "symbols": ["LineXMLElement$macrocall$11$macrocall$3", "LineXMLElement$macrocall$11$macrocall$2"]},
+    {"name": "LineXMLElement$macrocall$11$macrocall$1$ebnf$1", "symbols": ["LineXMLElement$macrocall$11$macrocall$1$ebnf$1", "LineXMLElement$macrocall$11$macrocall$1$ebnf$1$subexpression$1"], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
+    {"name": "LineXMLElement$macrocall$11$macrocall$1", "symbols": ["LineXMLElement$macrocall$11$macrocall$2", "LineXMLElement$macrocall$11$macrocall$1$ebnf$1"], "postprocess": ([ first, rest ]) => [ first[0], ...rest.map(v => v[1][0]) ]},
+    {"name": "LineXMLElement$macrocall$11", "symbols": ["LineXMLElement$macrocall$11$macrocall$1"]},
+    {"name": "LineXMLElement$macrocall$12", "symbols": [(lexer.has("xPOGClose") ? {type: "xPOGClose"} : xPOGClose)]},
+    {"name": "LineXMLElement$macrocall$9", "symbols": ["LineXMLElement$macrocall$10", "LineXMLElement$macrocall$11", "LineXMLElement$macrocall$12"], "postprocess": ([ open, body ]) => ({ tag: open[0].value, body: body[0] })},
+    {"name": "LineXMLElement", "symbols": ["LineXMLElement$macrocall$9"], "postprocess": ([{ tag, body }]) => ({ kind: "XMLElement", tag, content: body })},
     {"name": "XMLAttribute$ebnf$1", "symbols": [(lexer.has("identifiable") ? {type: "identifiable"} : identifiable)]},
     {"name": "XMLAttribute$ebnf$1", "symbols": ["XMLAttribute$ebnf$1", (lexer.has("identifiable") ? {type: "identifiable"} : identifiable)], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
     {"name": "XMLAttribute$ebnf$2", "symbols": []},
@@ -1076,17 +1194,15 @@ var grammar = {
           value: value.join(''),
           defaultValue: Boolean(defaultValue)
         })},
-    {"name": "PairingNet$ebnf$1", "symbols": [(lexer.has("identifiable") ? {type: "identifiable"} : identifiable)]},
-    {"name": "PairingNet$ebnf$1", "symbols": ["PairingNet$ebnf$1", (lexer.has("identifiable") ? {type: "identifiable"} : identifiable)], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
     {"name": "PairingNet$macrocall$2", "symbols": ["PairingNetItem"]},
     {"name": "PairingNet$macrocall$3", "symbols": [(lexer.has("arraySeparator") ? {type: "arraySeparator"} : arraySeparator)]},
     {"name": "PairingNet$macrocall$1$ebnf$1", "symbols": []},
     {"name": "PairingNet$macrocall$1$ebnf$1$subexpression$1", "symbols": ["PairingNet$macrocall$3", "PairingNet$macrocall$2"]},
     {"name": "PairingNet$macrocall$1$ebnf$1", "symbols": ["PairingNet$macrocall$1$ebnf$1", "PairingNet$macrocall$1$ebnf$1$subexpression$1"], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
     {"name": "PairingNet$macrocall$1", "symbols": ["PairingNet$macrocall$2", "PairingNet$macrocall$1$ebnf$1"], "postprocess": ([ first, rest ]) => [ first[0], ...rest.map(v => v[1][0]) ]},
-    {"name": "PairingNet", "symbols": ["PairingNet$ebnf$1", (lexer.has("pairingNetOpen") ? {type: "pairingNetOpen"} : pairingNetOpen), "PairingNet$macrocall$1", (lexer.has("pairingNetClose") ? {type: "pairingNetClose"} : pairingNetClose)], "postprocess":  ([ name,, list ]) => ({
+    {"name": "PairingNet", "symbols": [(lexer.has("pairingNetOpen") ? {type: "pairingNetOpen"} : pairingNetOpen), "PairingNet$macrocall$1", (lexer.has("pairingNetClose") ? {type: "pairingNetClose"} : pairingNetClose)], "postprocess":  ([ { value: name }, list ]) => ({
           kind: "PairingNet",
-          name: name.join(''),
+          name,
           list
         })},
     {"name": "PairingNetItem$ebnf$1", "symbols": [(lexer.has("spaces") ? {type: "spaces"} : spaces)], "postprocess": id},
@@ -1101,7 +1217,43 @@ var grammar = {
           kind: "PairingNetItem",
           from: from.join(''),
           to: to.join('')
-        })}
+        })},
+    {"name": "InlineKnob$ebnf$1", "symbols": ["Inline"]},
+    {"name": "InlineKnob$ebnf$1", "symbols": ["InlineKnob$ebnf$1", "Inline"], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
+    {"name": "InlineKnob", "symbols": [(lexer.has("inlineKnobOpen") ? {type: "inlineKnobOpen"} : inlineKnobOpen), "InlineKnob$ebnf$1", (lexer.has("inlineKnobClose") ? {type: "inlineKnobClose"} : inlineKnobClose)], "postprocess": ([ { value }, inlines ]) => ({ kind: "InlineKnob", index: parseInt(value), inlines: trimArray(inlines) })},
+    {"name": "ButtonKnob$ebnf$1", "symbols": ["Inline"]},
+    {"name": "ButtonKnob$ebnf$1", "symbols": ["ButtonKnob$ebnf$1", "Inline"], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
+    {"name": "ButtonKnob", "symbols": [(lexer.has("buttonKnobOpen") ? {type: "buttonKnobOpen"} : buttonKnobOpen), "ButtonKnob$ebnf$1", (lexer.has("buttonKnobClose") ? {type: "buttonKnobClose"} : buttonKnobClose)], "postprocess": ([ { value }, inlines ]) => ({ kind: "ButtonKnob", index: parseInt(value), inlines: trimArray(inlines) })},
+    {"name": "ActionDefinition$ebnf$1", "symbols": [(lexer.has("allSpaces") ? {type: "allSpaces"} : allSpaces)], "postprocess": id},
+    {"name": "ActionDefinition$ebnf$1", "symbols": [], "postprocess": function(d) {return null;}},
+    {"name": "ActionDefinition$ebnf$2", "symbols": [(lexer.has("allSpaces") ? {type: "allSpaces"} : allSpaces)], "postprocess": id},
+    {"name": "ActionDefinition$ebnf$2", "symbols": [], "postprocess": function(d) {return null;}},
+    {"name": "ActionDefinition$ebnf$3", "symbols": [(lexer.has("allSpaces") ? {type: "allSpaces"} : allSpaces)], "postprocess": id},
+    {"name": "ActionDefinition$ebnf$3", "symbols": [], "postprocess": function(d) {return null;}},
+    {"name": "ActionDefinition$macrocall$2", "symbols": ["Action"]},
+    {"name": "ActionDefinition$macrocall$3$ebnf$1", "symbols": [(lexer.has("allSpaces") ? {type: "allSpaces"} : allSpaces)], "postprocess": id},
+    {"name": "ActionDefinition$macrocall$3$ebnf$1", "symbols": [], "postprocess": function(d) {return null;}},
+    {"name": "ActionDefinition$macrocall$3$ebnf$2", "symbols": [(lexer.has("allSpaces") ? {type: "allSpaces"} : allSpaces)], "postprocess": id},
+    {"name": "ActionDefinition$macrocall$3$ebnf$2", "symbols": [], "postprocess": function(d) {return null;}},
+    {"name": "ActionDefinition$macrocall$3", "symbols": ["ActionDefinition$macrocall$3$ebnf$1", {"literal":","}, "ActionDefinition$macrocall$3$ebnf$2"]},
+    {"name": "ActionDefinition$macrocall$1$ebnf$1", "symbols": []},
+    {"name": "ActionDefinition$macrocall$1$ebnf$1$subexpression$1", "symbols": ["ActionDefinition$macrocall$3", "ActionDefinition$macrocall$2"]},
+    {"name": "ActionDefinition$macrocall$1$ebnf$1", "symbols": ["ActionDefinition$macrocall$1$ebnf$1", "ActionDefinition$macrocall$1$ebnf$1$subexpression$1"], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
+    {"name": "ActionDefinition$macrocall$1", "symbols": ["ActionDefinition$macrocall$2", "ActionDefinition$macrocall$1$ebnf$1"], "postprocess": ([ first, rest ]) => [ first[0], ...rest.map(v => v[1][0]) ]},
+    {"name": "ActionDefinition$ebnf$4", "symbols": [(lexer.has("allSpaces") ? {type: "allSpaces"} : allSpaces)], "postprocess": id},
+    {"name": "ActionDefinition$ebnf$4", "symbols": [], "postprocess": function(d) {return null;}},
+    {"name": "ActionDefinition$ebnf$5", "symbols": [(lexer.has("allSpaces") ? {type: "allSpaces"} : allSpaces)], "postprocess": id},
+    {"name": "ActionDefinition$ebnf$5", "symbols": [], "postprocess": function(d) {return null;}},
+    {"name": "ActionDefinition", "symbols": ["ActionDefinition$ebnf$1", (lexer.has("actionCondition") ? {type: "actionCondition"} : actionCondition), "ActionDefinition$ebnf$2", {"literal":"{"}, "ActionDefinition$ebnf$3", "ActionDefinition$macrocall$1", "ActionDefinition$ebnf$4", {"literal":"}"}, "ActionDefinition$ebnf$5"], "postprocess":  ([ , condition,,,, actions ]) => ({
+          kind: "ActionDefinition",
+          condition,
+          actions
+        })},
+    {"name": "Action", "symbols": [(lexer.has("aPlay") ? {type: "aPlay"} : aPlay), (lexer.has("medium") ? {type: "medium"} : medium)], "postprocess": ([ , medium ]) => ({ kind: "Action", command: "play", medium: medium.value })},
+    {"name": "Action$ebnf$1", "symbols": ["Text"]},
+    {"name": "Action$ebnf$1", "symbols": ["Action$ebnf$1", "Text"], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
+    {"name": "Action", "symbols": [(lexer.has("aReplace") ? {type: "aReplace"} : aReplace), "Action$ebnf$1"], "postprocess": ([ , value ]) => ({ kind: "Action", command: "replace", value: value.join('') })},
+    {"name": "Action", "symbols": [(lexer.has("action") ? {type: "action"} : action)], "postprocess": ([ { value } ]) => ({ kind: "Action", ...value })}
 ]
   , ParserStart: "Main"
 }
@@ -13967,7 +14119,7 @@ function componentify(Component) {
 }
 exports.default = componentify;
 
-},{"./react.js":59,"./use-waml.js":62,"react":20}],26:[function(require,module,exports){
+},{"./react.js":60,"./use-waml.js":63,"react":20}],26:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -13980,7 +14132,7 @@ const Anchor = ({ node, ...props }) => react_1.default.createElement("div", { ..
 Anchor.displayName = "Anchor";
 exports.default = (0, componentify_1.default)(Anchor);
 
-},{"../componentify":25,"./inline":40,"react":20}],27:[function(require,module,exports){
+},{"../componentify":25,"./inline":41,"react":20}],27:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -14041,7 +14193,7 @@ const Audio = ({ node, onPlay, onPause, onVolumeChange, ...props }) => {
 Audio.displayName = "Audio";
 exports.default = (0, componentify_1.default)(Audio);
 
-},{"../componentify":25,"../use-waml":62,"react":20}],28:[function(require,module,exports){
+},{"../componentify":25,"../use-waml":63,"react":20}],28:[function(require,module,exports){
 "use strict";
 
 var __createBinding = void 0 && (void 0).__createBinding || (Object.create ? function (o, m, k, k2) {
@@ -14089,11 +14241,14 @@ const BuiltinStyle = ({
   children = ""
 }) => react_1.default.createElement(scoped_style_1.default, null, `
   @import "https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.css";
+  .ChoiceOptionGroup {
+    display: contents;
+  }
   ${children}
 `);
 exports.default = (0, react_1.memo)(BuiltinStyle);
 
-},{"./scoped-style":51,"react":20}],29:[function(require,module,exports){
+},{"./scoped-style":52,"react":20}],29:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -14226,7 +14381,7 @@ const ButtonBlank = ({ node, onPointerEnter, onPointerLeave, onPointerUp, ...pro
 ButtonBlank.displayName = "ButtonBlank";
 exports.default = (0, componentify_1.default)(ButtonBlank);
 
-},{"../componentify":25,"../use-waml":62,"../utility":63,"@riiid/waml":3,"react":20}],30:[function(require,module,exports){
+},{"../componentify":25,"../use-waml":63,"../utility":64,"@riiid/waml":3,"react":20}],30:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -14326,7 +14481,20 @@ const ButtonOption = ({ node, style, onPointerDown, ...props }) => {
 ButtonOption.displayName = "ButtonOption";
 exports.default = (0, componentify_1.default)(ButtonOption);
 
-},{"../componentify":25,"../use-waml":62,"react":20}],31:[function(require,module,exports){
+},{"../componentify":25,"../use-waml":63,"react":20}],31:[function(require,module,exports){
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const react_1 = __importDefault(require("react"));
+const componentify_1 = __importDefault(require("../componentify"));
+const inline_1 = __importDefault(require("./inline"));
+const ChoiceOptionGroup = ({ node, ...props }) => react_1.default.createElement("div", { ...props }, node.map((v, i) => react_1.default.createElement(inline_1.default, { key: i, node: v })));
+ChoiceOptionGroup.displayName = "ChoiceOptionGroup";
+exports.default = (0, componentify_1.default)(ChoiceOptionGroup);
+
+},{"../componentify":25,"./inline":41,"react":20}],32:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -14368,7 +14536,7 @@ const ChoiceOptionLine = ({ node, style, ...props }) => {
 ChoiceOptionLine.displayName = "ChoiceOptionLine";
 exports.default = (0, componentify_1.default)(ChoiceOptionLine);
 
-},{"../componentify":25,"./choice-option":32,"./inline":40,"react":20}],32:[function(require,module,exports){
+},{"../componentify":25,"./choice-option":33,"./inline":41,"react":20}],33:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -14416,7 +14584,7 @@ const ChoiceOption = ({ node, onInteract, ...props }) => {
 ChoiceOption.displayName = "ChoiceOption";
 exports.default = (0, componentify_1.default)(ChoiceOption);
 
-},{"../componentify":25,"../use-waml":62,"react":20}],33:[function(require,module,exports){
+},{"../componentify":25,"../use-waml":63,"react":20}],34:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -14440,7 +14608,7 @@ const DebugConsole = ({ document }) => {
 };
 exports.default = DebugConsole;
 
-},{"../use-waml":62,"react":20}],34:[function(require,module,exports){
+},{"../use-waml":63,"react":20}],35:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -14527,7 +14695,7 @@ class WAMLErrorBoundary extends react_1.Component {
     }
 }
 
-},{"../componentify":25,"../use-waml":62,"../waml-error":64,"./isoprefixed-line-group-renderer":41,"./semantic-error-handler":52,"@riiid/waml":3,"react":20}],35:[function(require,module,exports){
+},{"../componentify":25,"../use-waml":63,"../waml-error":65,"./isoprefixed-line-group-renderer":42,"./semantic-error-handler":53,"@riiid/waml":3,"react":20}],36:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -14543,7 +14711,7 @@ const FigureCaption = ({ node, ...props }) => {
 FigureCaption.displayName = "FigureCaption";
 exports.default = (0, componentify_1.default)(FigureCaption);
 
-},{"../componentify":25,"./inline":40,"react":20}],36:[function(require,module,exports){
+},{"../componentify":25,"./inline":41,"react":20}],37:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -14559,7 +14727,7 @@ const FigureTitle = ({ node, ...props }) => {
 FigureTitle.displayName = "FigureTitle";
 exports.default = (0, componentify_1.default)(FigureTitle);
 
-},{"../componentify":25,"./inline":40,"react":20}],37:[function(require,module,exports){
+},{"../componentify":25,"./inline":41,"react":20}],38:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -14572,7 +14740,7 @@ const Footnote = ({ node, ...props }) => react_1.default.createElement("div", { 
 Footnote.displayName = "Footnote";
 exports.default = (0, componentify_1.default)(Footnote);
 
-},{"../componentify":25,"./inline":40,"react":20}],38:[function(require,module,exports){
+},{"../componentify":25,"./inline":41,"react":20}],39:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -14584,7 +14752,7 @@ const HR = ({ node, ...props }) => react_1.default.createElement("hr", { ...prop
 HR.displayName = "HR";
 exports.default = (0, componentify_1.default)(HR);
 
-},{"../componentify":25,"react":20}],39:[function(require,module,exports){
+},{"../componentify":25,"react":20}],40:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -14600,7 +14768,7 @@ const Image = ({ node, ...props }) => {
 Image.displayName = "Image";
 exports.default = (0, componentify_1.default)(Image);
 
-},{"../componentify":25,"../use-waml":62,"react":20}],40:[function(require,module,exports){
+},{"../componentify":25,"../use-waml":63,"react":20}],41:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -14608,6 +14776,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const waml_1 = require("@riiid/waml");
 const react_latex_next_1 = __importDefault(require("react-latex-next"));
+const react_1 = __importDefault(require("react"));
 const componentify_1 = __importDefault(require("../componentify"));
 const choice_option_1 = __importDefault(require("./choice-option"));
 const short_lingual_option_1 = __importDefault(require("./short-lingual-option"));
@@ -14618,7 +14787,7 @@ const audio_1 = __importDefault(require("./audio"));
 const button_option_1 = __importDefault(require("./button-option"));
 const table_1 = __importDefault(require("./table"));
 const pairing_option_group_1 = __importDefault(require("./pairing-option-group"));
-const react_1 = __importDefault(require("react"));
+const choice_option_group_1 = __importDefault(require("./choice-option-group"));
 const Inline = ({ node }) => {
     if (typeof node === "string") {
         return node;
@@ -14646,14 +14815,18 @@ const Inline = ({ node }) => {
                     return react_1.default.createElement("i", null, $inlines);
                 case "strikethrough":
                     return react_1.default.createElement("s", null, $inlines);
+                default: throw Error(`Unhandled style: ${node.style}`);
             }
         }
         case "XMLElement":
             switch (node.tag) {
+                case "cog":
+                    return react_1.default.createElement(choice_option_group_1.default, { node: node.content });
                 case "pog":
                     return react_1.default.createElement(pairing_option_group_1.default, { node: node.content });
                 case "table":
                     return react_1.default.createElement(table_1.default, { node: node });
+                default: throw Error(`Unhandled tag: ${node.tag}`);
             }
         case "Math":
             return react_1.default.createElement(react_latex_next_1.default, null, `$${node.content}$`);
@@ -14672,7 +14845,7 @@ const Inline = ({ node }) => {
 Inline.displayName = "Inline";
 exports.default = (0, componentify_1.default)(Inline);
 
-},{"../componentify":25,"./audio":27,"./button-blank":29,"./button-option":30,"./choice-option":32,"./image":39,"./pairing-option-group":47,"./short-lingual-option":53,"./table":55,"./video":56,"@riiid/waml":3,"react":20,"react-latex-next":17}],41:[function(require,module,exports){
+},{"../componentify":25,"./audio":27,"./button-blank":29,"./button-option":30,"./choice-option":33,"./choice-option-group":31,"./image":40,"./pairing-option-group":48,"./short-lingual-option":54,"./table":56,"./video":57,"@riiid/waml":3,"react":20,"react-latex-next":17}],42:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -14727,7 +14900,7 @@ function getIsoprefixedLineGroups(lines, depth = 0) {
     return R;
 }
 
-},{"./line":43,"./prefixed-line":50,"@riiid/waml":3,"react":20}],42:[function(require,module,exports){
+},{"./line":44,"./prefixed-line":51,"@riiid/waml":3,"react":20}],43:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -14794,7 +14967,7 @@ const LineComponent = ({ node, ...props }) => {
 LineComponent.displayName = "LineComponent";
 exports.default = (0, componentify_1.default)(LineComponent);
 
-},{"../componentify":25,"./anchor":26,"./choice-option-line":31,"./figure-caption":35,"./figure-title":36,"./footnote":37,"./hr":38,"./inline":40,"./long-lingual-option":44,"./passage":49,"./short-lingual-option":53,"@riiid/waml":3,"react":20,"react-latex-next":17}],43:[function(require,module,exports){
+},{"../componentify":25,"./anchor":26,"./choice-option-line":32,"./figure-caption":36,"./figure-title":37,"./footnote":38,"./hr":39,"./inline":41,"./long-lingual-option":45,"./passage":50,"./short-lingual-option":54,"@riiid/waml":3,"react":20,"react-latex-next":17}],44:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -14827,7 +15000,7 @@ const Line = ({ node, next, ...props }) => {
 Line.displayName = "Line";
 exports.default = (0, componentify_1.default)(Line);
 
-},{"../componentify":25,"../use-waml":62,"./line-component":42,"@riiid/waml":3,"react":20}],44:[function(require,module,exports){
+},{"../componentify":25,"../use-waml":63,"./line-component":43,"@riiid/waml":3,"react":20}],45:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -14847,7 +15020,7 @@ const LongLingualOption = ({ node, ...props }) => {
 LongLingualOption.displayName = "LongLingualOption";
 exports.default = (0, componentify_1.default)(LongLingualOption);
 
-},{"../componentify":25,"../use-waml":62,"react":20}],45:[function(require,module,exports){
+},{"../componentify":25,"../use-waml":63,"react":20}],46:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -14927,7 +15100,7 @@ const PairingLine = ({ node, from, to, onClick, style, ...props }) => {
 PairingLine.displayName = "PairingLine";
 exports.default = (0, componentify_1.default)(PairingLine);
 
-},{"../componentify":25,"../use-waml":62,"@riiid/waml":3,"react":20}],46:[function(require,module,exports){
+},{"../componentify":25,"../use-waml":63,"@riiid/waml":3,"react":20}],47:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -14985,7 +15158,7 @@ const PairingLines = () => {
 };
 exports.default = (0, react_1.memo)(PairingLines);
 
-},{"../use-waml":62,"./pairing-line":45,"react":20}],47:[function(require,module,exports){
+},{"../use-waml":63,"./pairing-line":46,"react":20}],48:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -14998,7 +15171,7 @@ const PairingOptionGroup = ({ node, ...props }) => react_1.default.createElement
 PairingOptionGroup.displayName = "PairingOptionGroup";
 exports.default = (0, componentify_1.default)(PairingOptionGroup);
 
-},{"../componentify":25,"./pairing-option":48,"react":20}],48:[function(require,module,exports){
+},{"../componentify":25,"./pairing-option":49,"react":20}],49:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -15102,7 +15275,7 @@ const PairingOption = ({ node, onClick, ...props }) => {
 PairingOption.displayName = "PairingOption";
 exports.default = (0, componentify_1.default)(PairingOption);
 
-},{"../componentify":25,"../use-waml":62,"./inline":40,"@riiid/waml":3,"react":20}],49:[function(require,module,exports){
+},{"../componentify":25,"../use-waml":63,"./inline":41,"@riiid/waml":3,"react":20}],50:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -15148,7 +15321,7 @@ const Passage = ({ node, fallback, defaultValue, onChange, ...props }) => {
 Passage.displayName = "Passage";
 exports.default = (0, componentify_1.default)(Passage);
 
-},{"..":57,"../componentify":25,"../use-waml":62,"react":20}],50:[function(require,module,exports){
+},{"..":58,"../componentify":25,"../use-waml":63,"react":20}],51:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -15206,7 +15379,7 @@ const PrefixedLine = ({ node, type, depth, className, ...props }) => {
 PrefixedLine.displayName = "PrefixedLine";
 exports.default = (0, componentify_1.default)(PrefixedLine);
 
-},{"../componentify":25,"../react":59,"../use-waml":62,"./isoprefixed-line-group-renderer":41,"react":20}],51:[function(require,module,exports){
+},{"../componentify":25,"../react":60,"../use-waml":63,"./isoprefixed-line-group-renderer":42,"react":20}],52:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -15225,7 +15398,7 @@ const ScopedStyle = ({ children }) => {
 };
 exports.default = (0, react_2.memo)(ScopedStyle);
 
-},{"react":20}],52:[function(require,module,exports){
+},{"react":20}],53:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -15237,7 +15410,7 @@ const SemanticErrorHandler = ({ node, ...props }) => react_1.default.createEleme
 SemanticErrorHandler.displayName = "SemanticErrorHandler";
 exports.default = (0, componentify_1.default)(SemanticErrorHandler);
 
-},{"../componentify":25,"react":20}],53:[function(require,module,exports){
+},{"../componentify":25,"react":20}],54:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -15257,7 +15430,7 @@ const ShortLingualOption = ({ node, inline, ...props }) => {
 ShortLingualOption.displayName = "ShortLingualOption";
 exports.default = (0, componentify_1.default)(ShortLingualOption);
 
-},{"../componentify":25,"../use-waml":62,"react":20}],54:[function(require,module,exports){
+},{"../componentify":25,"../use-waml":63,"react":20}],55:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -15272,7 +15445,7 @@ const SyntaxErrorHandler = ({ node, ...props }) => {
 SyntaxErrorHandler.displayName = "SyntaxErrorHandler";
 exports.default = (0, componentify_1.default)(SyntaxErrorHandler);
 
-},{"../componentify":25,"react":20}],55:[function(require,module,exports){
+},{"../componentify":25,"react":20}],56:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -15351,7 +15524,7 @@ const Table = ({ node, style, className, ...props }) => {
 Table.displayName = "Table";
 exports.default = (0, componentify_1.default)(Table);
 
-},{"../componentify":25,"../react":59,"../waml-error":64,"./document":34,"@riiid/waml":3,"react":20}],56:[function(require,module,exports){
+},{"../componentify":25,"../react":60,"../waml-error":65,"./document":35,"@riiid/waml":3,"react":20}],57:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -15412,7 +15585,7 @@ const Video = ({ node, onPlay, onPause, onVolumeChange, ...props }) => {
 Video.displayName = "Video";
 exports.default = (0, componentify_1.default)(Video);
 
-},{"../componentify":25,"../use-waml":62,"react":20}],57:[function(require,module,exports){
+},{"../componentify":25,"../use-waml":63,"react":20}],58:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -15511,7 +15684,7 @@ const WAMLViewer = ({ waml, middlewares = defaultMiddlewares, options = defaultO
 exports.default = WAMLViewer;
 __exportStar(require("./types"), exports);
 
-},{"./components/builtin-style":28,"./components/debug-console":33,"./components/document":34,"./components/pairing-lines":46,"./components/scoped-style":51,"./components/syntax-error-handler":54,"./types":61,"./use-waml":62,"@riiid/waml":3,"react":20,"react-dom":16}],58:[function(require,module,exports){
+},{"./components/builtin-style":28,"./components/debug-console":34,"./components/document":35,"./components/pairing-lines":47,"./components/scoped-style":52,"./components/syntax-error-handler":55,"./types":62,"./use-waml":63,"@riiid/waml":3,"react":20,"react-dom":16}],59:[function(require,module,exports){
 "use strict";
 var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (receiver, state, kind, f) {
     if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
@@ -15651,7 +15824,7 @@ function unflattenAnswer(answer) {
 }
 exports.unflattenAnswer = unflattenAnswer;
 
-},{"@riiid/waml":3}],59:[function(require,module,exports){
+},{"@riiid/waml":3}],60:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.C = void 0;
@@ -15661,7 +15834,7 @@ function C(...args) {
 }
 exports.C = C;
 
-},{}],60:[function(require,module,exports){
+},{}],61:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -15713,11 +15886,11 @@ const TestPage = () => {
 };
 react_dom_1.default.render(react_1.default.createElement(TestPage, null), document.querySelector("#stage"));
 
-},{".":57,"react":20,"react-dom":16}],61:[function(require,module,exports){
+},{".":58,"react":20,"react-dom":16}],62:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 
-},{}],62:[function(require,module,exports){
+},{}],63:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -15951,7 +16124,7 @@ const WAMLProvider = ({ document, options, defaultValue, value, onChange, onInte
 };
 exports.WAMLProvider = WAMLProvider;
 
-},{"./interaction-token.js":58,"@riiid/waml":3,"react":20}],63:[function(require,module,exports){
+},{"./interaction-token.js":59,"@riiid/waml":3,"react":20}],64:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getIntersection = void 0;
@@ -15964,7 +16137,7 @@ function getIntersection(a, b) {
 }
 exports.getIntersection = getIntersection;
 
-},{}],64:[function(require,module,exports){
+},{}],65:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.NOT_YET_IMPLEMENTED = void 0;
@@ -15977,4 +16150,4 @@ class WAMLError extends Error {
 exports.default = WAMLError;
 exports.NOT_YET_IMPLEMENTED = new WAMLError("Not yet implemented");
 
-},{}]},{},[60]);
+},{}]},{},[61]);
