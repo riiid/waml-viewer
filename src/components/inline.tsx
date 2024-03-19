@@ -13,6 +13,8 @@ import ButtonOption from "./button-option";
 import Table from "./table";
 import PairingOptionGroup from "./pairing-option-group";
 import ChoiceOptionGroup from "./choice-option-group";
+import InlineKnob from "./inline-knob";
+import ButtonKnob from "./button-knob";
 
 const Inline:WAMLComponent<'Inline'> = ({ node }) => {
   if(typeof node === "string"){
@@ -53,7 +55,7 @@ const Inline:WAMLComponent<'Inline'> = ({ node }) => {
           return <PairingOptionGroup node={node.content} />;
         case "table":
           return <Table node={node} />;
-        default: throw Error(`Unhandled tag: ${node.tag}`);
+        default: throw Error(`Unhandled tag: ${JSON.stringify(node)}`);
       }
     case "Math":
       return <Latex>{`$${node.content}$`}</Latex>;
@@ -71,6 +73,10 @@ const Inline:WAMLComponent<'Inline'> = ({ node }) => {
           ))}
         </span>
       );
+    case "InlineKnob":
+      return <InlineKnob node={node} />;
+    case "ButtonKnob":
+      return <ButtonKnob node={node} />;
     default:
   }
   throw Error(`Unhandled inline node: ${JSON.stringify(node)}`);

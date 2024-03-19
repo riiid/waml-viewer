@@ -6,6 +6,7 @@ type WAMLComponentMap = {
     'Anchor': WAML.Anchor;
     'Audio': WAML.MooToken<'medium'>;
     'ButtonBlank': WAML.MooToken<'buttonBlank'>;
+    'ButtonKnob': WAML.ButtonKnob;
     'ButtonOption': WAML.ButtonOption;
     'ChoiceOption': WAML.ChoiceOption;
     'ChoiceOptionGroup': WAML.Inline[];
@@ -19,6 +20,7 @@ type WAMLComponentMap = {
     'HR': WAML.MooToken<'hr'>;
     'Image': WAML.MooToken<'medium'>;
     'Inline': WAML.Inline;
+    'InlineKnob': WAML.InlineKnob;
     'Line': WAML.Line;
     'LineComponent': WAML.LineComponent;
     'LongLingualOption': WAML.MooToken<'longLingualOption'>;
@@ -132,4 +134,7 @@ export type WAMLUserInteraction = {
 }[keyof CustomUserInteractionTable]);
 export interface CustomUserInteractionTable {
 }
+export type WAMLAction = Exclude<WAML.Action, {
+    command: "set" | "replace";
+}>;
 export {};

@@ -17,6 +17,8 @@ const button_option_1 = __importDefault(require("./button-option"));
 const table_1 = __importDefault(require("./table"));
 const pairing_option_group_1 = __importDefault(require("./pairing-option-group"));
 const choice_option_group_1 = __importDefault(require("./choice-option-group"));
+const inline_knob_1 = __importDefault(require("./inline-knob"));
+const button_knob_1 = __importDefault(require("./button-knob"));
 const Inline = ({ node }) => {
     if (typeof node === "string") {
         return node;
@@ -55,7 +57,7 @@ const Inline = ({ node }) => {
                     return react_1.default.createElement(pairing_option_group_1.default, { node: node.content });
                 case "table":
                     return react_1.default.createElement(table_1.default, { node: node });
-                default: throw Error(`Unhandled tag: ${node.tag}`);
+                default: throw Error(`Unhandled tag: ${JSON.stringify(node)}`);
             }
         case "Math":
             return react_1.default.createElement(react_latex_next_1.default, null, `$${node.content}$`);
@@ -67,6 +69,10 @@ const Inline = ({ node }) => {
             return react_1.default.createElement(short_lingual_option_1.default, { node: node, inline: true });
         case "ClassedInline":
             return (react_1.default.createElement("span", { className: node.name }, node.inlines.map((v, i) => (react_1.default.createElement(Inline, { key: i, node: v })))));
+        case "InlineKnob":
+            return react_1.default.createElement(inline_knob_1.default, { node: node });
+        case "ButtonKnob":
+            return react_1.default.createElement(button_knob_1.default, { node: node });
         default:
     }
     throw Error(`Unhandled inline node: ${JSON.stringify(node)}`);

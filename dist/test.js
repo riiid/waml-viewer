@@ -35,6 +35,12 @@ const TestPage = () => {
     const [explanationWrapper, setExplanationWrapper] = (0, react_1.useState)(null);
     const [x, setX] = (0, react_1.useState)();
     const handleChange = (0, react_1.useCallback)(e => setWAML(e.currentTarget.value), []);
+    const handleKnobAction = (0, react_1.useCallback)((e) => {
+        console.log("WAML Action", e);
+        if (e.command === "play") {
+            window.open(e.medium.uri);
+        }
+    }, []);
     return react_1.default.createElement(react_1.default.Fragment, null,
         react_1.default.createElement("textarea", { value: waml, onChange: handleChange }),
         explanationWrapper && react_1.default.createElement(_1.default, { key: waml, waml: waml, options: {
@@ -44,7 +50,7 @@ const TestPage = () => {
                 ChoiceOption: {
                     getter: node => ({ 'data-value': node.value })
                 }
-            }, value: x, onChange: value => setX(value), onInteract: e => console.log("WAML Interaction", e) }),
+            }, value: x, onChange: value => setX(value), onInteract: e => console.log("WAML Interaction", e), onKnobAction: handleKnobAction }),
         react_1.default.createElement("aside", { ref: setExplanationWrapper }));
 };
 react_dom_1.default.render(react_1.default.createElement(TestPage, null), document.querySelector("#stage"));

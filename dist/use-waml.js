@@ -38,7 +38,7 @@ const useWAML = (invokingInteractionToken) => {
 };
 const debouncingInterval = 500;
 exports.default = useWAML;
-const WAMLProvider = ({ document, options, defaultValue, value, onChange, onInteract, children }) => {
+const WAMLProvider = ({ document, options, defaultValue, value, onChange, onInteract, onKnobAction, children }) => {
     const $renderingVariables = (0, react_1.useRef)({
         pendingAnswer: null,
         pendingClasses: [],
@@ -51,6 +51,7 @@ const WAMLProvider = ({ document, options, defaultValue, value, onChange, onInte
     const $debouncedInteractions = (0, react_1.useRef)({});
     const [uncontrolledValue, setUncontrolledValue] = (0, react_1.useState)(defaultValue);
     const [draggingObject, setDraggingObject] = (0, react_1.useState)(null);
+    const [knobProperties, setKnobProperties] = (0, react_1.useState)({});
     const flatValue = (0, react_1.useMemo)(() => uncontrolledValue ? (0, interaction_token_js_1.flattenAnswer)(uncontrolledValue) : [], [uncontrolledValue]);
     const buttonOptionState = (0, react_1.useMemo)(() => {
         var _a, _b;
@@ -156,11 +157,84 @@ const WAMLProvider = ({ document, options, defaultValue, value, onChange, onInte
             }
         };
     }, [document, flatValue]);
+    const actionScripts = (0, react_1.useMemo)(() => {
+        var _a;
+        var _b;
+        if ('error' in document)
+            return {};
+        const R = {};
+        for (const v of document.raw) {
+            if ((0, waml_1.hasKind)(v, 'XMLElement') && v.tag === "action") {
+                (_a = R[_b = v.index]) !== null && _a !== void 0 ? _a : (R[_b] = []);
+                R[v.index].push(...v.content);
+            }
+        }
+        return R;
+    }, [document]);
+    const executeActionScript = (0, react_1.useCallback)((index, script) => {
+        for (const v of script.actions) {
+            switch (v.command) {
+                case "set":
+                    setKnobProperties(prev => {
+                        var _a;
+                        const target = (_a = v.index) !== null && _a !== void 0 ? _a : index;
+                        const next = { ...prev };
+                        switch (v.value) {
+                            case "activated":
+                                next[target].activated = true;
+                                break;
+                            case "inactivated":
+                                next[target].activated = false;
+                                break;
+                            case "enabled":
+                                next[target].enabled = true;
+                                break;
+                            case "disabled":
+                                next[target].enabled = false;
+                                break;
+                            default: throw Error(`Unhandled set value: ${JSON.stringify(v)}`);
+                        }
+                        return next;
+                    });
+                    break;
+                case "replace":
+                    setKnobProperties(prev => {
+                        const next = { ...prev };
+                        next[index].contentOverride = v.value;
+                        return next;
+                    });
+                    break;
+                default: onKnobAction === null || onKnobAction === void 0 ? void 0 : onKnobAction(v);
+            }
+        }
+    }, [onKnobAction]);
     (0, react_1.useEffect)(() => {
         if (!value)
             return;
         setUncontrolledValue(value);
     }, [value]);
+    (0, react_1.useEffect)(() => {
+        const onLoadScripts = [];
+        setKnobProperties(() => {
+            const R = {};
+            for (const [k, v] of Object.entries(actionScripts)) {
+                const index = parseInt(k);
+                R[index] = {
+                    enabled: true,
+                    activated: false
+                };
+                for (const w of v) {
+                    if (w.condition.value === "onLoad") {
+                        onLoadScripts.push(() => executeActionScript(index, w));
+                    }
+                }
+            }
+            return R;
+        });
+        for (const v of onLoadScripts) {
+            v();
+        }
+    }, [actionScripts, executeActionScript]);
     const R = (0, react_1.useMemo)(() => ({
         checkButtonOptionUsed: node => {
             var _a, _b;
@@ -182,7 +256,15 @@ const WAMLProvider = ({ document, options, defaultValue, value, onChange, onInte
             return candidates[candidates.length - (((_a = $renderingVariables.current.buttonOptionUsed[value]) === null || _a === void 0 ? void 0 : _a.length) || 1)];
         },
         getComponentOptions: type => options[type],
+        getKnobProperty: index => knobProperties[index] || { activated: false, enabled: true },
         getURL: options.uriResolver || (uri => uri),
+        handleKnobClick: (index) => {
+            for (const v of actionScripts[index] || []) {
+                if (v.condition.value === "onClick") {
+                    executeActionScript(index, v);
+                }
+            }
+        },
         interactionToken: null,
         invokeInteractionToken: id => {
             let index = $renderingVariables.current.interactionTokenIndex[id];
@@ -196,6 +278,7 @@ const WAMLProvider = ({ document, options, defaultValue, value, onChange, onInte
             }
             return r;
         },
+        knobProperties,
         logInteraction: (e, debounceable) => {
             var _a;
             const now = Date.now();
@@ -226,7 +309,7 @@ const WAMLProvider = ({ document, options, defaultValue, value, onChange, onInte
             onChange === null || onChange === void 0 ? void 0 : onChange(nextAnswer);
         },
         value: uncontrolledValue
-    }), [buttonOptionState, document, draggingObject, flatValue, interactionTokens, onChange, onInteract, options, pairing, uncontrolledValue]);
+    }), [actionScripts, buttonOptionState, document, draggingObject, executeActionScript, flatValue, interactionTokens, knobProperties, onChange, onInteract, options, pairing, uncontrolledValue]);
     return react_1.default.createElement(context.Provider, { value: R }, children);
 };
 exports.WAMLProvider = WAMLProvider;

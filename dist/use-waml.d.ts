@@ -1,6 +1,6 @@
 import type { WAMLDocument } from "@riiid/waml";
 import { WAML } from "@riiid/waml";
-import type { FCWithChildren, WAMLComponentType, WAMLUserInteraction, WAMLViewerOptions } from "./types.js";
+import type { FCWithChildren, WAMLAction, WAMLComponentType, WAMLUserInteraction, WAMLViewerOptions } from "./types.js";
 import InteractionToken, { flattenAnswer } from "./interaction-token.js";
 type SplittedFormOf<T extends string> = T extends `${infer A}${infer B}` ? B extends "" ? [A] : [A, ...SplittedFormOf<B>] : [];
 type FirstLetterOf<T extends string> = SplittedFormOf<T>[0];
@@ -11,12 +11,18 @@ type DraggingObject = {
     'currentTarget': HTMLElement;
     'callback'?: (token: InteractionToken) => void;
 };
+type KnobProperty = {
+    'enabled': boolean;
+    'activated': boolean;
+    'contentOverride'?: string;
+};
 type Context = {
     'commonOptions': {
         [key in keyof WAMLViewerOptions as FirstLetterOf<key> extends Lowercase<FirstLetterOf<key>> ? key : never]: WAMLViewerOptions[key];
     };
     'draggingObject': DraggingObject | null;
     'interactionToken': InteractionToken;
+    'knobProperties': Record<number, KnobProperty>;
     'metadata': WAML.Metadata;
     'pairing': {
         'pairedVertices': Record<string, Array<{
@@ -45,7 +51,9 @@ type Context = {
     'checkButtonOptionUsed': (node: WAML.ButtonOption) => boolean;
     'getButtonOptionByValue': (value: string) => WAML.ButtonOption | null;
     'getComponentOptions': <T extends WAMLComponentType>(type: T) => WAMLViewerOptions[T];
+    'getKnobProperty': (index: number) => KnobProperty;
     'getURL': (uri: string) => string;
+    'handleKnobClick': (index: number) => void;
     'invokeInteractionToken': (id: string) => InteractionToken;
     'logInteraction': (e: WAMLUserInteraction, debounceable?: boolean) => void;
     'setDraggingObject': (value: DraggingObject | null) => void;
@@ -58,6 +66,7 @@ type Props = {
     'value'?: WAML.Answer;
     'onChange'?: (value: WAML.Answer) => void;
     'onInteract'?: (e: WAMLUserInteraction) => void;
+    'onKnobAction'?: (e: WAMLAction) => void;
 };
 declare const useWAML: (invokingInteractionToken?: boolean) => Context;
 export default useWAML;

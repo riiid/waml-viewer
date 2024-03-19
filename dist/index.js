@@ -30,7 +30,7 @@ const use_waml_1 = require("./use-waml");
 const pairing_lines_1 = __importDefault(require("./components/pairing-lines"));
 const defaultOptions = {};
 const defaultMiddlewares = [];
-const WAMLViewer = ({ waml, middlewares = defaultMiddlewares, options = defaultOptions, bare, defaultValue, value, onChange, onInteract, children, ...props }) => {
+const WAMLViewer = ({ waml, middlewares = defaultMiddlewares, options = defaultOptions, bare, defaultValue, value, onChange, onInteract, onKnobAction, children, ...props }) => {
     const document = (0, react_1.useMemo)(() => {
         try {
             const R = typeof waml === "string" ? new waml_1.WAMLDocument(waml) : waml;
@@ -83,7 +83,7 @@ const WAMLViewer = ({ waml, middlewares = defaultMiddlewares, options = defaultO
     }
     return react_2.default.createElement("article", { ...props },
         react_2.default.createElement(builtin_style_1.default, null, options.builtinCSS),
-        react_2.default.createElement(use_waml_1.WAMLProvider, { document: document, options: options, value: value, defaultValue: defaultValue, onChange: onChange, onInteract: onInteract },
+        react_2.default.createElement(use_waml_1.WAMLProvider, { document: document, options: options, value: value, defaultValue: defaultValue, onChange: onChange, onInteract: onInteract, onKnobAction: onKnobAction },
             styles.map((v, i) => (react_2.default.createElement(scoped_style_1.default, { key: i }, v))),
             react_2.default.createElement(document_1.default, { node: document.raw, style: { position: "relative" } },
                 react_2.default.createElement(pairing_lines_1.default, null)),

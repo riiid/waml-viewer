@@ -9,6 +9,7 @@ type WAMLComponentMap = {
   'Anchor': WAML.Anchor,
   'Audio': WAML.MooToken<'medium'>,
   'ButtonBlank': WAML.MooToken<'buttonBlank'>,
+  'ButtonKnob': WAML.ButtonKnob,
   'ButtonOption': WAML.ButtonOption,
   'ChoiceOption': WAML.ChoiceOption,
   'ChoiceOptionGroup': WAML.Inline[],
@@ -20,6 +21,7 @@ type WAMLComponentMap = {
   'HR': WAML.MooToken<'hr'>,
   'Image': WAML.MooToken<'medium'>,
   'Inline': WAML.Inline,
+  'InlineKnob': WAML.InlineKnob,
   'Line': WAML.Line,
   'LineComponent': WAML.LineComponent,
   'LongLingualOption': WAML.MooToken<'longLingualOption'>,
@@ -114,3 +116,5 @@ export type WAMLUserInteraction = {
 }[keyof CustomUserInteractionTable]);
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface CustomUserInteractionTable{}
+// 이 라이브러리 쓰는 쪽에서 WAML에 접근하지 않아도 되도록 하기 위함
+export type WAMLAction = Exclude<WAML.Action, { command: "set"|"replace" }>;

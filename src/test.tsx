@@ -2,6 +2,7 @@ import type { ChangeEventHandler, FC } from "react";
 import React, { useCallback, useState } from "react";
 import ReactDOM from "react-dom";
 import type { WAML } from "@riiid/waml";
+import type { WAMLAction } from ".";
 import WAMLViewer from ".";
 
 const TestPage:FC = () => {
@@ -14,6 +15,12 @@ const TestPage:FC = () => {
     e => setWAML(e.currentTarget.value),
     []
   );
+  const handleKnobAction = useCallback((e:WAMLAction) => {
+    console.log("WAML Action", e);
+    if(e.command === "play"){
+      window.open(e.medium.uri);
+    }
+  }, []);
 
   return <>
     <textarea value={waml} onChange={handleChange} />
@@ -31,6 +38,7 @@ const TestPage:FC = () => {
       value={x}
       onChange={value => setX(value)}
       onInteract={e => console.log("WAML Interaction", e)}
+      onKnobAction={handleKnobAction}
     />}
     <aside ref={setExplanationWrapper} />
   </>;

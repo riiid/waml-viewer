@@ -1,7 +1,7 @@
-import React, { createContext, useContext, useEffect, useId, useMemo, useRef, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useId, useMemo, useRef, useState } from "react";
 import type { WAMLDocument } from "@riiid/waml";
-import { WAML } from "@riiid/waml";
-import type { FCWithChildren, WAMLComponentType, WAMLUserInteraction, WAMLViewerOptions } from "./types.js";
+import { WAML, hasKind } from "@riiid/waml";
+import type { FCWithChildren, WAMLAction, WAMLComponentType, WAMLUserInteraction, WAMLViewerOptions } from "./types.js";
 import InteractionToken, { flattenAnswer, unflattenAnswer } from "./interaction-token.js";
 
 type SplittedFormOf<T extends string> = T extends `${infer A}${infer B}`
@@ -18,6 +18,11 @@ type DraggingObject = {
   'currentTarget': HTMLElement,
   'callback'?: (token:InteractionToken) => void
 };
+type KnobProperty = {
+  'enabled': boolean,
+  'activated': boolean,
+  'contentOverride'?: string
+};
 
 type Context = {
   'commonOptions': {
@@ -25,6 +30,7 @@ type Context = {
   },
   'draggingObject': DraggingObject|null,
   'interactionToken': InteractionToken,
+  'knobProperties': Record<number, KnobProperty>,
   'metadata': WAML.Metadata,
   'pairing': {
     'pairedVertices': Record<string, Array<{netIndex: number}&({from: string}|{to: string})>>,
@@ -48,7 +54,9 @@ type Context = {
   'checkButtonOptionUsed': (node:WAML.ButtonOption) => boolean,
   'getButtonOptionByValue': (value:string) => WAML.ButtonOption|null,
   'getComponentOptions': <T extends WAMLComponentType>(type:T) => WAMLViewerOptions[T],
+  'getKnobProperty': (index:number) => KnobProperty,
   'getURL': (uri:string) => string,
+  'handleKnobClick': (index:number) => void,
   'invokeInteractionToken': (id:string) => InteractionToken,
   'logInteraction': (e:WAMLUserInteraction, debounceable?:boolean) => void,
   'setDraggingObject': (value:DraggingObject|null) => void,
@@ -60,7 +68,8 @@ type Props = {
   'defaultValue'?: WAML.Answer,
   'value'?: WAML.Answer,
   'onChange'?: (value:WAML.Answer) => void,
-  'onInteract'?: (e:WAMLUserInteraction) => void
+  'onInteract'?: (e:WAMLUserInteraction) => void,
+  'onKnobAction'?: (e:WAMLAction) => void
 };
 
 const context = createContext<Context>(null!);
@@ -76,7 +85,7 @@ const useWAML = (invokingInteractionToken?:boolean) => {
 const debouncingInterval = 500;
 
 export default useWAML;
-export const WAMLProvider:FCWithChildren<Props> = ({ document, options, defaultValue, value, onChange, onInteract, children }) => {
+export const WAMLProvider:FCWithChildren<Props> = ({ document, options, defaultValue, value, onChange, onInteract, onKnobAction, children }) => {
   const $renderingVariables = useRef<Context['renderingVariables']>({
     pendingAnswer: null,
     pendingClasses: [],
@@ -89,6 +98,7 @@ export const WAMLProvider:FCWithChildren<Props> = ({ document, options, defaultV
   const $debouncedInteractions = useRef<Record<string, WAMLUserInteraction>>({});
   const [ uncontrolledValue, setUncontrolledValue ] = useState(defaultValue);
   const [ draggingObject, setDraggingObject ] = useState<DraggingObject|null>(null);
+  const [ knobProperties, setKnobProperties ] = useState<Record<number, KnobProperty>>({});
 
   const flatValue = useMemo(() => uncontrolledValue ? flattenAnswer(uncontrolledValue) : [], [ uncontrolledValue ]);
   const buttonOptionState = useMemo(() => {
@@ -194,11 +204,77 @@ export const WAMLProvider:FCWithChildren<Props> = ({ document, options, defaultV
       }
     };
   }, [ document, flatValue ]);
+  const actionScripts = useMemo(() => {
+    if('error' in document) return {};
+    const R:Record<string, WAML.ActionDefinition[]> = {};
+
+    for(const v of document.raw){
+      if(hasKind(v, 'XMLElement') && v.tag === "action"){
+        R[v.index] ??= [];
+        R[v.index].push(...v.content);
+      }
+    }
+    return R;
+  }, [ document ]);
+
+  const executeActionScript = useCallback((index:number, script:WAML.ActionDefinition) => {
+    for(const v of script.actions){
+      switch(v.command){
+        case "set":
+          setKnobProperties(prev => {
+            const target = v.index ?? index;
+            const next = { ...prev };
+
+            switch(v.value){
+              case "activated": next[target].activated = true; break;
+              case "inactivated": next[target].activated = false; break;
+              case "enabled": next[target].enabled = true; break;
+              case "disabled": next[target].enabled = false; break;
+              default: throw Error(`Unhandled set value: ${JSON.stringify(v)}`);
+            }
+            return next;
+          });
+          break;
+        case "replace":
+          setKnobProperties(prev => {
+            const next = { ...prev };
+            next[index].contentOverride = v.value;
+            return next;
+          });
+          break;
+        default: onKnobAction?.(v);
+      }
+    }
+  }, [ onKnobAction ]);
 
   useEffect(() => {
     if(!value) return;
     setUncontrolledValue(value);
   }, [ value ]);
+  useEffect(() => {
+    const onLoadScripts:Array<() => void> = [];
+
+    setKnobProperties(() => {
+      const R:typeof knobProperties = {};
+
+      for(const [ k, v ] of Object.entries(actionScripts)){
+        const index = parseInt(k);
+        R[index] = {
+          enabled: true,
+          activated: false
+        };
+        for(const w of v){
+          if(w.condition.value === "onLoad"){
+            onLoadScripts.push(() => executeActionScript(index, w));
+          }
+        }
+      }
+      return R;
+    });
+    for(const v of onLoadScripts){
+      v();
+    }
+  }, [ actionScripts, executeActionScript ]);
 
   const R = useMemo<Context>(() => ({
     checkButtonOptionUsed: node => {
@@ -218,7 +294,15 @@ export const WAMLProvider:FCWithChildren<Props> = ({ document, options, defaultV
       return candidates[candidates.length - ($renderingVariables.current.buttonOptionUsed[value]?.length || 1)];
     },
     getComponentOptions: type => options[type],
+    getKnobProperty: index => knobProperties[index] || { activated: false, enabled: true },
     getURL: options.uriResolver || (uri => uri),
+    handleKnobClick: (index:number) => {
+      for(const v of actionScripts[index] || []){
+        if(v.condition.value === "onClick"){
+          executeActionScript(index, v);
+        }
+      }
+    },
     interactionToken: null!,
     invokeInteractionToken: id => {
       let index = $renderingVariables.current.interactionTokenIndex[id];
@@ -232,6 +316,7 @@ export const WAMLProvider:FCWithChildren<Props> = ({ document, options, defaultV
       }
       return r;
     },
+    knobProperties,
     logInteraction: (e, debounceable) => {
       const now = Date.now();
 
@@ -264,7 +349,7 @@ export const WAMLProvider:FCWithChildren<Props> = ({ document, options, defaultV
       onChange?.(nextAnswer);
     },
     value: uncontrolledValue
-  }), [ buttonOptionState, document, draggingObject, flatValue, interactionTokens, onChange, onInteract, options, pairing, uncontrolledValue ]);
+  }), [ actionScripts, buttonOptionState, document, draggingObject, executeActionScript, flatValue, interactionTokens, knobProperties, onChange, onInteract, options, pairing, uncontrolledValue ]);
 
   return <context.Provider value={R}>
     {children}

@@ -1,6 +1,6 @@
 {
   "name": "waml-viewer",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "main": "dist/index.js",
   "repository": "https://github.com/riiid/waml-viewer.git",
   "author": "Juyeong Jeong <juyeong.jeong@riiid.co>",
@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "react": "^18.2.0",
-    "@riiid/waml": "github:riiid/waml#ab343ad20a943dc1b36d9e37bf41913b10249fa5",
+    "@riiid/waml": "github:riiid/waml#c3be2c8cdab2e9cbfcbb42b6f439465bf8704094",
     "react-latex-next": "^2.2.0"
   }
 }

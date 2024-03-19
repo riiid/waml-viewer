@@ -767,6 +767,7 @@ function id(x) { return x[0]; }
     aReplace: {
       escaping,
       comma: { match: /,/, pop: 1 },
+      lineBreak: { ...withoutXML.lineBreak, pop: 1 },
       ...textual
     },
     answer: {
@@ -829,12 +830,10 @@ function id(x) { return x[0]; }
       ...withoutXML
     },
     blockMath: {
-      escaping,
       blockMathClose: { match: "$$", pop: 1 },
       any: { match: /[\s\S]/, lineBreaks: true }
     },
     inlineMath: {
-      escaping,
       inlineMathClose: { match: /\$/, pop: 1 },
       any: { match: /[\s\S]/, lineBreaks: true }
     },
@@ -1014,7 +1013,9 @@ var grammar = {
     {"name": "XMLElement$macrocall$5", "symbols": ["XMLElement$macrocall$6", "XMLElement$macrocall$7", "XMLElement$macrocall$8"], "postprocess": ([ open, body ]) => ({ tag: open[0].value, body: body[0] })},
     {"name": "XMLElement", "symbols": ["XMLElement$macrocall$5"], "postprocess": ([{ tag, body }]) => ({ kind: "XMLElement", tag, content: body })},
     {"name": "XMLElement$macrocall$10", "symbols": [(lexer.has("xActionOpen") ? {type: "xActionOpen"} : xActionOpen)]},
-    {"name": "XMLElement$macrocall$11", "symbols": ["ActionDefinition"]},
+    {"name": "XMLElement$macrocall$11$ebnf$1", "symbols": ["ActionDefinition"]},
+    {"name": "XMLElement$macrocall$11$ebnf$1", "symbols": ["XMLElement$macrocall$11$ebnf$1", "ActionDefinition"], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
+    {"name": "XMLElement$macrocall$11", "symbols": ["XMLElement$macrocall$11$ebnf$1"]},
     {"name": "XMLElement$macrocall$12", "symbols": [(lexer.has("xActionClose") ? {type: "xActionClose"} : xActionClose)]},
     {"name": "XMLElement$macrocall$9$ebnf$1", "symbols": []},
     {"name": "XMLElement$macrocall$9$ebnf$1", "symbols": ["XMLElement$macrocall$9$ebnf$1", "XMLAttribute"], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
@@ -1031,7 +1032,7 @@ var grammar = {
             if(key !== "for") throw Error(`Unexpected attribute of <action>: ${key}`);
             index = parseInt(value) || 0;
           }
-          return { kind: "XMLElement", tag, index, condition: body.condition, actions: body.actions };
+          return { kind: "XMLElement", tag, index, content: body };
         }},
     {"name": "LineXMLElement$macrocall$2", "symbols": [(lexer.has("xTableOpen") ? {type: "xTableOpen"} : xTableOpen)]},
     {"name": "LineXMLElement$macrocall$3", "symbols": ["Table"]},
@@ -1252,7 +1253,9 @@ var grammar = {
     {"name": "Action", "symbols": [(lexer.has("aPlay") ? {type: "aPlay"} : aPlay), (lexer.has("medium") ? {type: "medium"} : medium)], "postprocess": ([ , medium ]) => ({ kind: "Action", command: "play", medium: medium.value })},
     {"name": "Action$ebnf$1", "symbols": ["Text"]},
     {"name": "Action$ebnf$1", "symbols": ["Action$ebnf$1", "Text"], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
-    {"name": "Action", "symbols": [(lexer.has("aReplace") ? {type: "aReplace"} : aReplace), "Action$ebnf$1"], "postprocess": ([ , value ]) => ({ kind: "Action", command: "replace", value: value.join('') })},
+    {"name": "Action$ebnf$2", "symbols": [(lexer.has("lineBreak") ? {type: "lineBreak"} : lineBreak)], "postprocess": id},
+    {"name": "Action$ebnf$2", "symbols": [], "postprocess": function(d) {return null;}},
+    {"name": "Action", "symbols": [(lexer.has("aReplace") ? {type: "aReplace"} : aReplace), "Action$ebnf$1", "Action$ebnf$2"], "postprocess": ([ , value ]) => ({ kind: "Action", command: "replace", value: value.join('') })},
     {"name": "Action", "symbols": [(lexer.has("action") ? {type: "action"} : action)], "postprocess": ([ { value } ]) => ({ kind: "Action", ...value })}
 ]
   , ParserStart: "Main"
@@ -14119,7 +14122,7 @@ function componentify(Component) {
 }
 exports.default = componentify;
 
-},{"./react.js":60,"./use-waml.js":63,"react":20}],26:[function(require,module,exports){
+},{"./react.js":62,"./use-waml.js":65,"react":20}],26:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -14132,7 +14135,7 @@ const Anchor = ({ node, ...props }) => react_1.default.createElement("div", { ..
 Anchor.displayName = "Anchor";
 exports.default = (0, componentify_1.default)(Anchor);
 
-},{"../componentify":25,"./inline":41,"react":20}],27:[function(require,module,exports){
+},{"../componentify":25,"./inline":43,"react":20}],27:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -14193,7 +14196,7 @@ const Audio = ({ node, onPlay, onPause, onVolumeChange, ...props }) => {
 Audio.displayName = "Audio";
 exports.default = (0, componentify_1.default)(Audio);
 
-},{"../componentify":25,"../use-waml":63,"react":20}],28:[function(require,module,exports){
+},{"../componentify":25,"../use-waml":65,"react":20}],28:[function(require,module,exports){
 "use strict";
 
 var __createBinding = void 0 && (void 0).__createBinding || (Object.create ? function (o, m, k, k2) {
@@ -14248,7 +14251,7 @@ const BuiltinStyle = ({
 `);
 exports.default = (0, react_1.memo)(BuiltinStyle);
 
-},{"./scoped-style":52,"react":20}],29:[function(require,module,exports){
+},{"./scoped-style":54,"react":20}],29:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -14381,7 +14384,54 @@ const ButtonBlank = ({ node, onPointerEnter, onPointerLeave, onPointerUp, ...pro
 ButtonBlank.displayName = "ButtonBlank";
 exports.default = (0, componentify_1.default)(ButtonBlank);
 
-},{"../componentify":25,"../use-waml":63,"../utility":64,"@riiid/waml":3,"react":20}],30:[function(require,module,exports){
+},{"../componentify":25,"../use-waml":65,"../utility":66,"@riiid/waml":3,"react":20}],30:[function(require,module,exports){
+"use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const react_1 = __importStar(require("react"));
+const componentify_1 = __importDefault(require("../componentify"));
+const use_waml_1 = __importDefault(require("../use-waml"));
+const inline_1 = __importDefault(require("./inline"));
+const ButtonKnob = ({ node, onClick, ...props }) => {
+    const { getKnobProperty, handleKnobClick } = (0, use_waml_1.default)();
+    const { activated, enabled, contentOverride } = getKnobProperty(node.index);
+    const handleClick = (0, react_1.useCallback)(e => {
+        onClick === null || onClick === void 0 ? void 0 : onClick(e);
+        if (e.defaultPrevented)
+            return;
+        handleKnobClick(node.index);
+    }, [handleKnobClick, node.index, onClick]);
+    return react_1.default.createElement("button", { disabled: !enabled, onClick: handleClick, ...props, "data-activated": activated, "data-enabled": enabled }, contentOverride || node.inlines.map((v, i) => react_1.default.createElement(inline_1.default, { key: i, node: v })));
+};
+ButtonKnob.displayName = "ButtonKnob";
+exports.default = (0, componentify_1.default)(ButtonKnob);
+
+},{"../componentify":25,"../use-waml":65,"./inline":43,"react":20}],31:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -14481,7 +14531,7 @@ const ButtonOption = ({ node, style, onPointerDown, ...props }) => {
 ButtonOption.displayName = "ButtonOption";
 exports.default = (0, componentify_1.default)(ButtonOption);
 
-},{"../componentify":25,"../use-waml":63,"react":20}],31:[function(require,module,exports){
+},{"../componentify":25,"../use-waml":65,"react":20}],32:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -14494,7 +14544,7 @@ const ChoiceOptionGroup = ({ node, ...props }) => react_1.default.createElement(
 ChoiceOptionGroup.displayName = "ChoiceOptionGroup";
 exports.default = (0, componentify_1.default)(ChoiceOptionGroup);
 
-},{"../componentify":25,"./inline":41,"react":20}],32:[function(require,module,exports){
+},{"../componentify":25,"./inline":43,"react":20}],33:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -14536,7 +14586,7 @@ const ChoiceOptionLine = ({ node, style, ...props }) => {
 ChoiceOptionLine.displayName = "ChoiceOptionLine";
 exports.default = (0, componentify_1.default)(ChoiceOptionLine);
 
-},{"../componentify":25,"./choice-option":33,"./inline":41,"react":20}],33:[function(require,module,exports){
+},{"../componentify":25,"./choice-option":34,"./inline":43,"react":20}],34:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -14584,7 +14634,7 @@ const ChoiceOption = ({ node, onInteract, ...props }) => {
 ChoiceOption.displayName = "ChoiceOption";
 exports.default = (0, componentify_1.default)(ChoiceOption);
 
-},{"../componentify":25,"../use-waml":63,"react":20}],34:[function(require,module,exports){
+},{"../componentify":25,"../use-waml":65,"react":20}],35:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -14608,7 +14658,7 @@ const DebugConsole = ({ document }) => {
 };
 exports.default = DebugConsole;
 
-},{"../use-waml":63,"react":20}],35:[function(require,module,exports){
+},{"../use-waml":65,"react":20}],36:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -14695,7 +14745,7 @@ class WAMLErrorBoundary extends react_1.Component {
     }
 }
 
-},{"../componentify":25,"../use-waml":63,"../waml-error":65,"./isoprefixed-line-group-renderer":42,"./semantic-error-handler":53,"@riiid/waml":3,"react":20}],36:[function(require,module,exports){
+},{"../componentify":25,"../use-waml":65,"../waml-error":67,"./isoprefixed-line-group-renderer":44,"./semantic-error-handler":55,"@riiid/waml":3,"react":20}],37:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -14711,7 +14761,7 @@ const FigureCaption = ({ node, ...props }) => {
 FigureCaption.displayName = "FigureCaption";
 exports.default = (0, componentify_1.default)(FigureCaption);
 
-},{"../componentify":25,"./inline":41,"react":20}],37:[function(require,module,exports){
+},{"../componentify":25,"./inline":43,"react":20}],38:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -14727,7 +14777,7 @@ const FigureTitle = ({ node, ...props }) => {
 FigureTitle.displayName = "FigureTitle";
 exports.default = (0, componentify_1.default)(FigureTitle);
 
-},{"../componentify":25,"./inline":41,"react":20}],38:[function(require,module,exports){
+},{"../componentify":25,"./inline":43,"react":20}],39:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -14740,7 +14790,7 @@ const Footnote = ({ node, ...props }) => react_1.default.createElement("div", { 
 Footnote.displayName = "Footnote";
 exports.default = (0, componentify_1.default)(Footnote);
 
-},{"../componentify":25,"./inline":41,"react":20}],39:[function(require,module,exports){
+},{"../componentify":25,"./inline":43,"react":20}],40:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -14752,7 +14802,7 @@ const HR = ({ node, ...props }) => react_1.default.createElement("hr", { ...prop
 HR.displayName = "HR";
 exports.default = (0, componentify_1.default)(HR);
 
-},{"../componentify":25,"react":20}],40:[function(require,module,exports){
+},{"../componentify":25,"react":20}],41:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -14768,7 +14818,54 @@ const Image = ({ node, ...props }) => {
 Image.displayName = "Image";
 exports.default = (0, componentify_1.default)(Image);
 
-},{"../componentify":25,"../use-waml":63,"react":20}],41:[function(require,module,exports){
+},{"../componentify":25,"../use-waml":65,"react":20}],42:[function(require,module,exports){
+"use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const react_1 = __importStar(require("react"));
+const componentify_1 = __importDefault(require("../componentify"));
+const use_waml_1 = __importDefault(require("../use-waml"));
+const inline_1 = __importDefault(require("./inline"));
+const InlineKnob = ({ node, onClick, ...props }) => {
+    const { getKnobProperty, handleKnobClick } = (0, use_waml_1.default)();
+    const { activated, enabled, contentOverride } = getKnobProperty(node.index);
+    const handleClick = (0, react_1.useCallback)(e => {
+        onClick === null || onClick === void 0 ? void 0 : onClick(e);
+        if (e.defaultPrevented)
+            return;
+        handleKnobClick(node.index);
+    }, [handleKnobClick, node.index, onClick]);
+    return react_1.default.createElement("label", { onClick: handleClick, ...props, "data-activated": activated, "data-enabled": enabled }, contentOverride || node.inlines.map((v, i) => react_1.default.createElement(inline_1.default, { key: i, node: v })));
+};
+InlineKnob.displayName = "InlineKnob";
+exports.default = (0, componentify_1.default)(InlineKnob);
+
+},{"../componentify":25,"../use-waml":65,"./inline":43,"react":20}],43:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -14788,6 +14885,8 @@ const button_option_1 = __importDefault(require("./button-option"));
 const table_1 = __importDefault(require("./table"));
 const pairing_option_group_1 = __importDefault(require("./pairing-option-group"));
 const choice_option_group_1 = __importDefault(require("./choice-option-group"));
+const inline_knob_1 = __importDefault(require("./inline-knob"));
+const button_knob_1 = __importDefault(require("./button-knob"));
 const Inline = ({ node }) => {
     if (typeof node === "string") {
         return node;
@@ -14826,7 +14925,7 @@ const Inline = ({ node }) => {
                     return react_1.default.createElement(pairing_option_group_1.default, { node: node.content });
                 case "table":
                     return react_1.default.createElement(table_1.default, { node: node });
-                default: throw Error(`Unhandled tag: ${node.tag}`);
+                default: throw Error(`Unhandled tag: ${JSON.stringify(node)}`);
             }
         case "Math":
             return react_1.default.createElement(react_latex_next_1.default, null, `$${node.content}$`);
@@ -14838,6 +14937,10 @@ const Inline = ({ node }) => {
             return react_1.default.createElement(short_lingual_option_1.default, { node: node, inline: true });
         case "ClassedInline":
             return (react_1.default.createElement("span", { className: node.name }, node.inlines.map((v, i) => (react_1.default.createElement(Inline, { key: i, node: v })))));
+        case "InlineKnob":
+            return react_1.default.createElement(inline_knob_1.default, { node: node });
+        case "ButtonKnob":
+            return react_1.default.createElement(button_knob_1.default, { node: node });
         default:
     }
     throw Error(`Unhandled inline node: ${JSON.stringify(node)}`);
@@ -14845,7 +14948,7 @@ const Inline = ({ node }) => {
 Inline.displayName = "Inline";
 exports.default = (0, componentify_1.default)(Inline);
 
-},{"../componentify":25,"./audio":27,"./button-blank":29,"./button-option":30,"./choice-option":33,"./choice-option-group":31,"./image":40,"./pairing-option-group":48,"./short-lingual-option":54,"./table":56,"./video":57,"@riiid/waml":3,"react":20,"react-latex-next":17}],42:[function(require,module,exports){
+},{"../componentify":25,"./audio":27,"./button-blank":29,"./button-knob":30,"./button-option":31,"./choice-option":34,"./choice-option-group":32,"./image":41,"./inline-knob":42,"./pairing-option-group":50,"./short-lingual-option":56,"./table":58,"./video":59,"@riiid/waml":3,"react":20,"react-latex-next":17}],44:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -14900,7 +15003,7 @@ function getIsoprefixedLineGroups(lines, depth = 0) {
     return R;
 }
 
-},{"./line":44,"./prefixed-line":51,"@riiid/waml":3,"react":20}],43:[function(require,module,exports){
+},{"./line":46,"./prefixed-line":53,"@riiid/waml":3,"react":20}],45:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -14967,7 +15070,7 @@ const LineComponent = ({ node, ...props }) => {
 LineComponent.displayName = "LineComponent";
 exports.default = (0, componentify_1.default)(LineComponent);
 
-},{"../componentify":25,"./anchor":26,"./choice-option-line":32,"./figure-caption":36,"./figure-title":37,"./footnote":38,"./hr":39,"./inline":41,"./long-lingual-option":45,"./passage":50,"./short-lingual-option":54,"@riiid/waml":3,"react":20,"react-latex-next":17}],44:[function(require,module,exports){
+},{"../componentify":25,"./anchor":26,"./choice-option-line":33,"./figure-caption":37,"./figure-title":38,"./footnote":39,"./hr":40,"./inline":43,"./long-lingual-option":47,"./passage":52,"./short-lingual-option":56,"@riiid/waml":3,"react":20,"react-latex-next":17}],46:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -15000,7 +15103,7 @@ const Line = ({ node, next, ...props }) => {
 Line.displayName = "Line";
 exports.default = (0, componentify_1.default)(Line);
 
-},{"../componentify":25,"../use-waml":63,"./line-component":43,"@riiid/waml":3,"react":20}],45:[function(require,module,exports){
+},{"../componentify":25,"../use-waml":65,"./line-component":45,"@riiid/waml":3,"react":20}],47:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -15020,7 +15123,7 @@ const LongLingualOption = ({ node, ...props }) => {
 LongLingualOption.displayName = "LongLingualOption";
 exports.default = (0, componentify_1.default)(LongLingualOption);
 
-},{"../componentify":25,"../use-waml":63,"react":20}],46:[function(require,module,exports){
+},{"../componentify":25,"../use-waml":65,"react":20}],48:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -15100,7 +15203,7 @@ const PairingLine = ({ node, from, to, onClick, style, ...props }) => {
 PairingLine.displayName = "PairingLine";
 exports.default = (0, componentify_1.default)(PairingLine);
 
-},{"../componentify":25,"../use-waml":63,"@riiid/waml":3,"react":20}],47:[function(require,module,exports){
+},{"../componentify":25,"../use-waml":65,"@riiid/waml":3,"react":20}],49:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -15158,7 +15261,7 @@ const PairingLines = () => {
 };
 exports.default = (0, react_1.memo)(PairingLines);
 
-},{"../use-waml":63,"./pairing-line":46,"react":20}],48:[function(require,module,exports){
+},{"../use-waml":65,"./pairing-line":48,"react":20}],50:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -15171,7 +15274,7 @@ const PairingOptionGroup = ({ node, ...props }) => react_1.default.createElement
 PairingOptionGroup.displayName = "PairingOptionGroup";
 exports.default = (0, componentify_1.default)(PairingOptionGroup);
 
-},{"../componentify":25,"./pairing-option":49,"react":20}],49:[function(require,module,exports){
+},{"../componentify":25,"./pairing-option":51,"react":20}],51:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -15275,7 +15378,7 @@ const PairingOption = ({ node, onClick, ...props }) => {
 PairingOption.displayName = "PairingOption";
 exports.default = (0, componentify_1.default)(PairingOption);
 
-},{"../componentify":25,"../use-waml":63,"./inline":41,"@riiid/waml":3,"react":20}],50:[function(require,module,exports){
+},{"../componentify":25,"../use-waml":65,"./inline":43,"@riiid/waml":3,"react":20}],52:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -15321,7 +15424,7 @@ const Passage = ({ node, fallback, defaultValue, onChange, ...props }) => {
 Passage.displayName = "Passage";
 exports.default = (0, componentify_1.default)(Passage);
 
-},{"..":58,"../componentify":25,"../use-waml":63,"react":20}],51:[function(require,module,exports){
+},{"..":60,"../componentify":25,"../use-waml":65,"react":20}],53:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -15379,7 +15482,7 @@ const PrefixedLine = ({ node, type, depth, className, ...props }) => {
 PrefixedLine.displayName = "PrefixedLine";
 exports.default = (0, componentify_1.default)(PrefixedLine);
 
-},{"../componentify":25,"../react":60,"../use-waml":63,"./isoprefixed-line-group-renderer":42,"react":20}],52:[function(require,module,exports){
+},{"../componentify":25,"../react":62,"../use-waml":65,"./isoprefixed-line-group-renderer":44,"react":20}],54:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -15398,7 +15501,7 @@ const ScopedStyle = ({ children }) => {
 };
 exports.default = (0, react_2.memo)(ScopedStyle);
 
-},{"react":20}],53:[function(require,module,exports){
+},{"react":20}],55:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -15410,7 +15513,7 @@ const SemanticErrorHandler = ({ node, ...props }) => react_1.default.createEleme
 SemanticErrorHandler.displayName = "SemanticErrorHandler";
 exports.default = (0, componentify_1.default)(SemanticErrorHandler);
 
-},{"../componentify":25,"react":20}],54:[function(require,module,exports){
+},{"../componentify":25,"react":20}],56:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -15430,7 +15533,7 @@ const ShortLingualOption = ({ node, inline, ...props }) => {
 ShortLingualOption.displayName = "ShortLingualOption";
 exports.default = (0, componentify_1.default)(ShortLingualOption);
 
-},{"../componentify":25,"../use-waml":63,"react":20}],55:[function(require,module,exports){
+},{"../componentify":25,"../use-waml":65,"react":20}],57:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -15445,7 +15548,7 @@ const SyntaxErrorHandler = ({ node, ...props }) => {
 SyntaxErrorHandler.displayName = "SyntaxErrorHandler";
 exports.default = (0, componentify_1.default)(SyntaxErrorHandler);
 
-},{"../componentify":25,"react":20}],56:[function(require,module,exports){
+},{"../componentify":25,"react":20}],58:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -15524,7 +15627,7 @@ const Table = ({ node, style, className, ...props }) => {
 Table.displayName = "Table";
 exports.default = (0, componentify_1.default)(Table);
 
-},{"../componentify":25,"../react":60,"../waml-error":65,"./document":35,"@riiid/waml":3,"react":20}],57:[function(require,module,exports){
+},{"../componentify":25,"../react":62,"../waml-error":67,"./document":36,"@riiid/waml":3,"react":20}],59:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -15585,7 +15688,7 @@ const Video = ({ node, onPlay, onPause, onVolumeChange, ...props }) => {
 Video.displayName = "Video";
 exports.default = (0, componentify_1.default)(Video);
 
-},{"../componentify":25,"../use-waml":63,"react":20}],58:[function(require,module,exports){
+},{"../componentify":25,"../use-waml":65,"react":20}],60:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -15618,7 +15721,7 @@ const use_waml_1 = require("./use-waml");
 const pairing_lines_1 = __importDefault(require("./components/pairing-lines"));
 const defaultOptions = {};
 const defaultMiddlewares = [];
-const WAMLViewer = ({ waml, middlewares = defaultMiddlewares, options = defaultOptions, bare, defaultValue, value, onChange, onInteract, children, ...props }) => {
+const WAMLViewer = ({ waml, middlewares = defaultMiddlewares, options = defaultOptions, bare, defaultValue, value, onChange, onInteract, onKnobAction, children, ...props }) => {
     const document = (0, react_1.useMemo)(() => {
         try {
             const R = typeof waml === "string" ? new waml_1.WAMLDocument(waml) : waml;
@@ -15671,7 +15774,7 @@ const WAMLViewer = ({ waml, middlewares = defaultMiddlewares, options = defaultO
     }
     return react_2.default.createElement("article", { ...props },
         react_2.default.createElement(builtin_style_1.default, null, options.builtinCSS),
-        react_2.default.createElement(use_waml_1.WAMLProvider, { document: document, options: options, value: value, defaultValue: defaultValue, onChange: onChange, onInteract: onInteract },
+        react_2.default.createElement(use_waml_1.WAMLProvider, { document: document, options: options, value: value, defaultValue: defaultValue, onChange: onChange, onInteract: onInteract, onKnobAction: onKnobAction },
             styles.map((v, i) => (react_2.default.createElement(scoped_style_1.default, { key: i }, v))),
             react_2.default.createElement(document_1.default, { node: document.raw, style: { position: "relative" } },
                 react_2.default.createElement(pairing_lines_1.default, null)),
@@ -15684,7 +15787,7 @@ const WAMLViewer = ({ waml, middlewares = defaultMiddlewares, options = defaultO
 exports.default = WAMLViewer;
 __exportStar(require("./types"), exports);
 
-},{"./components/builtin-style":28,"./components/debug-console":34,"./components/document":35,"./components/pairing-lines":47,"./components/scoped-style":52,"./components/syntax-error-handler":55,"./types":62,"./use-waml":63,"@riiid/waml":3,"react":20,"react-dom":16}],59:[function(require,module,exports){
+},{"./components/builtin-style":28,"./components/debug-console":35,"./components/document":36,"./components/pairing-lines":49,"./components/scoped-style":54,"./components/syntax-error-handler":57,"./types":64,"./use-waml":65,"@riiid/waml":3,"react":20,"react-dom":16}],61:[function(require,module,exports){
 "use strict";
 var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (receiver, state, kind, f) {
     if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
@@ -15824,7 +15927,7 @@ function unflattenAnswer(answer) {
 }
 exports.unflattenAnswer = unflattenAnswer;
 
-},{"@riiid/waml":3}],60:[function(require,module,exports){
+},{"@riiid/waml":3}],62:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.C = void 0;
@@ -15834,7 +15937,7 @@ function C(...args) {
 }
 exports.C = C;
 
-},{}],61:[function(require,module,exports){
+},{}],63:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -15872,6 +15975,12 @@ const TestPage = () => {
     const [explanationWrapper, setExplanationWrapper] = (0, react_1.useState)(null);
     const [x, setX] = (0, react_1.useState)();
     const handleChange = (0, react_1.useCallback)(e => setWAML(e.currentTarget.value), []);
+    const handleKnobAction = (0, react_1.useCallback)((e) => {
+        console.log("WAML Action", e);
+        if (e.command === "play") {
+            window.open(e.medium.uri);
+        }
+    }, []);
     return react_1.default.createElement(react_1.default.Fragment, null,
         react_1.default.createElement("textarea", { value: waml, onChange: handleChange }),
         explanationWrapper && react_1.default.createElement(_1.default, { key: waml, waml: waml, options: {
@@ -15881,16 +15990,16 @@ const TestPage = () => {
                 ChoiceOption: {
                     getter: node => ({ 'data-value': node.value })
                 }
-            }, value: x, onChange: value => setX(value), onInteract: e => console.log("WAML Interaction", e) }),
+            }, value: x, onChange: value => setX(value), onInteract: e => console.log("WAML Interaction", e), onKnobAction: handleKnobAction }),
         react_1.default.createElement("aside", { ref: setExplanationWrapper }));
 };
 react_dom_1.default.render(react_1.default.createElement(TestPage, null), document.querySelector("#stage"));
 
-},{".":58,"react":20,"react-dom":16}],62:[function(require,module,exports){
+},{".":60,"react":20,"react-dom":16}],64:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 
-},{}],63:[function(require,module,exports){
+},{}],65:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -15931,7 +16040,7 @@ const useWAML = (invokingInteractionToken) => {
 };
 const debouncingInterval = 500;
 exports.default = useWAML;
-const WAMLProvider = ({ document, options, defaultValue, value, onChange, onInteract, children }) => {
+const WAMLProvider = ({ document, options, defaultValue, value, onChange, onInteract, onKnobAction, children }) => {
     const $renderingVariables = (0, react_1.useRef)({
         pendingAnswer: null,
         pendingClasses: [],
@@ -15944,6 +16053,7 @@ const WAMLProvider = ({ document, options, defaultValue, value, onChange, onInte
     const $debouncedInteractions = (0, react_1.useRef)({});
     const [uncontrolledValue, setUncontrolledValue] = (0, react_1.useState)(defaultValue);
     const [draggingObject, setDraggingObject] = (0, react_1.useState)(null);
+    const [knobProperties, setKnobProperties] = (0, react_1.useState)({});
     const flatValue = (0, react_1.useMemo)(() => uncontrolledValue ? (0, interaction_token_js_1.flattenAnswer)(uncontrolledValue) : [], [uncontrolledValue]);
     const buttonOptionState = (0, react_1.useMemo)(() => {
         var _a, _b;
@@ -16049,11 +16159,84 @@ const WAMLProvider = ({ document, options, defaultValue, value, onChange, onInte
             }
         };
     }, [document, flatValue]);
+    const actionScripts = (0, react_1.useMemo)(() => {
+        var _a;
+        var _b;
+        if ('error' in document)
+            return {};
+        const R = {};
+        for (const v of document.raw) {
+            if ((0, waml_1.hasKind)(v, 'XMLElement') && v.tag === "action") {
+                (_a = R[_b = v.index]) !== null && _a !== void 0 ? _a : (R[_b] = []);
+                R[v.index].push(...v.content);
+            }
+        }
+        return R;
+    }, [document]);
+    const executeActionScript = (0, react_1.useCallback)((index, script) => {
+        for (const v of script.actions) {
+            switch (v.command) {
+                case "set":
+                    setKnobProperties(prev => {
+                        var _a;
+                        const target = (_a = v.index) !== null && _a !== void 0 ? _a : index;
+                        const next = { ...prev };
+                        switch (v.value) {
+                            case "activated":
+                                next[target].activated = true;
+                                break;
+                            case "inactivated":
+                                next[target].activated = false;
+                                break;
+                            case "enabled":
+                                next[target].enabled = true;
+                                break;
+                            case "disabled":
+                                next[target].enabled = false;
+                                break;
+                            default: throw Error(`Unhandled set value: ${JSON.stringify(v)}`);
+                        }
+                        return next;
+                    });
+                    break;
+                case "replace":
+                    setKnobProperties(prev => {
+                        const next = { ...prev };
+                        next[index].contentOverride = v.value;
+                        return next;
+                    });
+                    break;
+                default: onKnobAction === null || onKnobAction === void 0 ? void 0 : onKnobAction(v);
+            }
+        }
+    }, [onKnobAction]);
     (0, react_1.useEffect)(() => {
         if (!value)
             return;
         setUncontrolledValue(value);
     }, [value]);
+    (0, react_1.useEffect)(() => {
+        const onLoadScripts = [];
+        setKnobProperties(() => {
+            const R = {};
+            for (const [k, v] of Object.entries(actionScripts)) {
+                const index = parseInt(k);
+                R[index] = {
+                    enabled: true,
+                    activated: false
+                };
+                for (const w of v) {
+                    if (w.condition.value === "onLoad") {
+                        onLoadScripts.push(() => executeActionScript(index, w));
+                    }
+                }
+            }
+            return R;
+        });
+        for (const v of onLoadScripts) {
+            v();
+        }
+    }, [actionScripts, executeActionScript]);
     const R = (0, react_1.useMemo)(() => ({
         checkButtonOptionUsed: node => {
             var _a, _b;
@@ -16075,7 +16258,15 @@ const WAMLProvider = ({ document, options, defaultValue, value, onChange, onInte
             return candidates[candidates.length - (((_a = $renderingVariables.current.buttonOptionUsed[value]) === null || _a === void 0 ? void 0 : _a.length) || 1)];
         },
         getComponentOptions: type => options[type],
+        getKnobProperty: index => knobProperties[index] || { activated: false, enabled: true },
         getURL: options.uriResolver || (uri => uri),
+        handleKnobClick: (index) => {
+            for (const v of actionScripts[index] || []) {
+                if (v.condition.value === "onClick") {
+                    executeActionScript(index, v);
+                }
+            }
+        },
         interactionToken: null,
         invokeInteractionToken: id => {
             let index = $renderingVariables.current.interactionTokenIndex[id];
@@ -16089,6 +16280,7 @@ const WAMLProvider = ({ document, options, defaultValue, value, onChange, onInte
             }
             return r;
         },
+        knobProperties,
         logInteraction: (e, debounceable) => {
             var _a;
             const now = Date.now();
@@ -16119,12 +16311,12 @@ const WAMLProvider = ({ document, options, defaultValue, value, onChange, onInte
             onChange === null || onChange === void 0 ? void 0 : onChange(nextAnswer);
         },
         value: uncontrolledValue
-    }), [buttonOptionState, document, draggingObject, flatValue, interactionTokens, onChange, onInteract, options, pairing, uncontrolledValue]);
+    }), [actionScripts, buttonOptionState, document, draggingObject, executeActionScript, flatValue, interactionTokens, knobProperties, onChange, onInteract, options, pairing, uncontrolledValue]);
     return react_1.default.createElement(context.Provider, { value: R }, children);
 };
 exports.WAMLProvider = WAMLProvider;
 
-},{"./interaction-token.js":59,"@riiid/waml":3,"react":20}],64:[function(require,module,exports){
+},{"./interaction-token.js":61,"@riiid/waml":3,"react":20}],66:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getIntersection = void 0;
@@ -16137,7 +16329,7 @@ function getIntersection(a, b) {
 }
 exports.getIntersection = getIntersection;
 
-},{}],65:[function(require,module,exports){
+},{}],67:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.NOT_YET_IMPLEMENTED = void 0;
@@ -16150,4 +16342,4 @@ class WAMLError extends Error {
 exports.default = WAMLError;
 exports.NOT_YET_IMPLEMENTED = new WAMLError("Not yet implemented");
 
-},{}]},{},[61]);
+},{}]},{},[63]);

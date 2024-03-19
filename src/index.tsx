@@ -9,7 +9,7 @@ import DebugConsole from "./components/debug-console";
 import Document from "./components/document";
 import ScopedStyle from "./components/scoped-style";
 import SyntaxErrorHandler from "./components/syntax-error-handler";
-import type { ASTMiddleware, WAMLUserInteraction, WAMLViewerOptions } from "./types";
+import type { ASTMiddleware, WAMLAction, WAMLUserInteraction, WAMLViewerOptions } from "./types";
 import { WAMLProvider } from "./use-waml";
 import PairingLines from "./components/pairing-lines";
 
@@ -25,6 +25,15 @@ export interface WAMLViewerProps extends Omit<HTMLAttributes<HTMLElement>, 'defa
   value?:WAML.Answer;
   onChange?(value:WAML.Answer):void;
   onInteract?(e:WAMLUserInteraction):void;
+  /**
+   * 특정 조건에 의해 액션 스크립트가 실행될 때 호출되는 이벤트 핸들러.
+   *
+   * 이 함수가 바뀔 때마다 `onLoad` 조건이 성립되기 때문에
+   * 이 함수를 `useCallback` 등으로 메모이제이션하는 것이 권장됩니다.
+   *
+   * @param e 실행되는 액션 스크립트 객체.
+   */
+  onKnobAction?(e:WAMLAction):void;
 }
 const WAMLViewer:FC<WAMLViewerProps> = ({
   waml,
@@ -35,6 +44,7 @@ const WAMLViewer:FC<WAMLViewerProps> = ({
   value,
   onChange,
   onInteract,
+  onKnobAction,
   children,
   ...props
 }) => {
@@ -90,7 +100,7 @@ const WAMLViewer:FC<WAMLViewerProps> = ({
   }
   return <article {...props}>
     <BuiltinStyle>{options.builtinCSS}</BuiltinStyle>
-    <WAMLProvider document={document} options={options} value={value} defaultValue={defaultValue} onChange={onChange} onInteract={onInteract}>
+    <WAMLProvider document={document} options={options} value={value} defaultValue={defaultValue} onChange={onChange} onInteract={onInteract} onKnobAction={onKnobAction}>
       {styles.map((v, i) => (
         <ScopedStyle key={i}>{v}</ScopedStyle>
       ))}
