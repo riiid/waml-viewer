@@ -14338,7 +14338,8 @@ const ButtonBlank = ({ node, onPointerEnter, onPointerLeave, onPointerUp, ...pro
         // NOTE https://github.com/w3c/pointerevents/issues/178#issuecomment-1029108322
         e.target.releasePointerCapture(e.pointerId);
         const $target = e.currentTarget;
-        const targetNode = getButtonOptionByValue($target.textContent);
+        // TODO ButtonOption을 value로 특정하는 방식은 value가 같은 ButtonOption의 처리를 곤란하게 만들고 있음. 번호를 이용하는 방식으로 바꿔야 함.
+        const targetNode = getButtonOptionByValue($target.textContent, interactionToken.seq);
         if (!targetNode)
             throw Error(`Unexpected ButtonBlank value: ${$target.textContent}`);
         $self.current = true;
@@ -14352,7 +14353,6 @@ const ButtonBlank = ({ node, onPointerEnter, onPointerLeave, onPointerUp, ...pro
                 const { seq, input, interactionValue } = token;
                 if (seq === interactionToken.seq)
                     return;
-                console.log(interactionToken.input, input);
                 if (multiple || (input === null || input === void 0 ? void 0 : input.type) === "MULTIPLE" || !interactionValue) {
                     if (multiple)
                         interactionToken.handleInteract(targetNode.value);
@@ -16073,8 +16073,9 @@ const WAMLProvider = ({ document, options, defaultValue, value, onChange, onInte
             if (v.type !== waml_1.WAML.InteractionType.BUTTON_OPTION)
                 continue;
             for (const w of ((_a = flatValue[v.index]) === null || _a === void 0 ? void 0 : _a.value) || []) {
-                (_b = R[w]) !== null && _b !== void 0 ? _b : (R[w] = []);
-                R[w].push(v.index);
+                const key = `${v.group},${w}`;
+                (_b = R[key]) !== null && _b !== void 0 ? _b : (R[key] = []);
+                R[key].push(v.index);
             }
         }
         return R;
@@ -16248,23 +16249,30 @@ const WAMLProvider = ({ document, options, defaultValue, value, onChange, onInte
     }, [actionScripts, executeActionScript]);
     const R = (0, react_1.useMemo)(() => ({
         checkButtonOptionUsed: node => {
-            var _a, _b;
-            // 같은 value의 두 노드 중 한 노드만 답안으로 선택된 경우 먼저 등장한 노드부터 사용된 것으로 처리한다.
-            const usedNodes = (_a = $renderingVariables.current.buttonOptionUsed)[_b = node.value] || (_a[_b] = []);
-            let sequence = usedNodes.indexOf(node.id);
-            if (sequence === -1)
-                sequence = usedNodes.push(node.id) - 1;
-            return node.value in buttonOptionState && buttonOptionState[node.value].length > sequence;
+            return node.group.some(v => {
+                var _a;
+                const key = `${v},${node.value}`;
+                // 같은 value의 두 노드 중 한 노드만 답안으로 선택된 경우 먼저 등장한 노드부터 사용된 것으로 처리한다.
+                const usedNodes = (_a = $renderingVariables.current.buttonOptionUsed)[key] || (_a[key] = []);
+                let sequence = usedNodes.indexOf(node.id);
+                if (sequence === -1)
+                    sequence = usedNodes.push(node.id) - 1;
+                return key in buttonOptionState && buttonOptionState[key].length > sequence;
+            });
         },
         commonOptions: options,
         draggingObject,
-        // eslint-disable-next-line @typescript-eslint/no-shadow
-        getButtonOptionByValue: value => {
+        getButtonOptionByValue: (value, index) => {
             var _a;
+            if ('error' in document)
+                return null;
+            const interaction = document.metadata.answerFormat.interactions[index];
+            if (interaction.type !== waml_1.WAML.InteractionType.BUTTON_OPTION)
+                throw Error(`Unexpected interaction: ${JSON.stringify(interaction)}`);
             const candidates = Object.values($renderingVariables.current.buttonOptions).filter(v => v.value === value);
             if (!candidates.length)
                 return null;
-            return candidates[candidates.length - (((_a = $renderingVariables.current.buttonOptionUsed[value]) === null || _a === void 0 ? void 0 : _a.length) || 1)];
+            return candidates[candidates.length - (((_a = $renderingVariables.current.buttonOptionUsed[`${interaction.group},${value}`]) === null || _a === void 0 ? void 0 : _a.length) || 1)];
         },
         getComponentOptions: type => options[type],
         getKnobProperty: index => knobProperties[index] || { activated: false, enabled: true },

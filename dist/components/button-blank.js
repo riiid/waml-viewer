@@ -78,7 +78,8 @@ const ButtonBlank = ({ node, onPointerEnter, onPointerLeave, onPointerUp, ...pro
         // NOTE https://github.com/w3c/pointerevents/issues/178#issuecomment-1029108322
         e.target.releasePointerCapture(e.pointerId);
         const $target = e.currentTarget;
-        const targetNode = getButtonOptionByValue($target.textContent);
+        // TODO ButtonOption을 value로 특정하는 방식은 value가 같은 ButtonOption의 처리를 곤란하게 만들고 있음. 번호를 이용하는 방식으로 바꿔야 함.
+        const targetNode = getButtonOptionByValue($target.textContent, interactionToken.seq);
         if (!targetNode)
             throw Error(`Unexpected ButtonBlank value: ${$target.textContent}`);
         $self.current = true;
@@ -92,7 +93,6 @@ const ButtonBlank = ({ node, onPointerEnter, onPointerLeave, onPointerUp, ...pro
                 const { seq, input, interactionValue } = token;
                 if (seq === interactionToken.seq)
                     return;
-                console.log(interactionToken.input, input);
                 if (multiple || (input === null || input === void 0 ? void 0 : input.type) === "MULTIPLE" || !interactionValue) {
                     if (multiple)
                         interactionToken.handleInteract(targetNode.value);

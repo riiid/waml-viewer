@@ -49,7 +49,7 @@ type Context = {
     };
     'value': WAML.Answer | undefined;
     'checkButtonOptionUsed': (node: WAML.ButtonOption) => boolean;
-    'getButtonOptionByValue': (value: string) => WAML.ButtonOption | null;
+    'getButtonOptionByValue': (value: string, index: number) => WAML.ButtonOption | null;
     'getComponentOptions': <T extends WAMLComponentType>(type: T) => WAMLViewerOptions[T];
     'getKnobProperty': (index: number) => KnobProperty;
     'getURL': (uri: string) => string;

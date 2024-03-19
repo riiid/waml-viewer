@@ -52,7 +52,7 @@ type Context = {
   'value': WAML.Answer|undefined,
 
   'checkButtonOptionUsed': (node:WAML.ButtonOption) => boolean,
-  'getButtonOptionByValue': (value:string) => WAML.ButtonOption|null,
+  'getButtonOptionByValue': (value:string, index:number) => WAML.ButtonOption|null,
   'getComponentOptions': <T extends WAMLComponentType>(type:T) => WAMLViewerOptions[T],
   'getKnobProperty': (index:number) => KnobProperty,
   'getURL': (uri:string) => string,
@@ -108,8 +108,9 @@ export const WAMLProvider:FCWithChildren<Props> = ({ document, options, defaultV
     for(const v of document.metadata.answerFormat.interactions){
       if(v.type !== WAML.InteractionType.BUTTON_OPTION) continue;
       for(const w of flatValue[v.index]?.value || []){
-        R[w] ??= [];
-        R[w].push(v.index);
+        const key = `${v.group},${w}`;
+        R[key] ??= [];
+        R[key].push(v.index);
       }
     }
     return R;
@@ -278,20 +279,26 @@ export const WAMLProvider:FCWithChildren<Props> = ({ document, options, defaultV
 
   const R = useMemo<Context>(() => ({
     checkButtonOptionUsed: node => {
-      // 같은 value의 두 노드 중 한 노드만 답안으로 선택된 경우 먼저 등장한 노드부터 사용된 것으로 처리한다.
-      const usedNodes = $renderingVariables.current.buttonOptionUsed[node.value] ||= [];
-      let sequence = usedNodes.indexOf(node.id);
-      if(sequence === -1) sequence = usedNodes.push(node.id) - 1;
+      return node.group.some(v => {
+        const key = `${v},${node.value}`;
+        
+        // 같은 value의 두 노드 중 한 노드만 답안으로 선택된 경우 먼저 등장한 노드부터 사용된 것으로 처리한다.
+        const usedNodes = $renderingVariables.current.buttonOptionUsed[key] ||= [];
+        let sequence = usedNodes.indexOf(node.id);
+        if(sequence === -1) sequence = usedNodes.push(node.id) - 1;
 
-      return node.value in buttonOptionState && buttonOptionState[node.value].length > sequence;
+        return key in buttonOptionState && buttonOptionState[key].length > sequence;
+      });
     },
     commonOptions: options,
     draggingObject,
-    // eslint-disable-next-line @typescript-eslint/no-shadow
-    getButtonOptionByValue: value => {
+    getButtonOptionByValue: (value, index) => {
+      if('error' in document) return null;
+      const interaction = document.metadata.answerFormat.interactions[index];
+      if(interaction.type !== WAML.InteractionType.BUTTON_OPTION) throw Error(`Unexpected interaction: ${JSON.stringify(interaction)}`);
       const candidates = Object.values($renderingVariables.current.buttonOptions).filter(v => v.value === value);
       if(!candidates.length) return null;
-      return candidates[candidates.length - ($renderingVariables.current.buttonOptionUsed[value]?.length || 1)];
+      return candidates[candidates.length - ($renderingVariables.current.buttonOptionUsed[`${interaction.group},${value}`]?.length || 1)];
     },
     getComponentOptions: type => options[type],
     getKnobProperty: index => knobProperties[index] || { activated: false, enabled: true },

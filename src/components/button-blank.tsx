@@ -44,7 +44,8 @@ const ButtonBlank:WAMLComponent<'ButtonBlank'> = ({ node, onPointerEnter, onPoin
     (e.target as Element).releasePointerCapture(e.pointerId);
 
     const $target = e.currentTarget;
-    const targetNode = getButtonOptionByValue($target.textContent!);
+    // TODO ButtonOption을 value로 특정하는 방식은 value가 같은 ButtonOption의 처리를 곤란하게 만들고 있음. 번호를 이용하는 방식으로 바꿔야 함.
+    const targetNode = getButtonOptionByValue($target.textContent!, interactionToken.seq);
     if(!targetNode) throw Error(`Unexpected ButtonBlank value: ${$target.textContent}`);
     $self.current = true;
     logInteraction({ type: "button-option-down", value: $target.textContent!, index: interactionToken.seq });
@@ -56,7 +57,6 @@ const ButtonBlank:WAMLComponent<'ButtonBlank'> = ({ node, onPointerEnter, onPoin
       callback: token => {
         const { seq, input, interactionValue } = token;
         if(seq === interactionToken.seq) return;
-        console.log(interactionToken.input, input);
         if(multiple || input?.type === "MULTIPLE" || !interactionValue){
           if(multiple) interactionToken.handleInteract(targetNode.value);
           else interactionToken.unsetInteract();
