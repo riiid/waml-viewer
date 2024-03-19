@@ -34,6 +34,9 @@ const Inline = ({ node }) => {
             default: throw Error(`Unhandled medium type: ${node.value.type}`);
         }
     }
+    if ((0, waml_1.isMooToken)(node, 'forcedLineBreak')) {
+        return react_1.default.createElement("br", null);
+    }
     switch (node.kind) {
         case "StyledInline": {
             const $inlines = node.inlines.map((v, i) => react_1.default.createElement(Inline, { key: i, node: v }));

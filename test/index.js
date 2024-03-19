@@ -457,6 +457,10 @@ function sanitize(document, {
         if (v.value.alt) line.push(`[${v.value.alt}]\n`);
         continue;
       }
+      if ((0, _check.isMooToken)(v, "forcedLineBreak")) {
+        line.push("\n");
+        continue;
+      }
       switch (v.kind) {
         case "ChoiceOption":
         case "ButtonOption":
@@ -623,6 +627,7 @@ function id(x) { return x[0]; }
     character: /./
   };
   const withoutXML = {
+    forcedLineBreak: "///",
     lineComment: /^\/\/[^\n]+/,
     classOpen: "[[", classClose: "]]",
     blockMathOpen: { match: "$$", push: "blockMath" },
@@ -967,6 +972,7 @@ var grammar = {
     {"name": "Inline", "symbols": [(lexer.has("buttonBlank") ? {type: "buttonBlank"} : buttonBlank)], "postprocess": id},
     {"name": "Inline", "symbols": [(lexer.has("medium") ? {type: "medium"} : medium)], "postprocess": id},
     {"name": "Inline", "symbols": [(lexer.has("spaces") ? {type: "spaces"} : spaces)], "postprocess": ([ token ]) => token.value},
+    {"name": "Inline", "symbols": [(lexer.has("forcedLineBreak") ? {type: "forcedLineBreak"} : forcedLineBreak)], "postprocess": id},
     {"name": "Inline", "symbols": ["InlineMath"], "postprocess": id},
     {"name": "Inline", "symbols": ["Text"], "postprocess": id},
     {"name": "Inline", "symbols": ["StyledInline"], "postprocess": id},
@@ -14901,6 +14907,9 @@ const Inline = ({ node }) => {
             case "video": return react_1.default.createElement(video_1.default, { node: node });
             default: throw Error(`Unhandled medium type: ${node.value.type}`);
         }
+    }
+    if ((0, waml_1.isMooToken)(node, 'forcedLineBreak')) {
+        return react_1.default.createElement("br", null);
     }
     switch (node.kind) {
         case "StyledInline": {

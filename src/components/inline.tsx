@@ -31,6 +31,9 @@ const Inline:WAMLComponent<'Inline'> = ({ node }) => {
       default: throw Error(`Unhandled medium type: ${node.value.type}`);
     }
   }
+  if(isMooToken(node, 'forcedLineBreak')){
+    return <br />;
+  }
   switch(node.kind){
     case "StyledInline": {
       const $inlines = node.inlines.map((v, i) => <Inline key={i} node={v} />);
