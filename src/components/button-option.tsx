@@ -67,6 +67,7 @@ const ButtonOption:WAMLComponent<'ButtonOption'> = ({ node, style, onPointerDown
     ref={$}
     disabled={used}
     onPointerDown={handlePointerDown}
+    translate="no"
     {...props}
     {...dragging ? { 'data-dragging': true } : {}}
     style={{ ...style, 'touchAction': "none" }}
@@ -77,7 +78,7 @@ const ButtonOption:WAMLComponent<'ButtonOption'> = ({ node, style, onPointerDown
   return dragging
     ? <>
       {R}
-      <button ref={$ghost} {...props} data-ghost>{node.value}</button>
+      <button ref={$ghost} translate="no" {...props} data-ghost>{node.value}</button>
     </>
     : R
   ;

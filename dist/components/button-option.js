@@ -87,11 +87,11 @@ const ButtonOption = ({ node, style, onPointerDown, ...props }) => {
             window.removeEventListener('pointerup', onPointerUp);
         };
     }, [draggingObject, logInteraction, node, setDraggingObject]);
-    const R = react_1.default.createElement("button", { ref: $, disabled: used, onPointerDown: handlePointerDown, ...props, ...dragging ? { 'data-dragging': true } : {}, style: { ...style, 'touchAction': "none" } }, node.value);
+    const R = react_1.default.createElement("button", { ref: $, disabled: used, onPointerDown: handlePointerDown, translate: "no", ...props, ...dragging ? { 'data-dragging': true } : {}, style: { ...style, 'touchAction': "none" } }, node.value);
     return dragging
         ? react_1.default.createElement(react_1.default.Fragment, null,
             R,
-            react_1.default.createElement("button", { ref: $ghost, ...props, "data-ghost": true }, node.value))
+            react_1.default.createElement("button", { ref: $ghost, translate: "no", ...props, "data-ghost": true }, node.value))
         : R;
 };
 ButtonOption.displayName = "ButtonOption";

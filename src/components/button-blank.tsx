@@ -45,6 +45,7 @@ const ButtonBlank:WAMLComponent<'ButtonBlank'> = ({ node, onPointerEnter, onPoin
 
     const $target = e.currentTarget;
     // TODO ButtonOption을 value로 특정하는 방식은 value가 같은 ButtonOption의 처리를 곤란하게 만들고 있음. 번호를 이용하는 방식으로 바꿔야 함.
+    // NOTE 번역 등 $target.textContent를 임의로 바꾸는 브라우저 기능에 의해 문제가 될 수 있음.
     const targetNode = getButtonOptionByValue($target.textContent!, interactionToken.seq);
     if(!targetNode) throw Error(`Unexpected ButtonBlank value: ${$target.textContent}`);
     $self.current = true;
@@ -88,6 +89,7 @@ const ButtonBlank:WAMLComponent<'ButtonBlank'> = ({ node, onPointerEnter, onPoin
         key={i}
         onPointerDown={handlePointerDown}
         onClick={handleClick}
+        translate="no"
         data-value={v}
         {...dragging ? { 'data-dragging': true } : {}}
       >{v}</span>
@@ -98,6 +100,7 @@ const ButtonBlank:WAMLComponent<'ButtonBlank'> = ({ node, onPointerEnter, onPoin
     onPointerEnter={handlePointerEnter}
     onPointerLeave={handlePointerLeave}
     onPointerUp={handlePointerUp}
+    translate="no"
     {...props}
     {...preview ? { 'data-preview': true } : {}}
     {...draggingObject?.node.kind === "ButtonOption" && interactionToken.input?.value.includes(draggingObject.node.value) ? { 'data-child-dragging': true } : {}}

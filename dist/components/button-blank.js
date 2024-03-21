@@ -79,6 +79,7 @@ const ButtonBlank = ({ node, onPointerEnter, onPointerLeave, onPointerUp, ...pro
         e.target.releasePointerCapture(e.pointerId);
         const $target = e.currentTarget;
         // TODO ButtonOption을 value로 특정하는 방식은 value가 같은 ButtonOption의 처리를 곤란하게 만들고 있음. 번호를 이용하는 방식으로 바꿔야 함.
+        // NOTE 번역 등 $target.textContent를 임의로 바꾸는 브라우저 기능에 의해 문제가 될 수 있음.
         const targetNode = getButtonOptionByValue($target.textContent, interactionToken.seq);
         if (!targetNode)
             throw Error(`Unexpected ButtonBlank value: ${$target.textContent}`);
@@ -121,9 +122,9 @@ const ButtonBlank = ({ node, onPointerEnter, onPointerLeave, onPointerUp, ...pro
     }, [interactionToken, logInteraction, multiple]);
     const $words = (_b = interactionToken.input) === null || _b === void 0 ? void 0 : _b.value.map((v, i) => {
         const dragging = (draggingObject === null || draggingObject === void 0 ? void 0 : draggingObject.node.kind) === "ButtonOption" && draggingObject.node.value === v;
-        return (react_1.default.createElement("span", { key: i, onPointerDown: handlePointerDown, onClick: handleClick, "data-value": v, ...dragging ? { 'data-dragging': true } : {} }, v));
+        return (react_1.default.createElement("span", { key: i, onPointerDown: handlePointerDown, onClick: handleClick, translate: "no", "data-value": v, ...dragging ? { 'data-dragging': true } : {} }, v));
     });
-    return react_1.default.createElement("span", { onPointerEnter: handlePointerEnter, onPointerLeave: handlePointerLeave, onPointerUp: handlePointerUp, ...props, ...preview ? { 'data-preview': true } : {}, ...(draggingObject === null || draggingObject === void 0 ? void 0 : draggingObject.node.kind) === "ButtonOption" && ((_c = interactionToken.input) === null || _c === void 0 ? void 0 : _c.value.includes(draggingObject.node.value)) ? { 'data-child-dragging': true } : {} },
+    return react_1.default.createElement("span", { onPointerEnter: handlePointerEnter, onPointerLeave: handlePointerLeave, onPointerUp: handlePointerUp, translate: "no", ...props, ...preview ? { 'data-preview': true } : {}, ...(draggingObject === null || draggingObject === void 0 ? void 0 : draggingObject.node.kind) === "ButtonOption" && ((_c = interactionToken.input) === null || _c === void 0 ? void 0 : _c.value.includes(draggingObject.node.value)) ? { 'data-child-dragging': true } : {} },
         $words,
         multiple && Boolean(preview) && react_1.default.createElement("span", null, preview));
 };

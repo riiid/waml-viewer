@@ -237,20 +237,19 @@ const WAMLProvider = ({ document, options, defaultValue, value, onChange, onInte
         }
     }, [actionScripts, executeActionScript]);
     const R = (0, react_1.useMemo)(() => ({
-        checkButtonOptionUsed: node => {
-            return node.group.some(v => {
-                var _a;
-                const key = `${v},${node.value}`;
-                // 같은 value의 두 노드 중 한 노드만 답안으로 선택된 경우 먼저 등장한 노드부터 사용된 것으로 처리한다.
-                const usedNodes = (_a = $renderingVariables.current.buttonOptionUsed)[key] || (_a[key] = []);
-                let sequence = usedNodes.indexOf(node.id);
-                if (sequence === -1)
-                    sequence = usedNodes.push(node.id) - 1;
-                return key in buttonOptionState && buttonOptionState[key].length > sequence;
-            });
-        },
+        checkButtonOptionUsed: node => node.group.some(v => {
+            var _a;
+            const key = `${v},${node.value}`;
+            // 같은 value의 두 노드 중 한 노드만 답안으로 선택된 경우 먼저 등장한 노드부터 사용된 것으로 처리한다.
+            const usedNodes = (_a = $renderingVariables.current.buttonOptionUsed)[key] || (_a[key] = []);
+            let sequence = usedNodes.indexOf(node.id);
+            if (sequence === -1)
+                sequence = usedNodes.push(node.id) - 1;
+            return key in buttonOptionState && buttonOptionState[key].length > sequence;
+        }),
         commonOptions: options,
         draggingObject,
+        // eslint-disable-next-line @typescript-eslint/no-shadow
         getButtonOptionByValue: (value, index) => {
             var _a;
             if ('error' in document)
